@@ -19,6 +19,9 @@ namespace ElectronicObserver.Window
 		private FormMain _parent;
 		private bool _isLoaded;
 		private int[] _targetMissions = new int[5]; // 艦隊ごとの設定遠征ID (1-based, 2..4)
+		private bool _detailNeedsUpdate = false;
+		private bool _matrixNeedsUpdate = false;
+		private int _lastMissionResultDeckId = -1;
 
 		public FormExpeditionCheck(FormMain parent)
 		{
@@ -38,16 +41,14 @@ namespace ElectronicObserver.Window
 		{
 			APIObserver o = APIObserver.Instance;
 
-			void UpdateHandler(string apiname, dynamic data)
+			void UpdateResponseHandler(string apiname, dynamic data)
 			{
-				if (InvokeRequired)
-				{
-					BeginInvoke(new Action(() => UpdateAllViews()));
-				}
-				else
-				{
-					UpdateAllViews();
-				}
+				OnApiUpdated(apiname, data, false);
+			}
+
+			void UpdateRequestHandler(string apiname, dynamic data)
+			{
+				OnApiUpdated(apiname, data, true);
 			}
 
 			void SubscribeResponse(string apiName, APIReceivedEventHandler handler)
@@ -68,20 +69,31 @@ namespace ElectronicObserver.Window
 				}
 			}
 
-			SubscribeResponse("api_start2/getData", UpdateHandler);
-			SubscribeResponse("api_port/port", UpdateHandler);
-			SubscribeResponse("api_get_member/ship2", UpdateHandler);
-			SubscribeResponse("api_get_member/ship3", UpdateHandler);
-			SubscribeResponse("api_get_member/slot_item", UpdateHandler);
-			SubscribeResponse("api_req_hensei/change", UpdateHandler);
-			SubscribeResponse("api_req_hensei/preset_select", UpdateHandler);
-			SubscribeResponse("api_req_kaisou/slot_deprive", UpdateHandler);
-			SubscribeResponse("api_req_kaisou/slot_exchange_index", UpdateHandler);
-			SubscribeResponse("api_req_kaisou/powerup", UpdateHandler);
-			SubscribeResponse("api_req_kaisou/remodeling", UpdateHandler);
-			SubscribeResponse("api_req_hokyu/charge", UpdateHandler);
-			SubscribeResponse("api_req_nyukyo/start", UpdateHandler);
-			SubscribeResponse("api_req_mission/result", UpdateHandler);
+			SubscribeResponse("api_start2/getData", UpdateResponseHandler);
+			SubscribeResponse("api_port/port", UpdateResponseHandler);
+			SubscribeResponse("api_get_member/ship2", UpdateResponseHandler);
+			SubscribeResponse("api_get_member/ship3", UpdateResponseHandler);
+			SubscribeResponse("api_get_member/slot_item", UpdateResponseHandler);
+			SubscribeResponse("api_req_hensei/preset_select", UpdateResponseHandler);
+			SubscribeResponse("api_req_kaisou/slot_deprive", UpdateResponseHandler);
+			SubscribeResponse("api_req_kaisou/slot_exchange_index", UpdateResponseHandler);
+			SubscribeResponse("api_req_kaisou/powerup", UpdateResponseHandler);
+			SubscribeResponse("api_req_hokyu/charge", UpdateResponseHandler);
+
+			// 遠征帰投: Requestで艦隊番号を取得し、Responseで更新判定を行う
+			SubscribeRequest("api_req_mission/result", (apiname, data) =>
+			{
+				if (data is Dictionary<string, string> dict && dict.ContainsKey("api_deck_id") && int.TryParse(dict["api_deck_id"], out int deckId))
+				{
+					_lastMissionResultDeckId = deckId;
+				}
+			});
+			SubscribeResponse("api_req_mission/result", UpdateResponseHandler);
+
+			SubscribeRequest("api_req_hensei/change", UpdateRequestHandler);
+			SubscribeRequest("api_req_nyukyo/start", UpdateRequestHandler);
+			SubscribeRequest("api_req_kaisou/remodeling", UpdateRequestHandler);
+			SubscribeRequest("api_req_kaisou/open_exslot", UpdateRequestHandler);
 
 			// 遠征画面を開いた瞬間 (api_get_member/mission) のチェック警告
 			SubscribeResponse("api_get_member/mission", (apiname, data) =>
@@ -109,6 +121,190 @@ namespace ElectronicObserver.Window
 			});
 		}
 
+		private void OnApiUpdated(string apiname, dynamic data, bool isRequest)
+		{
+			if (!_isLoaded) return;
+
+			bool affectsSelectedFleet = IsFleetAffected(apiname, data, isRequest, SelectedFleetId);
+
+			if (InvokeRequired)
+			{
+				BeginInvoke(new Action(() => ProcessApiUpdate(affectsSelectedFleet)));
+			}
+			else
+			{
+				ProcessApiUpdate(affectsSelectedFleet);
+			}
+		}
+
+		/// <summary>
+		/// 受信した通信が選択中の艦隊に影響を与えるか判定します。
+		/// </summary>
+		private bool IsFleetAffected(string apiName, dynamic data, bool isRequest, int targetFleetId)
+		{
+			try
+			{
+				var db = KCDatabase.Instance;
+				var targetFleet = db.Fleet[targetFleetId];
+
+				switch (apiName)
+				{
+					case "api_start2/getData":
+					case "api_port/port":
+					case "api_get_member/ship2":
+					case "api_get_member/ship3":
+					case "api_get_member/slot_item":
+						return true;
+
+					case "api_req_hensei/change":
+						if (isRequest && data is Dictionary<string, string> changeReq)
+						{
+							if (changeReq.ContainsKey("api_id") && int.TryParse(changeReq["api_id"], out int deckId))
+							{
+								if (deckId == targetFleetId) return true;
+							}
+
+							if (targetFleet != null && changeReq.ContainsKey("api_ship_id") && int.TryParse(changeReq["api_ship_id"], out int shipId) && shipId > 0)
+							{
+								if (targetFleet.Members.Contains(shipId)) return true;
+							}
+							return false;
+						}
+						return true;
+
+					case "api_req_hensei/preset_select":
+						if (!isRequest && data != null)
+						{
+							try
+							{
+								int deckId = (int)data.api_id;
+								return deckId == targetFleetId;
+							}
+							catch { }
+						}
+						return true;
+
+					case "api_req_mission/result":
+						if (!isRequest && _lastMissionResultDeckId > 0)
+						{
+							return _lastMissionResultDeckId == targetFleetId;
+						}
+						return true;
+
+					case "api_req_hokyu/charge":
+						if (!isRequest && data != null && targetFleet != null)
+						{
+							try
+							{
+								foreach (var elem in data.api_ship)
+								{
+									int shipId = (int)elem.api_id;
+									if (targetFleet.Members.Contains(shipId)) return true;
+								}
+								return false;
+							}
+							catch { }
+						}
+						return true;
+
+					case "api_req_nyukyo/start":
+						if (isRequest && data is Dictionary<string, string> nyukyoReq && targetFleet != null)
+						{
+							if (nyukyoReq.ContainsKey("api_ship_id") && int.TryParse(nyukyoReq["api_ship_id"], out int shipId))
+							{
+								return targetFleet.Members.Contains(shipId);
+							}
+						}
+						return true;
+
+					case "api_req_kaisou/slot_deprive":
+						if (!isRequest && data != null && targetFleet != null)
+						{
+							try
+							{
+								int setId = (int)data.api_ship_data.api_set_ship.api_id;
+								int unsetId = (int)data.api_ship_data.api_unset_ship.api_id;
+								return targetFleet.Members.Contains(setId) || targetFleet.Members.Contains(unsetId);
+							}
+							catch { }
+						}
+						return true;
+
+					case "api_req_kaisou/slot_exchange_index":
+						if (!isRequest && data != null && targetFleet != null)
+						{
+							try
+							{
+								int shipId = (int)data.api_ship_data.api_id;
+								return targetFleet.Members.Contains(shipId);
+							}
+							catch { }
+						}
+						return true;
+
+					case "api_req_kaisou/powerup":
+						if (!isRequest && data != null && targetFleet != null)
+						{
+							try
+							{
+								int shipId = (int)data.api_ship.api_id;
+								return targetFleet.Members.Contains(shipId);
+							}
+							catch { }
+						}
+						return true;
+
+					case "api_req_kaisou/remodeling":
+					case "api_req_kaisou/open_exslot":
+						if (isRequest && data is Dictionary<string, string> shipReq && targetFleet != null)
+						{
+							if (shipReq.ContainsKey("api_id") && int.TryParse(shipReq["api_id"], out int shipId))
+							{
+								return targetFleet.Members.Contains(shipId);
+							}
+						}
+						return true;
+
+					default:
+						return true;
+				}
+			}
+			catch
+			{
+				return true;
+			}
+		}
+
+		private void ProcessApiUpdate(bool affectsSelectedFleet)
+		{
+			if (!_isLoaded) return;
+
+			if (affectsSelectedFleet)
+				_detailNeedsUpdate = true;
+			_matrixNeedsUpdate = true;
+
+			if (!Visible) return;
+
+			if (tabControl.SelectedTab == tabDetail)
+			{
+				if (affectsSelectedFleet)
+				{
+					if (comboArea.Items.Count == 0)
+					{
+						InitAreaAndMissionList();
+						SelectMission(_targetMissions[SelectedFleetId]);
+					}
+					UpdateDetailView();
+					_detailNeedsUpdate = false;
+				}
+			}
+			else if (tabControl.SelectedTab == tabMatrix)
+			{
+				UpdateMatrixView();
+				_matrixNeedsUpdate = false;
+			}
+		}
+
 		private void FormExpeditionCheck_Load(object sender, EventArgs e)
 		{
 			try
@@ -128,10 +324,46 @@ namespace ElectronicObserver.Window
 				UpdateControlPanelLayout();
 				UpdateResponsiveLayout();
 				UpdateAllViews();
+
+				tabControl.SelectedIndexChanged += tabControl_SelectedIndexChanged;
 			}
 			catch (Exception ex)
 			{
 				Utility.Logger.Add(3, "遠征可否ウィンドウの初期化でエラーが発生しました: " + ex.Message);
+			}
+		}
+
+		protected override void OnVisibleChanged(EventArgs e)
+		{
+			base.OnVisibleChanged(e);
+			if (Visible && _isLoaded)
+			{
+				if (tabControl.SelectedTab == tabDetail && _detailNeedsUpdate)
+				{
+					UpdateDetailView();
+					_detailNeedsUpdate = false;
+				}
+				else if (tabControl.SelectedTab == tabMatrix && _matrixNeedsUpdate)
+				{
+					UpdateMatrixView();
+					_matrixNeedsUpdate = false;
+				}
+			}
+		}
+
+		private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			if (!_isLoaded) return;
+
+			if (tabControl.SelectedTab == tabDetail && _detailNeedsUpdate)
+			{
+				UpdateDetailView();
+				_detailNeedsUpdate = false;
+			}
+			else if (tabControl.SelectedTab == tabMatrix && _matrixNeedsUpdate)
+			{
+				UpdateMatrixView();
+				_matrixNeedsUpdate = false;
 			}
 		}
 
@@ -323,6 +555,7 @@ namespace ElectronicObserver.Window
 			int targetId = _targetMissions[SelectedFleetId];
 			SelectMission(targetId);
 			UpdateDetailView();
+			_detailNeedsUpdate = false;
 		}
 
 		private void comboArea_SelectedIndexChanged(object sender, EventArgs e)
@@ -372,7 +605,9 @@ namespace ElectronicObserver.Window
 				SelectMission(_targetMissions[SelectedFleetId]);
 			}
 			UpdateDetailView();
+			_detailNeedsUpdate = false;
 			UpdateMatrixView();
+			_matrixNeedsUpdate = false;
 		}
 
 		/// <summary>
