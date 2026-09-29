@@ -128,12 +128,12 @@
 			// 
 			this.splitDetail.Panel1.AutoScroll = true;
 			this.splitDetail.Panel1.Controls.Add(this.groupSummary);
-			this.splitDetail.Panel1MinSize = 70;
+			this.splitDetail.Panel1MinSize = 0;
 			// 
 			// splitDetail.Panel2
 			// 
 			this.splitDetail.Panel2.Controls.Add(this.groupConditions);
-			this.splitDetail.Panel2MinSize = 80;
+			this.splitDetail.Panel2MinSize = 0;
 			this.splitDetail.Size = new System.Drawing.Size(626, 413);
 			this.splitDetail.SplitterDistance = 118;
 			this.splitDetail.TabIndex = 1;

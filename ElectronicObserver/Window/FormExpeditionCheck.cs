@@ -111,21 +111,28 @@ namespace ElectronicObserver.Window
 
 		private void FormExpeditionCheck_Load(object sender, EventArgs e)
 		{
-			InitAreaAndMissionList();
-			comboFleet.SelectedIndex = 0; // 第2艦隊
-
-			var config = Utility.Configuration.Config.FormExpeditionCheck;
-			if (config != null)
+			try
 			{
-				checkAlert.Checked = config.AlertOnMissionScreenOpened;
-				checkAlertSupply.Checked = config.AlertSupplyDepleted;
-			}
+				InitAreaAndMissionList();
+				comboFleet.SelectedIndex = 0; // 第2艦隊
 
-			_isLoaded = true;
-			SelectMission(_targetMissions[SelectedFleetId]);
-			UpdateControlPanelLayout();
-			UpdateResponsiveLayout();
-			UpdateAllViews();
+				var config = Utility.Configuration.Config.FormExpeditionCheck;
+				if (config != null)
+				{
+					checkAlert.Checked = config.AlertOnMissionScreenOpened;
+					checkAlertSupply.Checked = config.AlertSupplyDepleted;
+				}
+
+				_isLoaded = true;
+				SelectMission(_targetMissions[SelectedFleetId]);
+				UpdateControlPanelLayout();
+				UpdateResponsiveLayout();
+				UpdateAllViews();
+			}
+			catch (Exception ex)
+			{
+				Utility.Logger.Add(3, "遠征可否ウィンドウの初期化でエラーが発生しました: " + ex.Message);
+			}
 		}
 
 		private void checkAlert_CheckedChanged(object sender, EventArgs e)
@@ -150,12 +157,20 @@ namespace ElectronicObserver.Window
 
 		private void FormExpeditionCheck_Resize(object sender, EventArgs e)
 		{
-			UpdateResponsiveLayout();
+			try
+			{
+				UpdateResponsiveLayout();
+			}
+			catch { }
 		}
 
 		private void panelControl_Resize(object sender, EventArgs e)
 		{
-			UpdateControlPanelLayout();
+			try
+			{
+				UpdateControlPanelLayout();
+			}
+			catch { }
 		}
 
 		/// <summary>
@@ -163,32 +178,50 @@ namespace ElectronicObserver.Window
 		/// </summary>
 		private void UpdateResponsiveLayout()
 		{
-			if (splitDetail == null || tabControl.SelectedTab != tabDetail) return;
-
-			int w = tabDetail.ClientSize.Width;
-			int h = tabDetail.ClientSize.Height - panelControl.Height;
-
-			// 横幅が十分広い (>= 500px) かつ縦横比で横長の場合は左右分割、それ以外（基本的に小さい・細長いウィンドウ）は上下分割
-			if (w >= 500 && w > h * 1.2)
+			try
 			{
-				if (splitDetail.Orientation != Orientation.Vertical)
+				if (splitDetail == null || tabControl.SelectedTab != tabDetail) return;
+
+				int w = tabDetail.ClientSize.Width;
+				int h = tabDetail.ClientSize.Height - panelControl.Height;
+				if (w <= 0 || h <= 0) return;
+
+				// 横幅が十分広い (>= 500px) かつ縦横比で横長の場合は左右分割、それ以外（基本的に小さい・細長いウィンドウ）は上下分割
+				if (w >= 500 && w > h * 1.2)
 				{
-					splitDetail.Orientation = Orientation.Vertical;
+					if (splitDetail.Orientation != Orientation.Vertical)
+					{
+						splitDetail.Orientation = Orientation.Vertical;
+					}
+
+					int min = Math.Max(0, splitDetail.Panel1MinSize);
+					int max = splitDetail.Width - splitDetail.SplitterWidth - Math.Max(0, splitDetail.Panel2MinSize);
+					if (max > min)
+					{
+						int desiredDistance = Math.Min(240, Math.Max(180, (int)(w * 0.38)));
+						splitDetail.SplitterDistance = Math.Max(min, Math.Min(max, desiredDistance));
+					}
 				}
-				int desiredDistance = Math.Min(240, Math.Max(180, (int)(w * 0.38)));
-				if (splitDetail.Width > desiredDistance)
-					splitDetail.SplitterDistance = desiredDistance;
+				else
+				{
+					if (splitDetail.Orientation != Orientation.Horizontal)
+					{
+						splitDetail.Orientation = Orientation.Horizontal;
+					}
+
+					int min = Math.Max(0, splitDetail.Panel1MinSize);
+					int max = splitDetail.Height - splitDetail.SplitterWidth - Math.Max(0, splitDetail.Panel2MinSize);
+					if (max > min)
+					{
+						// 上部の概要パネルは必要最小限 (115px 前後) に留め、下のチェックリストに画面領域を最大限配分する
+						int desiredDistance = Math.Min(125, Math.Max(95, (int)(h * 0.35)));
+						splitDetail.SplitterDistance = Math.Max(min, Math.Min(max, desiredDistance));
+					}
+				}
 			}
-			else
+			catch
 			{
-				if (splitDetail.Orientation != Orientation.Horizontal)
-				{
-					splitDetail.Orientation = Orientation.Horizontal;
-				}
-				// 上部の概要パネルは必要最小限 (115px 前後) に留め、下のチェックリストに画面領域を最大限配分する
-				int desiredDistance = Math.Min(125, Math.Max(95, (int)(h * 0.35)));
-				if (splitDetail.Height > desiredDistance)
-					splitDetail.SplitterDistance = desiredDistance;
+				// SplitContainerの寸法変更時のWinForms例外を遮断
 			}
 		}
 

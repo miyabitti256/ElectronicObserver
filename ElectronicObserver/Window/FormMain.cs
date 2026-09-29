@@ -71,6 +71,8 @@ namespace ElectronicObserver.Window
 		public FormEquipmentGroup fEquipmentGroup;
 		public FormExpeditionCheck fExpeditionCheck;
 
+		private bool _layoutLoadFailed = false;
+
 		#endregion
 
 
@@ -600,7 +602,7 @@ namespace ElectronicObserver.Window
 			}
 			catch (Exception ex)
 			{
-
+				_layoutLoadFailed = true;
 				Utility.ErrorReporter.SendErrorReport(ex, "サブウィンドウ レイアウトの復元に失敗しました。");
 			}
 
@@ -670,7 +672,7 @@ namespace ElectronicObserver.Window
 			}
 			catch (Exception ex)
 			{
-
+				_layoutLoadFailed = true;
 				Utility.ErrorReporter.SendErrorReport(ex, "ウィンドウ レイアウトの復元に失敗しました。");
 
 			}
@@ -687,6 +689,11 @@ namespace ElectronicObserver.Window
 
 			try
 			{
+				if (_layoutLoadFailed)
+				{
+					Utility.Logger.Add(3, "レイアウト復元時にエラーが発生していたため、既存レイアウトの上書き保存をスキップしました。");
+					return;
+				}
 
 				if (MainDockPanel.Contents.Count == 0)
 				{
