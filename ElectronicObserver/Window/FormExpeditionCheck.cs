@@ -115,7 +115,113 @@ namespace ElectronicObserver.Window
 			comboFleet.SelectedIndex = 0; // 第2艦隊
 			_isLoaded = true;
 			SelectMission(_targetMissions[SelectedFleetId]);
+			UpdateControlPanelLayout();
+			UpdateResponsiveLayout();
 			UpdateAllViews();
+		}
+
+		private void FormExpeditionCheck_Resize(object sender, EventArgs e)
+		{
+			UpdateResponsiveLayout();
+		}
+
+		private void panelControl_Resize(object sender, EventArgs e)
+		{
+			UpdateControlPanelLayout();
+		}
+
+		/// <summary>
+		/// ウィンドウサイズに応じたレスポンシブな分割レイアウト計算を行います。
+		/// </summary>
+		private void UpdateResponsiveLayout()
+		{
+			if (splitDetail == null || tabControl.SelectedTab != tabDetail) return;
+
+			int w = tabDetail.ClientSize.Width;
+			int h = tabDetail.ClientSize.Height - panelControl.Height;
+
+			// 横幅が十分広い (>= 500px) かつ縦横比で横長の場合は左右分割、それ以外（基本的に小さい・細長いウィンドウ）は上下分割
+			if (w >= 500 && w > h * 1.2)
+			{
+				if (splitDetail.Orientation != Orientation.Vertical)
+				{
+					splitDetail.Orientation = Orientation.Vertical;
+				}
+				int desiredDistance = Math.Min(240, Math.Max(180, (int)(w * 0.38)));
+				if (splitDetail.Width > desiredDistance)
+					splitDetail.SplitterDistance = desiredDistance;
+			}
+			else
+			{
+				if (splitDetail.Orientation != Orientation.Horizontal)
+				{
+					splitDetail.Orientation = Orientation.Horizontal;
+				}
+				// 上部の概要パネルは必要最小限 (115px 前後) に留め、下のチェックリストに画面領域を最大限配分する
+				int desiredDistance = Math.Min(125, Math.Max(95, (int)(h * 0.35)));
+				if (splitDetail.Height > desiredDistance)
+					splitDetail.SplitterDistance = desiredDistance;
+			}
+		}
+
+		/// <summary>
+		/// 操作パネル（艦隊・海域・遠征コンボ、警告チェック）のリサイズ計算を行います。
+		/// </summary>
+		private void UpdateControlPanelLayout()
+		{
+			int w = panelControl.ClientSize.Width;
+			if (w <= 0) return;
+
+			panelControl.SuspendLayout();
+
+			if (w >= 480)
+			{
+				// 1行配置
+				panelControl.Height = 32;
+
+				labelFleet.Location = new Point(4, 8);
+				comboFleet.Location = new Point(36, 5);
+				comboFleet.Width = 62;
+
+				labelArea.Location = new Point(104, 8);
+				comboArea.Location = new Point(136, 5);
+				comboArea.Width = 85;
+
+				labelMission.Location = new Point(227, 8);
+				int missionLeft = 258;
+				int alertWidth = 145;
+				int missionWidth = Math.Max(90, w - missionLeft - alertWidth - 10);
+				comboMission.Location = new Point(missionLeft, 5);
+				comboMission.Width = missionWidth;
+
+				checkAlert.Location = new Point(w - alertWidth - 4, 8);
+				checkAlert.Size = new Size(alertWidth, 16);
+			}
+			else
+			{
+				// 小さいウィンドウ用の2行配置
+				panelControl.Height = 52;
+
+				// 1行目: [艦隊] [海域] [遠征]
+				labelFleet.Location = new Point(3, 6);
+				comboFleet.Location = new Point(34, 3);
+				comboFleet.Width = 58;
+
+				labelArea.Location = new Point(96, 6);
+				comboArea.Location = new Point(127, 3);
+				comboArea.Width = 78;
+
+				labelMission.Location = new Point(210, 6);
+				int missionLeft = 241;
+				comboMission.Location = new Point(missionLeft, 3);
+				comboMission.Width = Math.Max(70, w - missionLeft - 4);
+
+				// 2行目: [遠征画面表示時に警告]
+				checkAlert.Location = new Point(4, 29);
+				checkAlert.Size = new Size(w - 8, 16);
+			}
+
+			panelControl.ResumeLayout();
 		}
 
 		private void InitAreaAndMissionList()
@@ -299,7 +405,7 @@ namespace ElectronicObserver.Window
 			int drumCount = fleet?.MembersInstance.Where(s => s != null).Sum(s => s.AllSlotInstance.Count(e => e != null && e.MasterEquipment.CategoryType == EquipmentTypes.TransportContainer)) ?? 0;
 			int flagshipLv = fleet?.MembersInstance.FirstOrDefault(s => s != null)?.Level ?? 0;
 
-			labelGSDetail.Text = $"キラキラ: {sparkleCount}/{totalShips} 隻\r\nドラム缶: {drumCount} 個\r\n旗艦Lv: {flagshipLv}";
+			labelGSDetail.Text = $"キラ: {sparkleCount}/{totalShips} 隻 | 缶: {drumCount} 個 | 旗艦: Lv{flagshipLv}";
 			labelGSDesc.Text = ExpeditionHelper.GetGreatSuccessConditionDescription(missionId);
 
 			// 3. 成功要件詳細リスト
