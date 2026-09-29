@@ -1549,7 +1549,7 @@ namespace ElectronicObserver.Window
 
 		private void StripMenu_Tool_Jervis_Open_Click(object sender, EventArgs e)
 		{
-			OpenUrl("https://fleethub.madonoharu.workers.dev/");
+			OpenUrl("https://jervis.vercel.app/");
 		}
 
 		private void StripMenu_Tool_Jervis_OpenwithFleet_Click(object sender, EventArgs e)
@@ -1565,7 +1565,7 @@ namespace ElectronicObserver.Window
 			bool choice = Utility.Configuration.Config.Control.ShowDialogChooseAirBase;
 			if (ModifierKeys.HasFlag(Keys.Shift))
 				choice = !choice;
-			UriBuilder uBuild = new UriBuilder("https://fleethub.madonoharu.workers.dev/");
+			UriBuilder uBuild = new UriBuilder("https://jervis.vercel.app/");
 			if (choice)
 			{
 				DialogChooseAirBase dca = new DialogChooseAirBase();
