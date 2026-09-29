@@ -113,11 +113,39 @@ namespace ElectronicObserver.Window
 		{
 			InitAreaAndMissionList();
 			comboFleet.SelectedIndex = 0; // 第2艦隊
+
+			var config = Utility.Configuration.Config.FormExpeditionCheck;
+			if (config != null)
+			{
+				checkAlert.Checked = config.AlertOnMissionScreenOpened;
+				checkAlertSupply.Checked = config.AlertSupplyDepleted;
+			}
+
 			_isLoaded = true;
 			SelectMission(_targetMissions[SelectedFleetId]);
 			UpdateControlPanelLayout();
 			UpdateResponsiveLayout();
 			UpdateAllViews();
+		}
+
+		private void checkAlert_CheckedChanged(object sender, EventArgs e)
+		{
+			if (!_isLoaded) return;
+			var config = Utility.Configuration.Config.FormExpeditionCheck;
+			if (config != null)
+			{
+				config.AlertOnMissionScreenOpened = checkAlert.Checked;
+			}
+		}
+
+		private void checkAlertSupply_CheckedChanged(object sender, EventArgs e)
+		{
+			if (!_isLoaded) return;
+			var config = Utility.Configuration.Config.FormExpeditionCheck;
+			if (config != null)
+			{
+				config.AlertSupplyDepleted = checkAlertSupply.Checked;
+			}
 		}
 
 		private void FormExpeditionCheck_Resize(object sender, EventArgs e)
@@ -174,7 +202,7 @@ namespace ElectronicObserver.Window
 
 			panelControl.SuspendLayout();
 
-			if (w >= 480)
+			if (w >= 560)
 			{
 				// 1行配置
 				panelControl.Height = 32;
@@ -189,13 +217,17 @@ namespace ElectronicObserver.Window
 
 				labelMission.Location = new Point(227, 8);
 				int missionLeft = 258;
-				int alertWidth = 145;
-				int missionWidth = Math.Max(90, w - missionLeft - alertWidth - 10);
+				int alertSupplyWidth = 95;
+				int alertWidth = 135;
+				int missionWidth = Math.Max(90, w - missionLeft - alertWidth - alertSupplyWidth - 15);
 				comboMission.Location = new Point(missionLeft, 5);
 				comboMission.Width = missionWidth;
 
-				checkAlert.Location = new Point(w - alertWidth - 4, 8);
+				checkAlert.Location = new Point(w - alertWidth - alertSupplyWidth - 8, 8);
 				checkAlert.Size = new Size(alertWidth, 16);
+
+				checkAlertSupply.Location = new Point(w - alertSupplyWidth - 4, 8);
+				checkAlertSupply.Size = new Size(alertSupplyWidth, 16);
 			}
 			else
 			{
@@ -216,9 +248,12 @@ namespace ElectronicObserver.Window
 				comboMission.Location = new Point(missionLeft, 3);
 				comboMission.Width = Math.Max(70, w - missionLeft - 4);
 
-				// 2行目: [遠征画面表示時に警告]
+				// 2行目: [遠征画面表示時に警告] [未補給も警告]
 				checkAlert.Location = new Point(4, 29);
-				checkAlert.Size = new Size(w - 8, 16);
+				checkAlert.Size = new Size(135, 16);
+
+				checkAlertSupply.Location = new Point(144, 29);
+				checkAlertSupply.Size = new Size(95, 16);
 			}
 
 			panelControl.ResumeLayout();
@@ -318,11 +353,6 @@ namespace ElectronicObserver.Window
 			if (comboMission.SelectedItem == null) return;
 			_targetMissions[SelectedFleetId] = SelectedMissionId;
 			UpdateDetailView();
-		}
-
-		private void checkAlert_CheckedChanged(object sender, EventArgs e)
-		{
-			// 設定連動
 		}
 
 		public void SelectMission(int missionId)
@@ -597,14 +627,21 @@ namespace ElectronicObserver.Window
 
 				bool isFuelEmpty = fleet.MembersInstance.Any(s => s != null && s.FuelRate < 1);
 				bool isAmmoEmpty = fleet.MembersInstance.Any(s => s != null && s.AmmoRate < 1);
+				bool isSupplyEmpty = isFuelEmpty || isAmmoEmpty;
 
-				if (!result.IsSuceeded || isFuelEmpty || isAmmoEmpty)
+				// 未補給のみで、かつ「未補給も警告」がOFFの場合はモーダル警告の対象外（緊急補給で対応可能）
+				if (!result.IsSuceeded || (isSupplyEmpty && checkAlertSupply.Checked))
 				{
 					var reasons = new List<string>(result.FailureReason);
-					if (isFuelEmpty || isAmmoEmpty)
+					if (isSupplyEmpty)
 						reasons.Add("燃料/弾薬が未補給です");
 
 					warnings.Add($"【第{fleetId}艦隊: {fleet.Name}】\r\n設定遠征: [{mission.DisplayID}] {mission.Name}\r\n失敗原因: {string.Join(", ", reasons)}");
+				}
+				else if (isSupplyEmpty && !checkAlertSupply.Checked)
+				{
+					// 未補給のみで警告OFFの場合は情報ログのみ記録
+					Utility.Logger.Add(2, $"遠征確認: 第{fleetId}艦隊は未補給ですが、編成条件を満たしています（緊急補給可能）。");
 				}
 			}
 

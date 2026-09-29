@@ -61,6 +61,7 @@
 			this.colCurrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.panelControl = new System.Windows.Forms.Panel();
 			this.checkAlert = new System.Windows.Forms.CheckBox();
+			this.checkAlertSupply = new System.Windows.Forms.CheckBox();
 			this.comboMission = new System.Windows.Forms.ComboBox();
 			this.labelMission = new System.Windows.Forms.Label();
 			this.comboArea = new System.Windows.Forms.ComboBox();
@@ -449,6 +450,7 @@
 			// 
 			// panelControl
 			// 
+			this.panelControl.Controls.Add(this.checkAlertSupply);
 			this.panelControl.Controls.Add(this.checkAlert);
 			this.panelControl.Controls.Add(this.comboMission);
 			this.panelControl.Controls.Add(this.labelMission);
@@ -469,14 +471,28 @@
 			this.checkAlert.AutoSize = true;
 			this.checkAlert.Checked = true;
 			this.checkAlert.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.checkAlert.Location = new System.Drawing.Point(475, 9);
+			this.checkAlert.Location = new System.Drawing.Point(400, 9);
 			this.checkAlert.Name = "checkAlert";
-			this.checkAlert.Size = new System.Drawing.Size(148, 16);
+			this.checkAlert.Size = new System.Drawing.Size(136, 16);
 			this.checkAlert.TabIndex = 6;
 			this.checkAlert.Text = "遠征画面表示時に警告";
-			this.toolTip.SetToolTip(this.checkAlert, "遠征選択画面を開いた時、この艦隊の遠征条件を満たしていない場合に警告します");
+			this.toolTip.SetToolTip(this.checkAlert, "遠征選択画面を開いた時、設定した遠征条件を満たしていない場合に警告します");
 			this.checkAlert.UseVisualStyleBackColor = true;
 			this.checkAlert.CheckedChanged += new System.EventHandler(this.checkAlert_CheckedChanged);
+			// 
+			// checkAlertSupply
+			// 
+			this.checkAlertSupply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.checkAlertSupply.AutoSize = true;
+			this.checkAlertSupply.Checked = false;
+			this.checkAlertSupply.Location = new System.Drawing.Point(542, 9);
+			this.checkAlertSupply.Name = "checkAlertSupply";
+			this.checkAlertSupply.Size = new System.Drawing.Size(86, 16);
+			this.checkAlertSupply.TabIndex = 7;
+			this.checkAlertSupply.Text = "未補給も警告";
+			this.toolTip.SetToolTip(this.checkAlertSupply, "燃料・弾薬が不足している場合も警告モーダルを表示します（OFFの場合、緊急補給を想定して編成条件不足のみ警告します）");
+			this.checkAlertSupply.UseVisualStyleBackColor = true;
+			this.checkAlertSupply.CheckedChanged += new System.EventHandler(this.checkAlertSupply_CheckedChanged);
 			// 
 			// comboMission
 			// 
@@ -678,6 +694,7 @@
 		private System.Windows.Forms.Label labelMission;
 		private System.Windows.Forms.ComboBox comboMission;
 		private System.Windows.Forms.CheckBox checkAlert;
+		private System.Windows.Forms.CheckBox checkAlertSupply;
 		private System.Windows.Forms.SplitContainer splitDetail;
 		private System.Windows.Forms.GroupBox groupSummary;
 		private System.Windows.Forms.TableLayoutPanel tableSummary;
