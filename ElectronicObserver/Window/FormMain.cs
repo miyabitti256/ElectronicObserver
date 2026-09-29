@@ -69,6 +69,7 @@ namespace ElectronicObserver.Window
 		public FormSenka fSenka;
 		public FormAccessTime fAccessTime;
 		public FormEquipmentGroup fEquipmentGroup;
+		public FormExpeditionCheck fExpeditionCheck;
 
 		#endregion
 
@@ -141,6 +142,7 @@ namespace ElectronicObserver.Window
 			StripMenu_View_Json.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormJson];
 			StripMenu_View_FleetPreset.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormFleetPreset];
 			StripMenu_View_AccessTime.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormAccessTimer];
+			StripMenu_View_ExpeditionCheck.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormExpeditionCheck];
 
 			StripMenu_Tool_EquipmentList.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormEquipmentList];
 			StripMenu_Tool_DropRecord.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormDropRecord];
@@ -200,6 +202,7 @@ namespace ElectronicObserver.Window
 			SubForms.Add(fSenka = new FormSenka(this));
 			SubForms.Add(fAccessTime = new FormAccessTime(this));
 			SubForms.Add(fEquipmentGroup = new FormEquipmentGroup(this));
+			SubForms.Add(fExpeditionCheck = new FormExpeditionCheck(this));
 
 			ConfigurationChanged();     //設定から初期化
 
@@ -533,6 +536,8 @@ namespace ElectronicObserver.Window
 					return fSenka;
 				case "AccessTime":
 					return fAccessTime;
+				case "ExpeditionCheck":
+					return fExpeditionCheck;
 				default:
 					if (persistString.StartsWith("ShipGroup"))
 					{
@@ -1417,7 +1422,12 @@ namespace ElectronicObserver.Window
 
 		private void StripMenu_Tool_ExpeditionCheck_Click(object sender, EventArgs e)
 		{
-			new Dialog.DialogExpeditionCheck().Show(this);
+			fExpeditionCheck.Show(MainDockPanel);
+		}
+
+		private void StripMenu_View_ExpeditionCheck_Click(object sender, EventArgs e)
+		{
+			fExpeditionCheck.Show(MainDockPanel);
 		}
 
 

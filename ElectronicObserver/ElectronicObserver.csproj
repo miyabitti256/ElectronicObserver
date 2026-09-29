@@ -219,6 +219,7 @@
     <Compile Include="Data\MapAreaData.cs" />
     <Compile Include="Data\MapInfoData.cs" />
     <Compile Include="Data\MaterialData.cs" />
+    <Compile Include="Data\ExpeditionHelper.cs" />
     <Compile Include="Data\MissionClearCondition.cs" />
     <Compile Include="Data\MissionData.cs" />
     <Compile Include="Data\QuestData.cs" />
@@ -334,6 +335,7 @@
     <Compile Include="Observer\kcsapi\api_get_member\deck.cs" />
     <Compile Include="Observer\kcsapi\api_get_member\kdock.cs" />
     <Compile Include="Observer\kcsapi\api_get_member\mapinfo.cs" />
+    <Compile Include="Observer\kcsapi\api_get_member\mission.cs" />
     <Compile Include="Observer\kcsapi\api_get_member\ndock.cs" />
     <Compile Include="Observer\kcsapi\api_get_member\picture_book.cs" />
     <Compile Include="Observer\kcsapi\api_get_member\questlist.cs" />
@@ -694,6 +696,12 @@
     </Compile>
     <Compile Include="Window\FormCompass.Designer.cs">
       <DependentUpon>FormCompass.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Window\FormExpeditionCheck.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Window\FormExpeditionCheck.Designer.cs">
+      <DependentUpon>FormExpeditionCheck.cs</DependentUpon>
     </Compile>
     <Compile Include="Window\FormEquipmentGroup.Tooltip.cs">
       <SubType>Form</SubType>

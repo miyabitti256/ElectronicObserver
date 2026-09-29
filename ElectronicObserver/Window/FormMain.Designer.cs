@@ -68,6 +68,7 @@
 			this.StripMenu_View_Senka = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripMenu_View_Quest = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripMenu_View_Information = new System.Windows.Forms.ToolStripMenuItem();
+			this.StripMenu_View_ExpeditionCheck = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
 			this.StripMenu_View_Compass = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripMenu_View_Battle = new System.Windows.Forms.ToolStripMenuItem();
@@ -318,6 +319,7 @@
             this.StripMenu_View_Senka,
             this.StripMenu_View_Quest,
             this.StripMenu_View_Information,
+            this.StripMenu_View_ExpeditionCheck,
             this.toolStripSeparator3,
             this.StripMenu_View_Compass,
             this.StripMenu_View_Battle,
@@ -456,6 +458,13 @@
 			this.StripMenu_View_Information.Size = new System.Drawing.Size(218, 22);
 			this.StripMenu_View_Information.Text = "情報(&I)";
 			this.StripMenu_View_Information.Click += new System.EventHandler(this.StripMenu_View_Information_Click);
+			// 
+			// StripMenu_View_ExpeditionCheck
+			// 
+			this.StripMenu_View_ExpeditionCheck.Name = "StripMenu_View_ExpeditionCheck";
+			this.StripMenu_View_ExpeditionCheck.Size = new System.Drawing.Size(218, 22);
+			this.StripMenu_View_ExpeditionCheck.Text = "遠征可否(&E)";
+			this.StripMenu_View_ExpeditionCheck.Click += new System.EventHandler(this.StripMenu_View_ExpeditionCheck_Click);
 			// 
 			// toolStripSeparator3
 			// 
@@ -1120,5 +1129,6 @@
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Tool_CopyAllShips;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Tool_CopyAllEquips;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_View_EquipmentGroup;
+		private System.Windows.Forms.ToolStripMenuItem StripMenu_View_ExpeditionCheck;
 	}
 }
