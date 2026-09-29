@@ -688,6 +688,12 @@ namespace ElectronicObserver.Window
 			try
 			{
 
+				if (MainDockPanel.Contents.Count == 0)
+				{
+					Utility.Logger.Add(3, "ウィンドウが表示されていないため、レイアウトの保存をスキップしました。");
+					return;
+				}
+
 				CreateParentDirectories(path);
 
 				using (var archive = new ZipArchive(File.Open(path, FileMode.Create), ZipArchiveMode.Create))
