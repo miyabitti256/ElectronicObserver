@@ -50,33 +50,50 @@ namespace ElectronicObserver.Window
 				}
 			}
 
-			o["api_start2/getData"].ResponseReceived += UpdateHandler;
-			o["api_port/port"].ResponseReceived += UpdateHandler;
-			o["api_get_member/ship2"].ResponseReceived += UpdateHandler;
-			o["api_get_member/ship3"].ResponseReceived += UpdateHandler;
-			o["api_get_member/slot_item"].ResponseReceived += UpdateHandler;
-			o["api_req_hensei/change"].ResponseReceived += UpdateHandler;
-			o["api_req_hensei/preset_select"].ResponseReceived += UpdateHandler;
-			o["api_req_kaisou/slotset"].ResponseReceived += UpdateHandler;
-			o["api_req_kaisou/slot_deprive"].ResponseReceived += UpdateHandler;
-			o["api_req_kaisou/slot_exchange_index"].ResponseReceived += UpdateHandler;
-			o["api_req_kaisou/powerup"].ResponseReceived += UpdateHandler;
-			o["api_req_kaisou/remodeling"].ResponseReceived += UpdateHandler;
-			o["api_req_hokyu/charge"].ResponseReceived += UpdateHandler;
-			o["api_req_nyukyo/start"].ResponseReceived += UpdateHandler;
-			o["api_req_mission/result"].ResponseReceived += UpdateHandler;
+			void SubscribeResponse(string apiName, APIReceivedEventHandler handler)
+			{
+				var api = o[apiName];
+				if (api != null)
+				{
+					api.ResponseReceived += handler;
+				}
+			}
+
+			void SubscribeRequest(string apiName, APIReceivedEventHandler handler)
+			{
+				var api = o[apiName];
+				if (api != null)
+				{
+					api.RequestReceived += handler;
+				}
+			}
+
+			SubscribeResponse("api_start2/getData", UpdateHandler);
+			SubscribeResponse("api_port/port", UpdateHandler);
+			SubscribeResponse("api_get_member/ship2", UpdateHandler);
+			SubscribeResponse("api_get_member/ship3", UpdateHandler);
+			SubscribeResponse("api_get_member/slot_item", UpdateHandler);
+			SubscribeResponse("api_req_hensei/change", UpdateHandler);
+			SubscribeResponse("api_req_hensei/preset_select", UpdateHandler);
+			SubscribeResponse("api_req_kaisou/slot_deprive", UpdateHandler);
+			SubscribeResponse("api_req_kaisou/slot_exchange_index", UpdateHandler);
+			SubscribeResponse("api_req_kaisou/powerup", UpdateHandler);
+			SubscribeResponse("api_req_kaisou/remodeling", UpdateHandler);
+			SubscribeResponse("api_req_hokyu/charge", UpdateHandler);
+			SubscribeResponse("api_req_nyukyo/start", UpdateHandler);
+			SubscribeResponse("api_req_mission/result", UpdateHandler);
 
 			// 遠征画面を開いた瞬間 (api_get_member/mission) のチェック警告
-			o["api_get_member/mission"].ResponseReceived += (apiname, data) =>
+			SubscribeResponse("api_get_member/mission", (apiname, data) =>
 			{
 				if (InvokeRequired)
 					BeginInvoke(new Action(CheckOnMissionScreenOpened));
 				else
 					CheckOnMissionScreenOpened();
-			};
+			});
 
 			// 遠征出発時 (api_req_mission/start) のチェック警告
-			o["api_req_mission/start"].RequestReceived += (apiname, data) =>
+			SubscribeRequest("api_req_mission/start", (apiname, data) =>
 			{
 				try
 				{
@@ -89,7 +106,7 @@ namespace ElectronicObserver.Window
 						CheckOnMissionStart(fleetId, missionId);
 				}
 				catch { }
-			};
+			});
 		}
 
 		private void FormExpeditionCheck_Load(object sender, EventArgs e)
