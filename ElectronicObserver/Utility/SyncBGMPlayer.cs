@@ -339,8 +339,8 @@ namespace ElectronicObserver.Utility
 
 				_mp.IsLoop = sh.IsLoop;
 				_mp.LoopHeadPosition = sh.LoopHeadPosition;
-				if (!Utility.Configuration.Config.Control.UseSystemVolume)
-					_mp.Volume = sh.Volume;
+				// 個別音量を常に反映する (UseSystemVolume が有効でもシーン別BGMの音量設定を無視しないため)
+				_mp.Volume = sh.Volume;
 				_mp.Play();
 
 				return true;

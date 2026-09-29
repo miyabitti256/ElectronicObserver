@@ -75,8 +75,8 @@ namespace ElectronicObserver.Notifier
 			set
 			{
 				_soundVolume = value;
-				if (!Utility.Configuration.Config.Control.UseSystemVolume)
-					Sound.Volume = _soundVolume;
+				// 個別音量を常に反映する (UseSystemVolume が有効でも通知音の個別音量設定を無視しないため)
+				Sound.Volume = _soundVolume;
 			}
 		}
 
@@ -150,7 +150,8 @@ namespace ElectronicObserver.Notifier
 
 		public void SetInitialVolume(int volume)
 		{
-			Sound.Volume = volume;
+			// アプリ全体の音量ではなく各通知の個別設定音量を維持するため、引数のシステム音量で上書きしない
+			Sound.Volume = _soundVolume;
 		}
 
 
