@@ -38,21 +38,10 @@
 			this.splitDetail = new System.Windows.Forms.SplitContainer();
 			this.groupSummary = new System.Windows.Forms.GroupBox();
 			this.tableSummary = new System.Windows.Forms.TableLayoutPanel();
-			this.labelTimeTitle = new System.Windows.Forms.Label();
 			this.labelTime = new System.Windows.Forms.Label();
-			this.labelCostTitle = new System.Windows.Forms.Label();
 			this.labelCost = new System.Windows.Forms.Label();
-			this.labelGSTypeTitle = new System.Windows.Forms.Label();
-			this.labelGSType = new System.Windows.Forms.Label();
-			this.labelGSRateTitle = new System.Windows.Forms.Label();
 			this.labelGSRate = new System.Windows.Forms.Label();
-			this.labelGSDetailTitle = new System.Windows.Forms.Label();
 			this.labelGSDetail = new System.Windows.Forms.Label();
-			this.labelGSDesc = new System.Windows.Forms.Label();
-			this.labelItemTitle = new System.Windows.Forms.Label();
-			this.labelItem = new System.Windows.Forms.Label();
-			this.labelRewardTitle = new System.Windows.Forms.Label();
-			this.labelReward = new System.Windows.Forms.Label();
 			this.groupConditions = new System.Windows.Forms.GroupBox();
 			this.gridConditions = new System.Windows.Forms.DataGridView();
 			this.colStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -106,6 +95,7 @@
 			// 
 			// tabDetail
 			// 
+			this.tabDetail.AutoScroll = true;
 			this.tabDetail.Controls.Add(this.splitDetail);
 			this.tabDetail.Controls.Add(this.panelControl);
 			this.tabDetail.Location = new System.Drawing.Point(4, 22);
@@ -120,13 +110,13 @@
 			// 
 			this.splitDetail.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.splitDetail.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-			this.splitDetail.Location = new System.Drawing.Point(3, 38);
+			this.splitDetail.IsSplitterFixed = true;
+			this.splitDetail.Location = new System.Drawing.Point(3, 55);
 			this.splitDetail.Name = "splitDetail";
 			this.splitDetail.Orientation = System.Windows.Forms.Orientation.Horizontal;
 			// 
 			// splitDetail.Panel1
 			// 
-			this.splitDetail.Panel1.AutoScroll = true;
 			this.splitDetail.Panel1.Controls.Add(this.groupSummary);
 			this.splitDetail.Panel1MinSize = 0;
 			// 
@@ -134,8 +124,8 @@
 			// 
 			this.splitDetail.Panel2.Controls.Add(this.groupConditions);
 			this.splitDetail.Panel2MinSize = 0;
-			this.splitDetail.Size = new System.Drawing.Size(626, 413);
-			this.splitDetail.SplitterDistance = 118;
+			this.splitDetail.Size = new System.Drawing.Size(626, 396);
+			this.splitDetail.SplitterDistance = 62;
 			this.splitDetail.TabIndex = 1;
 			// 
 			// groupSummary
@@ -146,232 +136,82 @@
 			this.groupSummary.Margin = new System.Windows.Forms.Padding(0);
 			this.groupSummary.Name = "groupSummary";
 			this.groupSummary.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-			this.groupSummary.Size = new System.Drawing.Size(626, 118);
+			this.groupSummary.Size = new System.Drawing.Size(626, 62);
 			this.groupSummary.TabIndex = 0;
 			this.groupSummary.TabStop = false;
 			this.groupSummary.Text = "遠征・大成功概要";
 			// 
 			// tableSummary
 			// 
-			this.tableSummary.ColumnCount = 4;
-			this.tableSummary.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-			this.tableSummary.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.tableSummary.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 42F));
-			this.tableSummary.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.tableSummary.Controls.Add(this.labelTimeTitle, 0, 0);
-			this.tableSummary.Controls.Add(this.labelTime, 1, 0);
-			this.tableSummary.Controls.Add(this.labelCostTitle, 2, 0);
-			this.tableSummary.Controls.Add(this.labelCost, 3, 0);
-			this.tableSummary.Controls.Add(this.labelGSTypeTitle, 0, 1);
-			this.tableSummary.Controls.Add(this.labelGSType, 1, 1);
-			this.tableSummary.Controls.Add(this.labelGSRateTitle, 2, 1);
-			this.tableSummary.Controls.Add(this.labelGSRate, 3, 1);
-			this.tableSummary.Controls.Add(this.labelGSDetailTitle, 0, 2);
-			this.tableSummary.Controls.Add(this.labelGSDetail, 1, 2);
-			this.tableSummary.Controls.Add(this.labelGSDesc, 0, 3);
-			this.tableSummary.Controls.Add(this.labelItemTitle, 0, 4);
-			this.tableSummary.Controls.Add(this.labelItem, 1, 4);
-			this.tableSummary.Controls.Add(this.labelRewardTitle, 2, 4);
-			this.tableSummary.Controls.Add(this.labelReward, 3, 4);
+			this.tableSummary.ColumnCount = 3;
+			this.tableSummary.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 28F));
+			this.tableSummary.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 34F));
+			this.tableSummary.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 38F));
+			this.tableSummary.Controls.Add(this.labelTime, 0, 0);
+			this.tableSummary.Controls.Add(this.labelCost, 1, 0);
+			this.tableSummary.Controls.Add(this.labelGSRate, 2, 0);
+			this.tableSummary.Controls.Add(this.labelGSDetail, 0, 1);
 			this.tableSummary.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tableSummary.Location = new System.Drawing.Point(3, 14);
 			this.tableSummary.Margin = new System.Windows.Forms.Padding(0);
 			this.tableSummary.Name = "tableSummary";
-			this.tableSummary.RowCount = 5;
-			this.tableSummary.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 19F));
+			this.tableSummary.RowCount = 2;
+			this.tableSummary.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
 			this.tableSummary.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
-			this.tableSummary.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 18F));
-			this.tableSummary.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 18F));
-			this.tableSummary.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.tableSummary.Size = new System.Drawing.Size(620, 102);
+			this.tableSummary.Size = new System.Drawing.Size(620, 46);
 			this.tableSummary.TabIndex = 0;
-			// 
-			// labelTimeTitle
-			// 
-			this.labelTimeTitle.AutoSize = true;
-			this.labelTimeTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelTimeTitle.Location = new System.Drawing.Point(1, 0);
-			this.labelTimeTitle.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelTimeTitle.Name = "labelTimeTitle";
-			this.labelTimeTitle.Size = new System.Drawing.Size(40, 19);
-			this.labelTimeTitle.TabIndex = 0;
-			this.labelTimeTitle.Text = "時間:";
-			this.labelTimeTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// labelTime
 			// 
 			this.labelTime.AutoSize = true;
 			this.labelTime.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelTime.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-			this.labelTime.Location = new System.Drawing.Point(43, 0);
-			this.labelTime.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+			this.labelTime.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.labelTime.Location = new System.Drawing.Point(2, 0);
+			this.labelTime.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
 			this.labelTime.Name = "labelTime";
-			this.labelTime.Size = new System.Drawing.Size(266, 19);
-			this.labelTime.TabIndex = 1;
-			this.labelTime.Text = "00:00";
+			this.labelTime.Size = new System.Drawing.Size(169, 20);
+			this.labelTime.TabIndex = 0;
+			this.labelTime.Text = "時間: 00:00";
 			this.labelTime.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelCostTitle
-			// 
-			this.labelCostTitle.AutoSize = true;
-			this.labelCostTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelCostTitle.Location = new System.Drawing.Point(311, 0);
-			this.labelCostTitle.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelCostTitle.Name = "labelCostTitle";
-			this.labelCostTitle.Size = new System.Drawing.Size(40, 19);
-			this.labelCostTitle.TabIndex = 2;
-			this.labelCostTitle.Text = "消費:";
-			this.labelCostTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// labelCost
 			// 
 			this.labelCost.AutoSize = true;
 			this.labelCost.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelCost.Location = new System.Drawing.Point(353, 0);
-			this.labelCost.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+			this.labelCost.Location = new System.Drawing.Point(175, 0);
+			this.labelCost.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
 			this.labelCost.Name = "labelCost";
-			this.labelCost.Size = new System.Drawing.Size(266, 19);
-			this.labelCost.TabIndex = 3;
-			this.labelCost.Text = "燃 0% / 弾 0%";
+			this.labelCost.Size = new System.Drawing.Size(206, 20);
+			this.labelCost.TabIndex = 1;
+			this.labelCost.Text = "消費: 燃 0% / 弾 0%";
 			this.labelCost.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelGSTypeTitle
-			// 
-			this.labelGSTypeTitle.AutoSize = true;
-			this.labelGSTypeTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelGSTypeTitle.Location = new System.Drawing.Point(1, 19);
-			this.labelGSTypeTitle.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelGSTypeTitle.Name = "labelGSTypeTitle";
-			this.labelGSTypeTitle.Size = new System.Drawing.Size(40, 22);
-			this.labelGSTypeTitle.TabIndex = 4;
-			this.labelGSTypeTitle.Text = "タイプ:";
-			this.labelGSTypeTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelGSType
-			// 
-			this.labelGSType.AutoSize = true;
-			this.labelGSType.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelGSType.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-			this.labelGSType.Location = new System.Drawing.Point(43, 19);
-			this.labelGSType.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelGSType.Name = "labelGSType";
-			this.labelGSType.Size = new System.Drawing.Size(266, 22);
-			this.labelGSType.TabIndex = 5;
-			this.labelGSType.Text = "通常型";
-			this.labelGSType.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelGSRateTitle
-			// 
-			this.labelGSRateTitle.AutoSize = true;
-			this.labelGSRateTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelGSRateTitle.Location = new System.Drawing.Point(311, 19);
-			this.labelGSRateTitle.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelGSRateTitle.Name = "labelGSRateTitle";
-			this.labelGSRateTitle.Size = new System.Drawing.Size(40, 22);
-			this.labelGSRateTitle.TabIndex = 6;
-			this.labelGSRateTitle.Text = "確率:";
-			this.labelGSRateTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// labelGSRate
 			// 
 			this.labelGSRate.AutoSize = true;
 			this.labelGSRate.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelGSRate.Font = new System.Drawing.Font("MS UI Gothic", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.labelGSRate.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
 			this.labelGSRate.ForeColor = System.Drawing.Color.Green;
-			this.labelGSRate.Location = new System.Drawing.Point(353, 19);
-			this.labelGSRate.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+			this.labelGSRate.Location = new System.Drawing.Point(385, 0);
+			this.labelGSRate.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
 			this.labelGSRate.Name = "labelGSRate";
-			this.labelGSRate.Size = new System.Drawing.Size(266, 22);
-			this.labelGSRate.TabIndex = 7;
-			this.labelGSRate.Text = "0.0%";
+			this.labelGSRate.Size = new System.Drawing.Size(233, 20);
+			this.labelGSRate.TabIndex = 2;
+			this.labelGSRate.Text = "大成功: 0.0% (通常型)";
 			this.labelGSRate.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelGSDetailTitle
-			// 
-			this.labelGSDetailTitle.AutoSize = true;
-			this.labelGSDetailTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelGSDetailTitle.Location = new System.Drawing.Point(1, 41);
-			this.labelGSDetailTitle.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelGSDetailTitle.Name = "labelGSDetailTitle";
-			this.labelGSDetailTitle.Size = new System.Drawing.Size(40, 18);
-			this.labelGSDetailTitle.TabIndex = 8;
-			this.labelGSDetailTitle.Text = "状況:";
-			this.labelGSDetailTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// labelGSDetail
 			// 
 			this.labelGSDetail.AutoSize = true;
 			this.tableSummary.SetColumnSpan(this.labelGSDetail, 3);
 			this.labelGSDetail.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelGSDetail.Location = new System.Drawing.Point(43, 41);
-			this.labelGSDetail.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
+			this.labelGSDetail.Location = new System.Drawing.Point(2, 20);
+			this.labelGSDetail.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
 			this.labelGSDetail.Name = "labelGSDetail";
-			this.labelGSDetail.Size = new System.Drawing.Size(576, 18);
-			this.labelGSDetail.TabIndex = 9;
-			this.labelGSDetail.Text = "キラ: 0/6 隻 | ドラム缶: 0 個 | 旗艦Lv: 1";
+			this.labelGSDetail.Size = new System.Drawing.Size(616, 26);
+			this.labelGSDetail.TabIndex = 3;
+			this.labelGSDetail.Text = "キラ: 0/6 隻 | ドラム缶: 0 個 | 旗艦: Lv1";
 			this.labelGSDetail.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelGSDesc
-			// 
-			this.labelGSDesc.AutoSize = true;
-			this.tableSummary.SetColumnSpan(this.labelGSDesc, 4);
-			this.labelGSDesc.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelGSDesc.ForeColor = System.Drawing.SystemColors.GrayText;
-			this.labelGSDesc.Location = new System.Drawing.Point(1, 59);
-			this.labelGSDesc.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelGSDesc.Name = "labelGSDesc";
-			this.labelGSDesc.Size = new System.Drawing.Size(618, 18);
-			this.labelGSDesc.TabIndex = 10;
-			this.labelGSDesc.Text = "※説明文";
-			this.labelGSDesc.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelItemTitle
-			// 
-			this.labelItemTitle.AutoSize = true;
-			this.labelItemTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelItemTitle.Location = new System.Drawing.Point(1, 77);
-			this.labelItemTitle.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelItemTitle.Name = "labelItemTitle";
-			this.labelItemTitle.Size = new System.Drawing.Size(40, 25);
-			this.labelItemTitle.TabIndex = 11;
-			this.labelItemTitle.Text = "帰投:";
-			this.labelItemTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelItem
-			// 
-			this.labelItem.AutoSize = true;
-			this.labelItem.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelItem.Location = new System.Drawing.Point(43, 77);
-			this.labelItem.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelItem.Name = "labelItem";
-			this.labelItem.Size = new System.Drawing.Size(266, 25);
-			this.labelItem.TabIndex = 12;
-			this.labelItem.Text = "-";
-			this.labelItem.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelRewardTitle
-			// 
-			this.labelRewardTitle.AutoSize = true;
-			this.labelRewardTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelRewardTitle.Location = new System.Drawing.Point(311, 77);
-			this.labelRewardTitle.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelRewardTitle.Name = "labelRewardTitle";
-			this.labelRewardTitle.Size = new System.Drawing.Size(40, 25);
-			this.labelRewardTitle.TabIndex = 13;
-			this.labelRewardTitle.Text = "説明:";
-			this.labelRewardTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// labelReward
-			// 
-			this.labelReward.AutoSize = true;
-			this.labelReward.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelReward.Location = new System.Drawing.Point(353, 77);
-			this.labelReward.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
-			this.labelReward.Name = "labelReward";
-			this.labelReward.Size = new System.Drawing.Size(266, 25);
-			this.labelReward.TabIndex = 14;
-			this.labelReward.Text = "-";
-			this.labelReward.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// groupConditions
 			// 
@@ -412,6 +252,7 @@
 			this.gridConditions.ReadOnly = true;
 			this.gridConditions.RowHeadersVisible = false;
 			this.gridConditions.RowTemplate.Height = 20;
+			this.gridConditions.ScrollBars = System.Windows.Forms.ScrollBars.Both;
 			this.gridConditions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.gridConditions.Size = new System.Drawing.Size(376, 395);
 			this.gridConditions.TabIndex = 0;
@@ -423,7 +264,7 @@
 			this.colStatus.HeaderText = "判定";
 			this.colStatus.Name = "colStatus";
 			this.colStatus.ReadOnly = true;
-			this.colStatus.Width = 28;
+			this.colStatus.Width = 36;
 			this.colStatus.Resizable = System.Windows.Forms.DataGridViewTriState.False;
 			// 
 			// colItemName
@@ -431,20 +272,20 @@
 			this.colItemName.HeaderText = "項目";
 			this.colItemName.Name = "colItemName";
 			this.colItemName.ReadOnly = true;
-			this.colItemName.Width = 72;
+			this.colItemName.Width = 80;
 			// 
 			// colRequirement
 			// 
 			this.colRequirement.HeaderText = "要求条件";
 			this.colRequirement.Name = "colRequirement";
 			this.colRequirement.ReadOnly = true;
-			this.colRequirement.Width = 82;
+			this.colRequirement.Width = 120;
 			// 
 			// colCurrent
 			// 
 			this.colCurrent.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
 			this.colCurrent.HeaderText = "艦隊の現在値";
-			this.colCurrent.MinimumWidth = 60;
+			this.colCurrent.MinimumWidth = 100;
 			this.colCurrent.Name = "colCurrent";
 			this.colCurrent.ReadOnly = true;
 			// 
@@ -461,19 +302,19 @@
 			this.panelControl.Dock = System.Windows.Forms.DockStyle.Top;
 			this.panelControl.Location = new System.Drawing.Point(3, 3);
 			this.panelControl.Name = "panelControl";
-			this.panelControl.Size = new System.Drawing.Size(626, 32);
+			this.panelControl.Size = new System.Drawing.Size(626, 52);
 			this.panelControl.TabIndex = 0;
 			this.panelControl.Resize += new System.EventHandler(this.panelControl_Resize);
 			// 
 			// checkAlert
 			// 
-			this.checkAlert.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.checkAlert.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
 			this.checkAlert.AutoSize = true;
 			this.checkAlert.Checked = true;
 			this.checkAlert.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.checkAlert.Location = new System.Drawing.Point(400, 9);
+			this.checkAlert.Location = new System.Drawing.Point(6, 30);
 			this.checkAlert.Name = "checkAlert";
-			this.checkAlert.Size = new System.Drawing.Size(136, 16);
+			this.checkAlert.Size = new System.Drawing.Size(148, 16);
 			this.checkAlert.TabIndex = 6;
 			this.checkAlert.Text = "遠征画面表示時に警告";
 			this.toolTip.SetToolTip(this.checkAlert, "遠征選択画面を開いた時、設定した遠征条件を満たしていない場合に警告します");
@@ -482,12 +323,12 @@
 			// 
 			// checkAlertSupply
 			// 
-			this.checkAlertSupply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.checkAlertSupply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
 			this.checkAlertSupply.AutoSize = true;
 			this.checkAlertSupply.Checked = false;
-			this.checkAlertSupply.Location = new System.Drawing.Point(542, 9);
+			this.checkAlertSupply.Location = new System.Drawing.Point(165, 30);
 			this.checkAlertSupply.Name = "checkAlertSupply";
-			this.checkAlertSupply.Size = new System.Drawing.Size(86, 16);
+			this.checkAlertSupply.Size = new System.Drawing.Size(98, 16);
 			this.checkAlertSupply.TabIndex = 7;
 			this.checkAlertSupply.Text = "未補給も警告";
 			this.toolTip.SetToolTip(this.checkAlertSupply, "燃料・弾薬が不足している場合も警告モーダルを表示します（OFFの場合、緊急補給を想定して編成条件不足のみ警告します）");
@@ -704,21 +545,10 @@
 		private System.Windows.Forms.DataGridViewTextBoxColumn colItemName;
 		private System.Windows.Forms.DataGridViewTextBoxColumn colRequirement;
 		private System.Windows.Forms.DataGridViewTextBoxColumn colCurrent;
-		private System.Windows.Forms.Label labelTimeTitle;
 		private System.Windows.Forms.Label labelTime;
-		private System.Windows.Forms.Label labelCostTitle;
 		private System.Windows.Forms.Label labelCost;
-		private System.Windows.Forms.Label labelRewardTitle;
-		private System.Windows.Forms.Label labelReward;
-		private System.Windows.Forms.Label labelItemTitle;
-		private System.Windows.Forms.Label labelItem;
-		private System.Windows.Forms.Label labelGSTypeTitle;
-		private System.Windows.Forms.Label labelGSType;
-		private System.Windows.Forms.Label labelGSRateTitle;
 		private System.Windows.Forms.Label labelGSRate;
-		private System.Windows.Forms.Label labelGSDetailTitle;
 		private System.Windows.Forms.Label labelGSDetail;
-		private System.Windows.Forms.Label labelGSDesc;
 		private System.Windows.Forms.DataGridView matrixGrid;
 		private System.Windows.Forms.DataGridViewTextBoxColumn matrixColID;
 		private System.Windows.Forms.DataGridViewTextBoxColumn matrixColName;

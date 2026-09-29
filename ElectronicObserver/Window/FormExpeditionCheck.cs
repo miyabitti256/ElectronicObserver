@@ -182,41 +182,21 @@ namespace ElectronicObserver.Window
 			{
 				if (splitDetail == null || tabControl.SelectedTab != tabDetail) return;
 
-				int w = tabDetail.ClientSize.Width;
-				int h = tabDetail.ClientSize.Height - panelControl.Height;
-				if (w <= 0 || h <= 0) return;
-
-				// 横幅が十分広い (>= 500px) かつ縦横比で横長の場合は左右分割、それ以外（基本的に小さい・細長いウィンドウ）は上下分割
-				if (w >= 500 && w > h * 1.2)
+				if (splitDetail.Orientation != Orientation.Horizontal)
 				{
-					if (splitDetail.Orientation != Orientation.Vertical)
-					{
-						splitDetail.Orientation = Orientation.Vertical;
-					}
-
-					int min = Math.Max(0, splitDetail.Panel1MinSize);
-					int max = splitDetail.Width - splitDetail.SplitterWidth - Math.Max(0, splitDetail.Panel2MinSize);
-					if (max > min)
-					{
-						int desiredDistance = Math.Min(240, Math.Max(180, (int)(w * 0.38)));
-						splitDetail.SplitterDistance = Math.Max(min, Math.Min(max, desiredDistance));
-					}
+					splitDetail.Orientation = Orientation.Horizontal;
 				}
-				else
-				{
-					if (splitDetail.Orientation != Orientation.Horizontal)
-					{
-						splitDetail.Orientation = Orientation.Horizontal;
-					}
 
-					int min = Math.Max(0, splitDetail.Panel1MinSize);
-					int max = splitDetail.Height - splitDetail.SplitterWidth - Math.Max(0, splitDetail.Panel2MinSize);
-					if (max > min)
-					{
-						// 上部の概要パネルは必要最小限 (115px 前後) に留め、下のチェックリストに画面領域を最大限配分する
-						int desiredDistance = Math.Min(125, Math.Max(95, (int)(h * 0.35)));
-						splitDetail.SplitterDistance = Math.Max(min, Math.Min(max, desiredDistance));
-					}
+				int h = tabDetail.ClientSize.Height - panelControl.Height;
+				if (h <= 0) return;
+
+				// 上部の概要パネルは 62px に固定し、残りの広大な画面領域をすべて要件チェックリストに配分
+				int desiredDistance = 62;
+				int min = Math.Max(0, splitDetail.Panel1MinSize);
+				int max = splitDetail.Height - splitDetail.SplitterWidth - Math.Max(0, splitDetail.Panel2MinSize);
+				if (max > min)
+				{
+					splitDetail.SplitterDistance = Math.Max(min, Math.Min(max, desiredDistance));
 				}
 			}
 			catch
@@ -235,59 +215,29 @@ namespace ElectronicObserver.Window
 
 			panelControl.SuspendLayout();
 
-			if (w >= 560)
-			{
-				// 1行配置
-				panelControl.Height = 32;
+			// 安定した2行配置（高さ 52px）
+			panelControl.Height = 52;
 
-				labelFleet.Location = new Point(4, 8);
-				comboFleet.Location = new Point(36, 5);
-				comboFleet.Width = 62;
+			// 1行目: [艦隊] [海域] [遠征]
+			labelFleet.Location = new Point(4, 7);
+			comboFleet.Location = new Point(36, 4);
+			comboFleet.Width = 62;
 
-				labelArea.Location = new Point(104, 8);
-				comboArea.Location = new Point(136, 5);
-				comboArea.Width = 85;
+			labelArea.Location = new Point(104, 7);
+			comboArea.Location = new Point(136, 4);
+			comboArea.Width = 85;
 
-				labelMission.Location = new Point(227, 8);
-				int missionLeft = 258;
-				int alertSupplyWidth = 95;
-				int alertWidth = 135;
-				int missionWidth = Math.Max(90, w - missionLeft - alertWidth - alertSupplyWidth - 15);
-				comboMission.Location = new Point(missionLeft, 5);
-				comboMission.Width = missionWidth;
+			labelMission.Location = new Point(227, 7);
+			int missionLeft = 258;
+			comboMission.Location = new Point(missionLeft, 4);
+			comboMission.Width = Math.Max(80, w - missionLeft - 6);
 
-				checkAlert.Location = new Point(w - alertWidth - alertSupplyWidth - 8, 8);
-				checkAlert.Size = new Size(alertWidth, 16);
+			// 2行目: [遠征画面表示時に警告] [未補給も警告]
+			checkAlert.Location = new Point(6, 30);
+			checkAlert.Size = new Size(148, 16);
 
-				checkAlertSupply.Location = new Point(w - alertSupplyWidth - 4, 8);
-				checkAlertSupply.Size = new Size(alertSupplyWidth, 16);
-			}
-			else
-			{
-				// 小さいウィンドウ用の2行配置
-				panelControl.Height = 52;
-
-				// 1行目: [艦隊] [海域] [遠征]
-				labelFleet.Location = new Point(3, 6);
-				comboFleet.Location = new Point(34, 3);
-				comboFleet.Width = 58;
-
-				labelArea.Location = new Point(96, 6);
-				comboArea.Location = new Point(127, 3);
-				comboArea.Width = 78;
-
-				labelMission.Location = new Point(210, 6);
-				int missionLeft = 241;
-				comboMission.Location = new Point(missionLeft, 3);
-				comboMission.Width = Math.Max(70, w - missionLeft - 4);
-
-				// 2行目: [遠征画面表示時に警告] [未補給も警告]
-				checkAlert.Location = new Point(4, 29);
-				checkAlert.Size = new Size(135, 16);
-
-				checkAlertSupply.Location = new Point(144, 29);
-				checkAlertSupply.Size = new Size(95, 16);
-			}
+			checkAlertSupply.Location = new Point(165, 30);
+			checkAlertSupply.Size = new Size(100, 16);
 
 			panelControl.ResumeLayout();
 		}
@@ -439,28 +389,30 @@ namespace ElectronicObserver.Window
 			var fleet = db.Fleet[fleetId];
 
 			// 1. 遠征基本情報
-			labelTime.Text = $"{mission.Time / 60:D2}:{mission.Time % 60:D2}";
-			labelCost.Text = $"燃 {(int)(mission.Fuel * 100)}% / 弾 {(int)(mission.Ammo * 100)}%";
-			labelReward.Text = string.IsNullOrEmpty(mission.Detail) ? "-" : mission.Detail;
-			labelItem.Text = mission.Cancelable ? "強制帰投可能" : "強制帰投不可";
+			labelTime.Text = $"時間: {mission.Time / 60:D2}:{mission.Time % 60:D2}";
+			labelCost.Text = $"消費: 燃 {(int)(mission.Fuel * 100)}% / 弾 {(int)(mission.Ammo * 100)}%";
 
 			// 2. 大成功情報
 			var gsType = ExpeditionHelper.GetGreatSuccessType(missionId);
+			string gsTypeStr;
 			switch (gsType)
 			{
 				case ExpeditionGreatSuccessType.Regular:
-					labelGSType.Text = "通常型 (全員キラ必須)";
+					gsTypeStr = "通常型";
 					break;
 				case ExpeditionGreatSuccessType.Drum:
-					labelGSType.Text = "ドラム缶型 (缶ボーナス)";
+					gsTypeStr = "ドラム缶型";
 					break;
 				case ExpeditionGreatSuccessType.Level:
-					labelGSType.Text = "旗艦Lv型 (Lvボーナス)";
+					gsTypeStr = "旗艦Lv型";
+					break;
+				default:
+					gsTypeStr = "通常型";
 					break;
 			}
 
 			double gsRate = ExpeditionHelper.CalculateGreatSuccessRate(fleet, missionId);
-			labelGSRate.Text = $"{gsRate:P1}";
+			labelGSRate.Text = $"大成功: {gsRate:P1} ({gsTypeStr})";
 			labelGSRate.ForeColor = gsRate > 0.8 ? Color.Green : (gsRate > 0.4 ? Color.DarkGoldenrod : Color.Firebrick);
 
 			int sparkleCount = fleet?.MembersInstance.Count(s => s != null && s.Condition > 49) ?? 0;
@@ -468,8 +420,13 @@ namespace ElectronicObserver.Window
 			int drumCount = fleet?.MembersInstance.Where(s => s != null).Sum(s => s.AllSlotInstance.Count(e => e != null && e.MasterEquipment.CategoryType == EquipmentTypes.TransportContainer)) ?? 0;
 			int flagshipLv = fleet?.MembersInstance.FirstOrDefault(s => s != null)?.Level ?? 0;
 
-			labelGSDetail.Text = $"キラ: {sparkleCount}/{totalShips} 隻 | 缶: {drumCount} 個 | 旗艦: Lv{flagshipLv}";
-			labelGSDesc.Text = ExpeditionHelper.GetGreatSuccessConditionDescription(missionId);
+			string gsDesc = ExpeditionHelper.GetGreatSuccessConditionDescription(missionId);
+			labelGSDetail.Text = $"キラ: {sparkleCount}/{totalShips} 隻 ｜ 缶: {drumCount} 個 ｜ 旗艦: Lv{flagshipLv} ｜ {gsDesc}";
+
+			// 概要パネルへのツールチップ設定（詳細説明や帰投可否をツールチップで確認可能に）
+			string cancelStr = mission.Cancelable ? "強制帰投可能" : "強制帰投不可";
+			string descStr = string.IsNullOrEmpty(mission.Detail) ? "" : "\r\n\r\n" + mission.Detail.Replace("<br>", "\r\n");
+			toolTip.SetToolTip(groupSummary, $"【[{mission.DisplayID}] {mission.Name}】\r\n時間: {mission.Time / 60:D2}:{mission.Time % 60:D2} ｜ 消費: 燃{(int)(mission.Fuel * 100)}%/弾{(int)(mission.Ammo * 100)}% ｜ {cancelStr}{descStr}");
 
 			// 3. 成功要件詳細リスト
 			gridConditions.SuspendLayout();
