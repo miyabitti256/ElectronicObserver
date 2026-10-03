@@ -11,10 +11,16 @@ namespace Browser.CefOp
 	public static class AdmiralNameMaskHelper
 	{
 		/// <summary>
-		/// 一覧めいかー改二互換の母港右上領域の基準 dHash (0x00988e66, 0x71888e46)
+		/// 母港右上領域（鋼材・ボーキサイトアイコン）の基準 dHash
 		/// </summary>
-		private static readonly uint BasisDHash0 = 0x00988e66;
-		private static readonly uint BasisDHash1 = 0x71888e46;
+		private static readonly uint BasisDHash0 = 0x4A049A2F;
+		private static readonly uint BasisDHash1 = 0x15928B9F;
+
+		/// <summary>
+		/// 一覧めいかー改二の旧環境向け互換基準 dHash
+		/// </summary>
+		private static readonly uint LegacyBasisDHash0 = 0x00988e66;
+		private static readonly uint LegacyBasisDHash1 = 0x71888e46;
 
 		public static Bitmap ProcessScreenShot(
 			Bitmap original,
@@ -139,30 +145,27 @@ namespace Browser.CefOp
 					using (var g = Graphics.FromImage(thumb))
 					{
 						g.InterpolationMode = InterpolationMode.Bilinear;
+						g.PixelOffsetMode = PixelOffsetMode.Half;
 						g.DrawImage(image, new Rectangle(0, 0, 8, 8), new Rectangle(sx, sy, sw, sh), GraphicsUnit.Pixel);
 					}
 
-					// 64ピクセル (8x8) をボトムアップ順で走査して dHash を計算
-					// HSP の VRAM は Windows DIB と同様に下から上 (y=7 down to 0, x=0 to 7)
+					// 64ピクセル (8x8) の輝度値を計算
 					int[] lums = new int[64];
 					int idx = 0;
-					for (int y = 7; y >= 0; y--)
+					for (int y = 0; y < 8; y++)
 					{
 						for (int x = 0; x < 8; x++)
 						{
 							Color c = thumb.GetPixel(x, y);
-							// lum = ((B * 18 + G * 158 + R * 80) >> 8) & 0xFF
 							lums[idx++] = ((c.B * 18 + c.G * 158 + c.R * 80) >> 8) & 0xFF;
 						}
 					}
 
 					uint hash0 = 0;
 					uint hash1 = 0;
-					int pLum = lums[0];
-					for (int i = 0; i < 64; i++)
+					for (int i = 0; i < 63; i++)
 					{
-						int nextLum = (i + 1 < 64) ? lums[i + 1] : lums[i];
-						bool bit = pLum > nextLum;
+						bool bit = lums[i] > lums[i + 1];
 						if (i < 32)
 						{
 							hash0 = (hash0 << 1) | (bit ? 1u : 0u);
@@ -171,11 +174,15 @@ namespace Browser.CefOp
 						{
 							hash1 = (hash1 << 1) | (bit ? 1u : 0u);
 						}
-						pLum = nextLum;
 					}
 
+					// Why not legacy hash only: Chromium描画環境ではレンダリング差により旧ハッシュと乖離するため現行基準ハッシュを優先判定する
 					int dist = PopCount(hash0 ^ BasisDHash0) + PopCount(hash1 ^ BasisDHash1);
-					return dist < 16;
+					if (dist < 16)
+						return true;
+
+					int legacyDist = PopCount(hash0 ^ LegacyBasisDHash0) + PopCount(hash1 ^ LegacyBasisDHash1);
+					return legacyDist < 16;
 				}
 			}
 			catch

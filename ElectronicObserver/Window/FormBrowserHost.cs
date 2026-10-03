@@ -88,6 +88,8 @@ namespace ElectronicObserver.Window
 			InitializeComponent();
 
 			Icon = ResourceManager.ImageToIcon(ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormBrowser]);
+
+			Utility.Configuration.Instance.ConfigurationChanged += ConfigurationChanged;
 		}
 
 		public void InitializeApiCompleted()
@@ -133,7 +135,7 @@ namespace ElectronicObserver.Window
 		internal void ConfigurationChanged()
 		{
 			Font = Utility.Configuration.Config.UI.MainFont;
-			Browser.AsyncRemoteRun(() => Browser.Proxy.ConfigurationChanged(Configuration));
+			Browser?.AsyncRemoteRun(() => Browser.Proxy.ConfigurationChanged(Configuration));
 		}
 
 
