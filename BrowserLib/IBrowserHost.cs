@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -147,6 +147,30 @@ namespace BrowserLib
 		/// </summary>
 		[DataMember]
 		public bool AvoidTwitterDeterioration { get; set; }
+
+		/// <summary>
+		/// スクリーンショットにおいて提督名を隠すか
+		/// </summary>
+		[DataMember]
+		public bool MaskAdmiralName { get; set; }
+
+		/// <summary>
+		/// スクリーンショットで提督名を隠す際、司令部Lvは隠さず残すか
+		/// </summary>
+		[DataMember]
+		public bool KeepHQLevel { get; set; }
+
+		/// <summary>
+		/// 提督名を隠す方式 (0=モザイク, 1=黒塗り, 2=切り取り)
+		/// </summary>
+		[DataMember]
+		public int AdmiralNameMaskMode { get; set; }
+
+		/// <summary>
+		/// 母港画面であると判定された時のみ提督名を隠すか
+		/// </summary>
+		[DataMember]
+		public bool MaskOnlyOnHomeport { get; set; }
 
 		/// <summary>
 		/// ツールメニューの配置

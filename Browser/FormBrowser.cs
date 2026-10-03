@@ -1,4 +1,4 @@
-﻿using Browser.CefOp;
+using Browser.CefOp;
 using BrowserLib;
 using CefSharp;
 using CefSharp.WinForms;
@@ -1094,6 +1094,13 @@ namespace Browser
 
 				if (image == null)
 					return;
+
+				image = AdmiralNameMaskHelper.ProcessScreenShot(
+					image,
+					Configuration.MaskAdmiralName,
+					Configuration.KeepHQLevel,
+					Configuration.AdmiralNameMaskMode,
+					Configuration.MaskOnlyOnHomeport);
 
 				if (is32bpp)
 				{

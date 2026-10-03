@@ -1,4 +1,4 @@
-﻿using ElectronicObserver.Notifier;
+using ElectronicObserver.Notifier;
 using ElectronicObserver.Observer;
 using ElectronicObserver.Resource;
 using ElectronicObserver.Utility;
@@ -81,6 +81,7 @@ namespace ElectronicObserver.Window.Dialog
 			Connection_SaveDataPath_TextChanged(null, new EventArgs());
 			Debug_EnableDebugMenu_CheckedChanged(null, new EventArgs());
 			FormFleet_FixShipNameWidth_CheckedChanged(null, new EventArgs());
+			FormBrowser_ScreenShot_MaskAdmiralName_CheckedChanged(null, new EventArgs());
 		}
 
 
@@ -502,6 +503,10 @@ namespace ElectronicObserver.Window.Dialog
 			FormBrowser_PreserveDrawingBuffer.Checked = config.FormBrowser.PreserveDrawingBuffer;
 			FormBrowser_ForceColorProfile.Checked = config.FormBrowser.ForceColorProfile;
 			FormBrowser_SavesBrowserLog.Checked = config.FormBrowser.SavesBrowserLog;
+			FormBrowser_ScreenShot_MaskAdmiralName.Checked = config.FormBrowser.MaskAdmiralName;
+			FormBrowser_ScreenShot_KeepHQLevel.Checked = config.FormBrowser.KeepHQLevel;
+			FormBrowser_ScreenShot_MaskMode.SelectedIndex = Math.Max(0, Math.Min(2, config.FormBrowser.AdmiralNameMaskMode));
+			FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked = config.FormBrowser.MaskOnlyOnHomeport;
 
 			if (!config.FormBrowser.IsToolMenuVisible)
 				FormBrowser_ToolMenuDockStyle.SelectedIndex = 4;
@@ -739,6 +744,10 @@ namespace ElectronicObserver.Window.Dialog
 			config.FormBrowser.PreserveDrawingBuffer = FormBrowser_PreserveDrawingBuffer.Checked;
 			config.FormBrowser.ForceColorProfile = FormBrowser_ForceColorProfile.Checked;
 			config.FormBrowser.SavesBrowserLog = FormBrowser_SavesBrowserLog.Checked;
+			config.FormBrowser.MaskAdmiralName = FormBrowser_ScreenShot_MaskAdmiralName.Checked;
+			config.FormBrowser.KeepHQLevel = FormBrowser_ScreenShot_KeepHQLevel.Checked;
+			config.FormBrowser.AdmiralNameMaskMode = FormBrowser_ScreenShot_MaskMode.SelectedIndex;
+			config.FormBrowser.MaskOnlyOnHomeport = FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked;
 			if (FormBrowser_ToolMenuDockStyle.SelectedIndex == 4)
 			{
 				config.FormBrowser.IsToolMenuVisible = false;
@@ -894,6 +903,21 @@ namespace ElectronicObserver.Window.Dialog
 		private void FormBrowser_ScreenShotFormat_JPEG_CheckedChanged(object sender, EventArgs e)
 		{
 			FormBrowser_ScreenShotFormat_AvoidTwitterDeterioration.Enabled = false;
+		}
+
+		private void FormBrowser_ScreenShot_MaskAdmiralName_CheckedChanged(object sender, EventArgs e)
+		{
+			bool enabled = FormBrowser_ScreenShot_MaskAdmiralName.Checked;
+			FormBrowser_ScreenShot_KeepHQLevel.Enabled = enabled && FormBrowser_ScreenShot_MaskMode.SelectedIndex != 2;
+			FormBrowser_ScreenShot_MaskOnlyOnHomeport.Enabled = enabled;
+			labelScreenShot_MaskMode.Enabled = enabled;
+			FormBrowser_ScreenShot_MaskMode.Enabled = enabled;
+		}
+
+		private void FormBrowser_ScreenShot_MaskMode_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			// 切り取り (index 2) の場合は上部ヘッダーごと切り取られるため「司令部Lvは隠さない」を無効化
+			FormBrowser_ScreenShot_KeepHQLevel.Enabled = FormBrowser_ScreenShot_MaskAdmiralName.Checked && FormBrowser_ScreenShot_MaskMode.SelectedIndex != 2;
 		}
 
 
