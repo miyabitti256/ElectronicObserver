@@ -1,4 +1,4 @@
-﻿using ElectronicObserver.Resource.Record;
+using ElectronicObserver.Resource.Record;
 using ElectronicObserver.Utility.Mathematics;
 using ElectronicObserver.Utility.Storage;
 using System;
@@ -1029,6 +1029,26 @@ namespace ElectronicObserver.Utility
 				public bool AvoidTwitterDeterioration { get; set; }
 
 				/// <summary>
+				/// スクリーンショットにおいて提督名を隠すか
+				/// </summary>
+				public bool MaskAdmiralName { get; set; }
+
+				/// <summary>
+				/// スクリーンショットで提督名を隠す際、司令部Lvは隠さず残すか
+				/// </summary>
+				public bool KeepHQLevel { get; set; }
+
+				/// <summary>
+				/// 提督名を隠す方式 (0=モザイク, 1=黒塗り, 2=切り取り)
+				/// </summary>
+				public int AdmiralNameMaskMode { get; set; }
+
+				/// <summary>
+				/// 母港画面であると判定された時のみ提督名を隠すか
+				/// </summary>
+				public bool MaskOnlyOnHomeport { get; set; }
+
+				/// <summary>
 				/// ツールメニューの配置
 				/// </summary>
 				public DockStyle ToolMenuDockStyle { get; set; }
@@ -1078,6 +1098,10 @@ namespace ElectronicObserver.Utility
 					AppliesStyleSheet = true;
 					IsDMMreloadDialogDestroyable = false;
 					AvoidTwitterDeterioration = true;
+					MaskAdmiralName = false;
+					KeepHQLevel = false;
+					AdmiralNameMaskMode = 0;
+					MaskOnlyOnHomeport = true;
 					ToolMenuDockStyle = DockStyle.Top;
 					IsToolMenuVisible = true;
 					ConfirmAtRefresh = true;

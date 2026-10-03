@@ -1,4 +1,4 @@
-﻿using BrowserLib;
+using BrowserLib;
 using ElectronicObserver.Observer;
 using ElectronicObserver.Resource;
 using ElectronicObserver.Utility.Mathematics;
@@ -235,6 +235,10 @@ namespace ElectronicObserver.Window
 				config.AppliesStyleSheet = c.AppliesStyleSheet;
 				config.IsDMMreloadDialogDestroyable = c.IsDMMreloadDialogDestroyable;
 				config.AvoidTwitterDeterioration = c.AvoidTwitterDeterioration;
+				config.MaskAdmiralName = c.MaskAdmiralName;
+				config.KeepHQLevel = c.KeepHQLevel;
+				config.AdmiralNameMaskMode = c.AdmiralNameMaskMode;
+				config.MaskOnlyOnHomeport = c.MaskOnlyOnHomeport;
 				config.ToolMenuDockStyle = (int)c.ToolMenuDockStyle;
 				config.IsToolMenuVisible = c.IsToolMenuVisible;
 				config.ConfirmAtRefresh = c.ConfirmAtRefresh;
@@ -264,6 +268,10 @@ namespace ElectronicObserver.Window
 			c.AppliesStyleSheet = config.AppliesStyleSheet;
 			c.IsDMMreloadDialogDestroyable = config.IsDMMreloadDialogDestroyable;
 			c.AvoidTwitterDeterioration = config.AvoidTwitterDeterioration;
+			c.MaskAdmiralName = config.MaskAdmiralName;
+			c.KeepHQLevel = config.KeepHQLevel;
+			c.AdmiralNameMaskMode = config.AdmiralNameMaskMode;
+			c.MaskOnlyOnHomeport = config.MaskOnlyOnHomeport;
 			c.ToolMenuDockStyle = (DockStyle)config.ToolMenuDockStyle;
 			c.IsToolMenuVisible = config.IsToolMenuVisible;
 			c.ConfirmAtRefresh = config.ConfirmAtRefresh;
