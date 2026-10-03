@@ -63,12 +63,12 @@ namespace Browser.CefOp
 				(int)Math.Round(w * (240.0 / 1200.0)),
 				(int)Math.Round(h * (36.0 / 720.0)));
 
-			// 司令部Lv矩形: (510/1200 ~ 655/1200, Y=0 ~ 36/720)
-			// Why not include '艦隊司令部' text: '司令部Lvを隠す'の意図に合わせ、固定ラベルを残して個人情報であるLvと階級のみを自然に隠すため
+			// 司令部Lv矩形: (548/1200 ~ 655/1200, Y=0 ~ 36/720)
+			// Why not include '艦隊司令部Lv.' text: 固定ラベルである青緑文字を残し、可変の個人情報である数字(Lv)と[階級]のみを自然に隠すため
 			var lvRect = new Rectangle(
-				(int)Math.Round(w * (510.0 / 1200.0)),
+				(int)Math.Round(w * (548.0 / 1200.0)),
 				0,
-				(int)Math.Round(w * (145.0 / 1200.0)),
+				(int)Math.Round(w * (107.0 / 1200.0)),
 				(int)Math.Round(h * (36.0 / 720.0)));
 
 			if (maskMode == 1) // 背景色塗りつぶし（黒塗り）
