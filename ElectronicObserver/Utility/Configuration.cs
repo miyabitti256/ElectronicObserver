@@ -1346,6 +1346,34 @@ namespace ElectronicObserver.Utility
 			[DataMember]
 			public ConfigFormEquipmentGroup FormEquipmentGroup { get; private set; }
 
+			/// <summary>
+			/// [遠征可否]ウィンドウの設定を扱います。
+			/// </summary>
+			public class ConfigFormExpeditionCheck : ConfigPartBase
+			{
+				/// <summary>
+				/// 遠征画面表示時に警告ダイアログを表示するか
+				/// </summary>
+				public bool AlertOnMissionScreenOpened { get; set; }
+
+				/// <summary>
+				/// 燃料・弾薬の未補給も警告モーダルの対象に含めるか (false の場合、未補給のみの艦隊はモーダル警告を表示しない)
+				/// </summary>
+				public bool AlertSupplyDepleted { get; set; }
+
+				public ConfigFormExpeditionCheck()
+				{
+					AlertOnMissionScreenOpened = true;
+					AlertSupplyDepleted = false;
+				}
+			}
+
+			/// <summary>
+			/// [遠征可否]ウィンドウ
+			/// </summary>
+			[DataMember]
+			public ConfigFormExpeditionCheck FormExpeditionCheck { get; private set; }
+
 
 			/// <summary>
 			/// 各[通知]ウィンドウの設定を扱います。
@@ -1712,6 +1740,7 @@ namespace ElectronicObserver.Utility
 				FormBaseAirCorps = new ConfigFormBaseAirCorps();
 				FormAccessTime = new ConfigFormAccessTime();
 				FormEquipmentGroup = new ConfigFormEquipmentGroup();
+				FormExpeditionCheck = new ConfigFormExpeditionCheck();
 
 				NotifierExpedition = new ConfigNotifierBase();
 				NotifierConstruction = new ConfigNotifierBase();

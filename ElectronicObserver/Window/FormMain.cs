@@ -69,6 +69,9 @@ namespace ElectronicObserver.Window
 		public FormSenka fSenka;
 		public FormAccessTime fAccessTime;
 		public FormEquipmentGroup fEquipmentGroup;
+		public FormExpeditionCheck fExpeditionCheck;
+
+		private bool _layoutLoadFailed = false;
 
 		#endregion
 
@@ -141,6 +144,7 @@ namespace ElectronicObserver.Window
 			StripMenu_View_Json.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormJson];
 			StripMenu_View_FleetPreset.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormFleetPreset];
 			StripMenu_View_AccessTime.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormAccessTimer];
+			StripMenu_View_ExpeditionCheck.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormExpeditionCheck];
 
 			StripMenu_Tool_EquipmentList.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormEquipmentList];
 			StripMenu_Tool_DropRecord.Image = ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormDropRecord];
@@ -200,6 +204,7 @@ namespace ElectronicObserver.Window
 			SubForms.Add(fSenka = new FormSenka(this));
 			SubForms.Add(fAccessTime = new FormAccessTime(this));
 			SubForms.Add(fEquipmentGroup = new FormEquipmentGroup(this));
+			SubForms.Add(fExpeditionCheck = new FormExpeditionCheck(this));
 
 			ConfigurationChanged();     //設定から初期化
 
@@ -533,6 +538,8 @@ namespace ElectronicObserver.Window
 					return fSenka;
 				case "AccessTime":
 					return fAccessTime;
+				case "ExpeditionCheck":
+					return fExpeditionCheck;
 				default:
 					if (persistString.StartsWith("ShipGroup"))
 					{
@@ -595,7 +602,7 @@ namespace ElectronicObserver.Window
 			}
 			catch (Exception ex)
 			{
-
+				_layoutLoadFailed = true;
 				Utility.ErrorReporter.SendErrorReport(ex, "サブウィンドウ レイアウトの復元に失敗しました。");
 			}
 
@@ -665,7 +672,7 @@ namespace ElectronicObserver.Window
 			}
 			catch (Exception ex)
 			{
-
+				_layoutLoadFailed = true;
 				Utility.ErrorReporter.SendErrorReport(ex, "ウィンドウ レイアウトの復元に失敗しました。");
 
 			}
@@ -682,6 +689,17 @@ namespace ElectronicObserver.Window
 
 			try
 			{
+				if (_layoutLoadFailed)
+				{
+					Utility.Logger.Add(3, "レイアウト復元時にエラーが発生していたため、既存レイアウトの上書き保存をスキップしました。");
+					return;
+				}
+
+				if (MainDockPanel.Contents.Count == 0)
+				{
+					Utility.Logger.Add(3, "ウィンドウが表示されていないため、レイアウトの保存をスキップしました。");
+					return;
+				}
 
 				CreateParentDirectories(path);
 
@@ -1417,7 +1435,12 @@ namespace ElectronicObserver.Window
 
 		private void StripMenu_Tool_ExpeditionCheck_Click(object sender, EventArgs e)
 		{
-			new Dialog.DialogExpeditionCheck().Show(this);
+			fExpeditionCheck.Show(MainDockPanel);
+		}
+
+		private void StripMenu_View_ExpeditionCheck_Click(object sender, EventArgs e)
+		{
+			fExpeditionCheck.Show(MainDockPanel);
 		}
 
 

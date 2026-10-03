@@ -70,6 +70,7 @@ namespace ElectronicObserver.Observer
 				new kcsapi.api_req_kousyou.destroyitem2(),
 				new kcsapi.api_req_member.get_practice_enemyinfo(),
 				new kcsapi.api_get_member.picture_book(),
+				new kcsapi.api_get_member.mission(),
 				new kcsapi.api_req_mission.start(),
 				new kcsapi.api_get_member.ship3(),
 				new kcsapi.api_req_kaisou.powerup(),
