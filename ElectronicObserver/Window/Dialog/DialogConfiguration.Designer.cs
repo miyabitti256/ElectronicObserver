@@ -2395,7 +2395,7 @@
 			// FormBrowser_SavesBrowserLog
 			// 
 			this.FormBrowser_SavesBrowserLog.AutoSize = true;
-			this.FormBrowser_SavesBrowserLog.Location = new System.Drawing.Point(6, 274);
+			this.FormBrowser_SavesBrowserLog.Location = new System.Drawing.Point(282, 257);
 			this.FormBrowser_SavesBrowserLog.Name = "FormBrowser_SavesBrowserLog";
 			this.FormBrowser_SavesBrowserLog.Size = new System.Drawing.Size(180, 19);
 			this.FormBrowser_SavesBrowserLog.TabIndex = 17;
@@ -2407,7 +2407,7 @@
 			// FormBrowser_ForceColorProfile
 			// 
 			this.FormBrowser_ForceColorProfile.AutoSize = true;
-			this.FormBrowser_ForceColorProfile.Location = new System.Drawing.Point(6, 249);
+			this.FormBrowser_ForceColorProfile.Location = new System.Drawing.Point(282, 232);
 			this.FormBrowser_ForceColorProfile.Name = "FormBrowser_ForceColorProfile";
 			this.FormBrowser_ForceColorProfile.Size = new System.Drawing.Size(216, 19);
 			this.FormBrowser_ForceColorProfile.TabIndex = 16;
@@ -2418,7 +2418,7 @@
 			// FormBrowser_PreserveDrawingBuffer
 			// 
 			this.FormBrowser_PreserveDrawingBuffer.AutoSize = true;
-			this.FormBrowser_PreserveDrawingBuffer.Location = new System.Drawing.Point(6, 224);
+			this.FormBrowser_PreserveDrawingBuffer.Location = new System.Drawing.Point(6, 257);
 			this.FormBrowser_PreserveDrawingBuffer.Name = "FormBrowser_PreserveDrawingBuffer";
 			this.FormBrowser_PreserveDrawingBuffer.Size = new System.Drawing.Size(145, 19);
 			this.FormBrowser_PreserveDrawingBuffer.TabIndex = 15;
@@ -2431,7 +2431,7 @@
 			// 
 			this.label20.AutoSize = true;
 			this.label20.ForeColor = System.Drawing.Color.Red;
-			this.label20.Location = new System.Drawing.Point(9, 308);
+			this.label20.Location = new System.Drawing.Point(9, 290);
 			this.label20.Name = "label20";
 			this.label20.Size = new System.Drawing.Size(241, 15);
 			this.label20.TabIndex = 14;
@@ -2440,7 +2440,7 @@
 			// FormBrowser_HardwareAccelerationEnabled
 			// 
 			this.FormBrowser_HardwareAccelerationEnabled.AutoSize = true;
-			this.FormBrowser_HardwareAccelerationEnabled.Location = new System.Drawing.Point(6, 199);
+			this.FormBrowser_HardwareAccelerationEnabled.Location = new System.Drawing.Point(6, 232);
 			this.FormBrowser_HardwareAccelerationEnabled.Name = "FormBrowser_HardwareAccelerationEnabled";
 			this.FormBrowser_HardwareAccelerationEnabled.Size = new System.Drawing.Size(230, 19);
 			this.FormBrowser_HardwareAccelerationEnabled.TabIndex = 13;
