@@ -63,6 +63,10 @@ namespace Browser.CefOp
 				return original;
 			}
 
+			// クラシック表示 (Level.) かモダン表示 (Lv.) かを自動検出
+			// Why not inject JS: 画像自体から瞬時に判定でき、非同期JS呼び出しによる遅延やゲーム側オブジェクト変更のリスクを完全に排除できるため
+			bool isClassic = IsClassicHeader(original);
+
 			// 提督名矩形: (170/1200 ~ 410/1200, Y=0 ~ 36/720)
 			var nameRect = new Rectangle(
 				(int)Math.Round(w * (170.0 / 1200.0)),
@@ -70,11 +74,14 @@ namespace Browser.CefOp
 				(int)Math.Round(w * (240.0 / 1200.0)),
 				(int)Math.Round(h * (36.0 / 720.0)));
 
-			// 司令部Lv矩形: (548/1200 ~ 655/1200, Y=14/720 ~ 34/720)
-			// Why not include '艦隊司令部Lv.' text: 固定ラベルである青緑文字を残し、可変の個人情報である数字(Lv)と[階級]のみを自然に隠すため
+			// 司令部Lv矩形:
+			// モダン: (548/1200 ~ 655/1200, Y=14/720 ~ 34/720) -> "艦隊司令部Lv."
+			// クラシック: (598/1200 ~ 705/1200, Y=14/720 ~ 34/720) -> "艦隊司令部Level." (+50pxシフト)
+			// Why not include '艦隊司令部Lv.' / 'Level.' text: 固定ラベルである青緑文字を残し、可変の個人情報である数字(Lv)と[階級]のみを自然に隠すため
 			// Why not Y=0 ~ 36: 司令部Lv上部(Y=0~13)には金色の装飾ラインが存在し、Y=0から塗りつぶすと装飾が削れてしまうため、文字領域(Y=14~34)の高さのみを対象とする
+			double lvXRatio = isClassic ? (598.0 / 1200.0) : (548.0 / 1200.0);
 			var lvRect = new Rectangle(
-				(int)Math.Round(w * (548.0 / 1200.0)),
+				(int)Math.Round(w * lvXRatio),
 				(int)Math.Round(h * (14.0 / 720.0)),
 				(int)Math.Round(w * (107.0 / 1200.0)),
 				(int)Math.Round(h * (20.0 / 720.0)));
@@ -299,6 +306,50 @@ namespace Browser.CefOp
 			int g = (maxKey >> 8) & 0xFF;
 			int b = maxKey & 0xFF;
 			return Color.FromArgb(r, g, b);
+		}
+
+		/// <summary>
+		/// ヘッダーの司令部表示がクラシック表示 (艦隊司令部Level.) かモダン表示 (艦隊司令部Lv.) かを判定します。
+		/// X: 560..585, Y: 15..25 にシアン(青緑)文字が存在するかどうかで判定します。
+		/// </summary>
+		private static bool IsClassicHeader(Bitmap image)
+		{
+			if (image == null) return false;
+
+			int w = image.Width;
+			int h = image.Height;
+
+			int xStart = (int)Math.Round(w * (560.0 / 1200.0));
+			int xEnd = (int)Math.Round(w * (585.0 / 1200.0));
+			int yStart = (int)Math.Round(h * (15.0 / 720.0));
+			int yEnd = (int)Math.Round(h * (25.0 / 720.0));
+
+			if (xEnd > w || yEnd > h || xStart < 0 || yStart < 0)
+				return false;
+
+			try
+			{
+				int cyanCount = 0;
+				for (int y = yStart; y <= yEnd; y++)
+				{
+					for (int x = xStart; x <= xEnd; x++)
+					{
+						Color c = image.GetPixel(x, y);
+						if (c.G > 60 && c.B > 60 && c.G > c.R * 1.15 && c.B > c.R * 1.15)
+						{
+							cyanCount++;
+							if (cyanCount >= 5)
+								return true;
+						}
+					}
+				}
+			}
+			catch
+			{
+				// Why not throw: 画像解析エラーで例外を伝播させない
+			}
+
+			return false;
 		}
 	}
 }
