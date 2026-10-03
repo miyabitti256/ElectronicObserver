@@ -12,16 +12,23 @@ namespace Browser.CefOp
 	public static class AdmiralNameMaskHelper
 	{
 		/// <summary>
-		/// 母港右上領域（鋼材・ボーキサイトアイコン）の基準 dHash
+		/// 母港右上領域（鋼材・ボーキサイトアイコン）の各UIスキン基準 dHash テーブル
 		/// </summary>
-		private static readonly uint BasisDHash0 = 0x4A049A2F;
-		private static readonly uint BasisDHash1 = 0x15928B9F;
+		private static readonly uint[] BasisHashes0 = new uint[]
+		{
+			0x4A049A2F, // クラシック (黒)
+			0x2E449AAA, // メタル (グレー)
+			0xD36598A9, // プレーン (白)
+			0x00988e66, // 旧環境互換
+		};
 
-		/// <summary>
-		/// 一覧めいかー改二の旧環境向け互換基準 dHash
-		/// </summary>
-		private static readonly uint LegacyBasisDHash0 = 0x00988e66;
-		private static readonly uint LegacyBasisDHash1 = 0x71888e46;
+		private static readonly uint[] BasisHashes1 = new uint[]
+		{
+			0x15928B9F,
+			0x39924B5C,
+			0x489ACB5C,
+			0x71888e46,
+		};
 
 		public static Bitmap ProcessScreenShot(
 			Bitmap original,
@@ -63,25 +70,33 @@ namespace Browser.CefOp
 				(int)Math.Round(w * (240.0 / 1200.0)),
 				(int)Math.Round(h * (36.0 / 720.0)));
 
-			// 司令部Lv矩形: (548/1200 ~ 655/1200, Y=0 ~ 36/720)
+			// 司令部Lv矩形: (548/1200 ~ 655/1200, Y=14/720 ~ 34/720)
 			// Why not include '艦隊司令部Lv.' text: 固定ラベルである青緑文字を残し、可変の個人情報である数字(Lv)と[階級]のみを自然に隠すため
+			// Why not Y=0 ~ 36: 司令部Lv上部(Y=0~13)には金色の装飾ラインが存在し、Y=0から塗りつぶすと装飾が削れてしまうため、文字領域(Y=14~34)の高さのみを対象とする
 			var lvRect = new Rectangle(
 				(int)Math.Round(w * (548.0 / 1200.0)),
-				0,
+				(int)Math.Round(h * (14.0 / 720.0)),
 				(int)Math.Round(w * (107.0 / 1200.0)),
-				(int)Math.Round(h * (36.0 / 720.0)));
+				(int)Math.Round(h * (20.0 / 720.0)));
 
 			if (maskMode == 1) // 背景色塗りつぶし（黒塗り）
 			{
 				// Why not fixed black: 艦これのUIスキンやヘッダー背景色(#202020等)と完全一致させて塗り境界を目立たせないため動的サンプリング色を使用する
-				Color bgColor = GetDominantColor(original, nameRect);
+				// Why not share bg color: スキンやグラデーションによって提督名枠と司令部枠で背景色が微妙に異なる場合があるため個別にサンプリングする
+				Color bgName = GetDominantColor(original, nameRect);
 				using (var g = Graphics.FromImage(original))
-				using (var brush = new SolidBrush(bgColor))
 				{
-					g.FillRectangle(brush, nameRect);
+					using (var brush = new SolidBrush(bgName))
+					{
+						g.FillRectangle(brush, nameRect);
+					}
 					if (!keepHQLevel)
 					{
-						g.FillRectangle(brush, lvRect);
+						Color bgLv = GetDominantColor(original, lvRect);
+						using (var brush = new SolidBrush(bgLv))
+						{
+							g.FillRectangle(brush, lvRect);
+						}
 					}
 				}
 			}
@@ -125,7 +140,7 @@ namespace Browser.CefOp
 		}
 
 		/// <summary>
-		/// 母港画面であるかどうかを dHash (Difference Hash) により判定します。
+		/// 母港画面であるかどうかを dHash (Difference Hash) および青緑ラベル検出により判定します。
 		/// </summary>
 		public static bool IsHomeport(Bitmap image)
 		{
@@ -140,61 +155,94 @@ namespace Browser.CefOp
 			int sw = (int)Math.Round(w * (30.0 / 1200.0));
 			int sh = (int)Math.Round(h * (50.0 / 720.0));
 
-			if (sx + sw > w || sy + sh > h || sw <= 0 || sh <= 0)
-				return false;
+			if (sx + sw <= w && sy + sh <= h && sw > 0 && sh > 0)
+			{
+				try
+				{
+					using (var thumb = new Bitmap(8, 8, PixelFormat.Format32bppArgb))
+					{
+						using (var g = Graphics.FromImage(thumb))
+						{
+							g.InterpolationMode = InterpolationMode.Bilinear;
+							g.PixelOffsetMode = PixelOffsetMode.Half;
+							g.DrawImage(image, new Rectangle(0, 0, 8, 8), new Rectangle(sx, sy, sw, sh), GraphicsUnit.Pixel);
+						}
 
+						// 64ピクセル (8x8) の輝度値を計算
+						int[] lums = new int[64];
+						int idx = 0;
+						for (int y = 0; y < 8; y++)
+						{
+							for (int x = 0; x < 8; x++)
+							{
+								Color c = thumb.GetPixel(x, y);
+								lums[idx++] = ((c.B * 18 + c.G * 158 + c.R * 80) >> 8) & 0xFF;
+							}
+						}
+
+						uint hash0 = 0;
+						uint hash1 = 0;
+						for (int i = 0; i < 63; i++)
+						{
+							bool bit = lums[i] > lums[i + 1];
+							if (i < 32)
+							{
+								hash0 = (hash0 << 1) | (bit ? 1u : 0u);
+							}
+							else
+							{
+								hash1 = (hash1 << 1) | (bit ? 1u : 0u);
+							}
+						}
+
+						// Why not single skin hash: UIスキン(黒・グレー・白)によって資材アイコン領域の描画が異なるため各スキンのハッシュと比較する
+						for (int i = 0; i < BasisHashes0.Length; i++)
+						{
+							int dist = PopCount(hash0 ^ BasisHashes0[i]) + PopCount(hash1 ^ BasisHashes1[i]);
+							if (dist < 12)
+								return true;
+						}
+					}
+				}
+				catch
+				{
+					// Why not throw: 画像解析のエラーでスクショ撮影自体を失敗させないため安全にフォールバックへ進む
+				}
+			}
+
+			// スキン非依存フォールバック: 「艦隊司令部Lv.」の青緑文字(シアン色)検出 (X: 420..540, Y: 15..25)
+			// Why not dHash only: 新規スキン追加時や僅かなレンダリング差異時でも固定ヘッダーの青緑文字で確実に判定するため
 			try
 			{
-				using (var thumb = new Bitmap(8, 8, PixelFormat.Format32bppArgb))
+				int cyanCount = 0;
+				int xStart = (int)Math.Round(w * (420.0 / 1200.0));
+				int xEnd = (int)Math.Round(w * (540.0 / 1200.0));
+				int yStart = (int)Math.Round(h * (15.0 / 720.0));
+				int yEnd = (int)Math.Round(h * (25.0 / 720.0));
+
+				if (xEnd <= w && yEnd <= h && xStart < xEnd && yStart < yEnd)
 				{
-					using (var g = Graphics.FromImage(thumb))
+					for (int y = yStart; y <= yEnd; y++)
 					{
-						g.InterpolationMode = InterpolationMode.Bilinear;
-						g.PixelOffsetMode = PixelOffsetMode.Half;
-						g.DrawImage(image, new Rectangle(0, 0, 8, 8), new Rectangle(sx, sy, sw, sh), GraphicsUnit.Pixel);
-					}
-
-					// 64ピクセル (8x8) の輝度値を計算
-					int[] lums = new int[64];
-					int idx = 0;
-					for (int y = 0; y < 8; y++)
-					{
-						for (int x = 0; x < 8; x++)
+						for (int x = xStart; x <= xEnd; x++)
 						{
-							Color c = thumb.GetPixel(x, y);
-							lums[idx++] = ((c.B * 18 + c.G * 158 + c.R * 80) >> 8) & 0xFF;
+							Color c = image.GetPixel(x, y);
+							if (c.G > 60 && c.B > 60 && c.G > c.R * 1.15 && c.B > c.R * 1.15)
+							{
+								cyanCount++;
+								if (cyanCount >= 10)
+									return true;
+							}
 						}
 					}
-
-					uint hash0 = 0;
-					uint hash1 = 0;
-					for (int i = 0; i < 63; i++)
-					{
-						bool bit = lums[i] > lums[i + 1];
-						if (i < 32)
-						{
-							hash0 = (hash0 << 1) | (bit ? 1u : 0u);
-						}
-						else
-						{
-							hash1 = (hash1 << 1) | (bit ? 1u : 0u);
-						}
-					}
-
-					// Why not legacy hash only: Chromium描画環境ではレンダリング差により旧ハッシュと乖離するため現行基準ハッシュを優先判定する
-					int dist = PopCount(hash0 ^ BasisDHash0) + PopCount(hash1 ^ BasisDHash1);
-					if (dist < 16)
-						return true;
-
-					int legacyDist = PopCount(hash0 ^ LegacyBasisDHash0) + PopCount(hash1 ^ LegacyBasisDHash1);
-					return legacyDist < 16;
 				}
 			}
 			catch
 			{
-				// Why not throw: 画像解析のエラーでスクショ撮影自体を失敗させないため安全にfalseを返す
-				return false;
+				// Why not throw: 画像解析エラーで例外を伝播させない
 			}
+
+			return false;
 		}
 
 		private static int PopCount(uint x)
