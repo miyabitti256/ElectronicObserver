@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -55,28 +56,32 @@ namespace Browser.CefOp
 				return original;
 			}
 
-			// 提督名矩形: (14.125%, 0%, 19.375%, 5.0%)
+			// 提督名矩形: (170/1200 ~ 410/1200, Y=0 ~ 36/720)
 			var nameRect = new Rectangle(
-				(int)Math.Round(0.14125 * w),
+				(int)Math.Round(w * (170.0 / 1200.0)),
 				0,
-				(int)Math.Round(0.19375 * w),
-				(int)Math.Round(0.05 * h));
+				(int)Math.Round(w * (240.0 / 1200.0)),
+				(int)Math.Round(h * (36.0 / 720.0)));
 
-			// 司令部Lv矩形: (39.5%, 2.083%, 22.0%, 3.333%)
+			// 司令部Lv矩形: (510/1200 ~ 655/1200, Y=0 ~ 36/720)
+			// Why not include '艦隊司令部' text: '司令部Lvを隠す'の意図に合わせ、固定ラベルを残して個人情報であるLvと階級のみを自然に隠すため
 			var lvRect = new Rectangle(
-				(int)Math.Round(0.395 * w),
-				(int)Math.Round(0.0208333333 * h + 0.9),
-				(int)Math.Round(0.22 * w),
-				(int)Math.Round(0.0333333333 * h + 0.5));
+				(int)Math.Round(w * (510.0 / 1200.0)),
+				0,
+				(int)Math.Round(w * (145.0 / 1200.0)),
+				(int)Math.Round(h * (36.0 / 720.0)));
 
-			if (maskMode == 1) // 黒塗り
+			if (maskMode == 1) // 背景色塗りつぶし（黒塗り）
 			{
+				// Why not fixed black: 艦これのUIスキンやヘッダー背景色(#202020等)と完全一致させて塗り境界を目立たせないため動的サンプリング色を使用する
+				Color bgColor = GetDominantColor(original, nameRect);
 				using (var g = Graphics.FromImage(original))
+				using (var brush = new SolidBrush(bgColor))
 				{
-					g.FillRectangle(Brushes.Black, nameRect);
+					g.FillRectangle(brush, nameRect);
 					if (!keepHQLevel)
 					{
-						g.FillRectangle(Brushes.Black, lvRect);
+						g.FillRectangle(brush, lvRect);
 					}
 				}
 			}
@@ -199,6 +204,53 @@ namespace Browser.CefOp
 			x = (x & 0x0f0f0f0f) + ((x >> 4) & 0x0f0f0f0f);
 			x = (x & 0x00ff00ff) + ((x >> 8) & 0x00ff00ff);
 			return (int)((x & 0x0000ffff) + ((x >> 16) & 0x0000ffff));
+		}
+
+		/// <summary>
+		/// 指定領域の最頻色（ヘッダー背景色）をサンプリングします。
+		/// UIスキンによって背景色が異なる場合でも周囲に馴染む色を動的に取得します。
+		/// </summary>
+		private static Color GetDominantColor(Bitmap bmp, Rectangle rect)
+		{
+			rect.Intersect(new Rectangle(0, 0, bmp.Width, bmp.Height));
+			if (rect.Width <= 0 || rect.Height <= 0)
+				return Color.FromArgb(32, 32, 32); // Why not throw: フォールバックとして標準の #202020 を返す
+
+			var dict = new Dictionary<int, int>();
+
+			for (int y = rect.Top; y < rect.Bottom; y++)
+			{
+				for (int x = rect.Left; x < rect.Right; x++)
+				{
+					Color c = bmp.GetPixel(x, y);
+					int qR = (c.R / 4) * 4;
+					int qG = (c.G / 4) * 4;
+					int qB = (c.B / 4) * 4;
+					int key = (qR << 16) | (qG << 8) | qB;
+
+					dict.TryGetValue(key, out int count);
+					dict[key] = count + 1;
+				}
+			}
+
+			int maxKey = 0;
+			int maxCount = -1;
+			foreach (var kvp in dict)
+			{
+				if (kvp.Value > maxCount)
+				{
+					maxCount = kvp.Value;
+					maxKey = kvp.Key;
+				}
+			}
+
+			if (maxCount <= 0)
+				return Color.FromArgb(32, 32, 32);
+
+			int r = (maxKey >> 16) & 0xFF;
+			int g = (maxKey >> 8) & 0xFF;
+			int b = maxKey & 0xFF;
+			return Color.FromArgb(r, g, b);
 		}
 	}
 }
