@@ -930,6 +930,51 @@ namespace ElectronicObserver.Window.Dialog
 			return cats;
 		}
 
+		private string GetImprovementEquipsString(ShipDataMaster ship)
+		{
+			if (ship == null)
+				return "";
+
+			var weekNames = new[]
+			{
+				"日曜日",
+				"月曜日",
+				"火曜日",
+				"水曜日",
+				"木曜日",
+				"金曜日",
+				"土曜日",
+			};
+
+			var lines = new List<string>(7);
+
+			for (int day = 0; day < 7; day++)
+			{
+				var ids = ship.EquipImprovement != null && ship.EquipImprovement.Count > day
+					? ship.EquipImprovement[day]
+					: null;
+
+				string equips;
+				if (ids == null || ids.Count == 0)
+				{
+					equips = "(なし)";
+				}
+				else
+				{
+					equips = string.Join(" / ", ids.Select(id =>
+					{
+						if (KCDatabase.Instance.MasterEquipments.TryGetValue(id, out var eq) && eq != null)
+							return $"[{eq.EquipmentID}] {eq.Name}";
+
+						return $"ID:{id}";
+					}));
+				}
+
+				lines.Add($"{weekNames[day]}：{equips}");
+			}
+
+			return string.Join("\r\n", lines);
+		}
 
 		private void ParameterLevel_ValueChanged(object sender, EventArgs e)
 		{
@@ -1774,7 +1819,101 @@ namespace ElectronicObserver.Window.Dialog
 			MessageBox.Show(result, "出現海域検索", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
+		private void StripMenu_View_ShowImprovementEquips_Click(object sender, EventArgs e)
+		{
+			var ship = KCDatabase.Instance.MasterShips[_shipID];
+			if (ship == null)
+			{
+				System.Media.SystemSounds.Exclamation.Play();
+				return;
+			}
 
+			string text = GetImprovementEquipsString(ship);
+
+			if (string.IsNullOrEmpty(text))
+				text = "改修装備情報はありません。";
+
+			using (var dialog = new Form())
+			using (var panel = new FlowLayoutPanel())
+			using (var button = new Button())
+			{
+				dialog.Text = "改修を担当する特別装備";
+				dialog.StartPosition = FormStartPosition.CenterParent;
+				dialog.FormBorderStyle = FormBorderStyle.FixedDialog;
+				dialog.MinimizeBox = false;
+				dialog.MaximizeBox = false;
+				dialog.ShowInTaskbar = false;
+				dialog.Icon = this.Icon;
+				dialog.Font = this.Font;
+				dialog.BackColor = SystemColors.Control;
+
+				panel.FlowDirection = FlowDirection.TopDown;
+				panel.WrapContents = false;
+				panel.AutoSize = true;
+				panel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+				panel.Location = new Point(12, 12);
+				panel.Margin = Padding.Empty;
+				panel.Padding = Padding.Empty;
+				panel.BackColor = dialog.BackColor;
+
+				var lines = text.Replace("\r\n", "\n").Split('\n');
+				int maxWidth = 0;
+
+				foreach (string line in lines)
+				{
+					Size size = TextRenderer.MeasureText(
+						line.Length == 0 ? " " : line,
+						dialog.Font,
+						new Size(int.MaxValue, int.MaxValue),
+						TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine);
+
+					if (size.Width > maxWidth)
+						maxWidth = size.Width;
+				}
+
+				int textWidth = Math.Min(Math.Max(260, maxWidth + 4), 1200);
+
+				foreach (string line in lines)
+				{
+					var label = new Label
+					{
+						AutoSize = false,
+						Width = textWidth,
+						Height = TextRenderer.MeasureText(
+							line.Length == 0 ? " " : line,
+							dialog.Font,
+							new Size(int.MaxValue, int.MaxValue),
+							TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine).Height + 6,
+						Text = line,
+						Font = dialog.Font,
+						BackColor = dialog.BackColor,
+						ForeColor = SystemColors.ControlText,
+						Margin = Padding.Empty,
+						Padding = new Padding(0, 3, 0, 3),
+						TextAlign = ContentAlignment.MiddleLeft
+					};
+
+					panel.Controls.Add(label);
+				}
+
+				button.Text = "OK";
+				button.DialogResult = DialogResult.OK;
+				button.Size = new Size(75, 23);
+
+				dialog.AcceptButton = button;
+				dialog.CancelButton = button;
+
+				dialog.Controls.Add(panel);
+				dialog.Controls.Add(button);
+
+				button.Location = new Point(panel.Left + panel.Width - button.Width, panel.Bottom + 12);
+				dialog.ClientSize = new Size(panel.Right + 12, button.Bottom + 12);
+
+				dialog.Shown += (s, ev) => button.Focus();
+
+				dialog.ShowDialog(this);
+			}
+		}
 
 		private void ShipBanner_MouseClick(object sender, MouseEventArgs e)
 		{
