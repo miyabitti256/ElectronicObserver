@@ -126,6 +126,28 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
+		public async Task DownloadAsync_RefreshesTheChecksumsFileOfAnOlderVersion()
+		{
+			// 前のバージョンの checksums.txt が残っている状態を作る。
+			// バージョンが違ってもサイズが同じことがあるので、中身を見ないと区別できない
+			Fixture older = CreateFixture("4.7.2-20261017");
+			Fixture fixture = CreateFixture("4.7.3-20261018");
+			Assert.Equal(older.Checksums.Length, fixture.Checksums.Length);
+
+			File.WriteAllText(Path.Combine(_directory, UpdateLogic.ChecksumsAssetName), older.Checksums);
+
+			var source = new StubReleaseSource(fixture);
+			var downloader = new UpdateDownloader(source, _directory);
+
+			bool result = await downloader.DownloadAsync(fixture.Release);
+
+			Assert.True(result);
+			Assert.Equal(UpdateDownloadStatus.Ready, downloader.Status);
+			Assert.Contains(UpdateLogic.ChecksumsAssetName, source.DownloadedFileNames);
+			Assert.Equal(fixture.Checksums, File.ReadAllText(Path.Combine(_directory, UpdateLogic.ChecksumsAssetName)));
+		}
+
+		[Fact]
 		public async Task DownloadAsync_RemovesPackagesOfOlderVersions()
 		{
 			Fixture fixture = CreateFixture("4.7.3-20261018");

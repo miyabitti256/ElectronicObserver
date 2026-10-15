@@ -1,4 +1,4 @@
-using ElectronicObserver.Update;
+﻿using ElectronicObserver.Update;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -112,7 +112,9 @@ namespace ElectronicObserver.Utility
 
 				string checksumsPath = Path.Combine(_downloadDirectory, UpdateLogic.ChecksumsAssetName);
 
-				if (!UpdateLogic.IsDownloadedFileComplete(checksumsPath, checksumsAsset.Size))
+				// 前のバージョンのチェックサムファイルが残っていることがあるので、
+				// 中身が今回の配布 zip のものでなければ取り直す
+				if (!UpdateLogic.CanReuseChecksumsFile(checksumsPath, zipAsset.Name, checksumsAsset.Size))
 				{
 					if (File.Exists(checksumsPath)) File.Delete(checksumsPath);
 					await _source.DownloadFileAsync(checksumsAsset.DownloadUrl, checksumsPath).ConfigureAwait(false);

@@ -295,6 +295,40 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
+		public void CanReuseChecksumsFile_RequiresTheEntryForThePackage()
+		{
+			string directory = CreateTempDirectory();
+
+			try
+			{
+				string fileName = "ElectronicObserver-4.7.3-20261018.zip";
+				string path = Path.Combine(directory, UpdateLogic.ChecksumsAssetName);
+				string text = Hash + "  ElectronicObserver-4.7.2-20261017.zip\n";
+
+				File.WriteAllText(path, text);
+				long size = new FileInfo(path).Length;
+
+				// 別のバージョンのハッシュしか載っていないので使えない
+				Assert.False(UpdateLogic.CanReuseChecksumsFile(path, fileName, size));
+
+				File.WriteAllText(path, text + Hash + "  " + fileName + "\n");
+
+				// サイズが合っていても中身が違えば使わないので、サイズを指定して確認する
+				Assert.False(UpdateLogic.CanReuseChecksumsFile(path, fileName, size));
+				Assert.True(UpdateLogic.CanReuseChecksumsFile(path, fileName, new FileInfo(path).Length));
+
+				// 壊れている / 無い場合は使わない
+				File.WriteAllText(path, "こわれています\n");
+				Assert.False(UpdateLogic.CanReuseChecksumsFile(path, fileName, 0));
+				Assert.False(UpdateLogic.CanReuseChecksumsFile(Path.Combine(directory, "missing.txt"), fileName, 0));
+			}
+			finally
+			{
+				Directory.Delete(directory, true);
+			}
+		}
+
+		[Fact]
 		public void GetObsoleteZipPaths_ReturnsOnlyOtherPackages()
 		{
 			string directory = CreateTempDirectory();

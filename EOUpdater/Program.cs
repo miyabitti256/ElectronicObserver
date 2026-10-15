@@ -87,7 +87,7 @@ namespace EOUpdater
 				string zipPath = Path.Combine(downloadDirectory, zipAsset.Name);
 				string checksumsPath = Path.Combine(downloadDirectory, UpdateLogic.ChecksumsAssetName);
 
-				await DownloadIfNeededAsync(source, checksumsAsset, checksumsPath);
+				await DownloadIfNeededAsync(source, checksumsAsset, checksumsPath, zipAsset.Name);
 				await DownloadIfNeededAsync(source, zipAsset, zipPath);
 
 				// ダウンロードした zip を checksums.txt の SHA-256 で検証する
@@ -159,10 +159,16 @@ namespace EOUpdater
 			return directory;
 		}
 
-		private static async Task DownloadIfNeededAsync(IReleaseSource source, ReleaseAsset asset, string destinationPath)
+		private static async Task DownloadIfNeededAsync(IReleaseSource source, ReleaseAsset asset, string destinationPath, string checksumsFileName = null)
 		{
-			// 本体がバックグラウンドでダウンロード済みの場合など、前回のダウンロードを再利用する
-			if (UpdateLogic.IsDownloadedFileComplete(destinationPath, asset.Size))
+			// 本体がバックグラウンドでダウンロード済みの場合など、前回のダウンロードを再利用する。
+			// チェックサムファイルは、中身が対象の配布ファイルのものでなければ使えない
+			// (バージョンが違ってもサイズが同じことがある)。
+			bool reusable = checksumsFileName != null
+				? UpdateLogic.CanReuseChecksumsFile(destinationPath, checksumsFileName, asset.Size)
+				: UpdateLogic.IsDownloadedFileComplete(destinationPath, asset.Size);
+
+			if (reusable)
 			{
 				Console.WriteLine($"ダウンロード済みのファイルを使用します: {asset.Name}");
 				return;
