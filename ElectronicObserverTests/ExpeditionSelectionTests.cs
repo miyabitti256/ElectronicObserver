@@ -57,5 +57,19 @@ namespace ElectronicObserverTests
 		{
 			Assert.Equal(expected, ExpeditionSelection.SanitizeTabIndex(saved, tabCount));
 		}
+
+		[Theory]
+		[InlineData(0, 0)]     // 0% は「警告しない」として有効
+		[InlineData(80, 80)]
+		[InlineData(100, 100)]
+		[InlineData(-1, 100)]  // 範囲外は既定値
+		[InlineData(101, 100)]
+		[InlineData(int.MinValue, 100)]
+		[InlineData(int.MaxValue, 100)]
+		public void SanitizeGreatSuccessRateThreshold_FallsBackToTheDefault(int saved, int expected)
+		{
+			Assert.Equal(expected, ExpeditionSelection.SanitizeGreatSuccessRateThreshold(saved));
+			Assert.Equal(100, ExpeditionSelection.DefaultGreatSuccessRateThreshold);
+		}
 	}
 }

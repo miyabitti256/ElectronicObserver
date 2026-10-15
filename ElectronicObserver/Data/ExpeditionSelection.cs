@@ -50,5 +50,18 @@ namespace ElectronicObserver.Data
 		{
 			return (saved >= 0 && saved < tabCount) ? saved : 0;
 		}
+
+		/// <summary>
+		/// 大成功の警告閾値を検証し、範囲外 (0〜100 の外) は既定 (100%) にフォールバックします。
+		/// </summary>
+		public static int SanitizeGreatSuccessRateThreshold(int saved)
+		{
+			return (saved >= 0 && saved <= 100) ? saved : DefaultGreatSuccessRateThreshold;
+		}
+
+		/// <summary>
+		/// 大成功の警告閾値の既定値 (%)。
+		/// </summary>
+		public const int DefaultGreatSuccessRateThreshold = 100;
 	}
 }

@@ -51,6 +51,10 @@
 			this.panelControl = new System.Windows.Forms.Panel();
 			this.checkAlert = new System.Windows.Forms.CheckBox();
 			this.checkAlertSupply = new System.Windows.Forms.CheckBox();
+			this.checkAlertGreatSuccess = new System.Windows.Forms.CheckBox();
+			this.labelGreatSuccessRate = new System.Windows.Forms.Label();
+			this.numGreatSuccessThreshold = new System.Windows.Forms.NumericUpDown();
+			this.labelGreatSuccessPercent = new System.Windows.Forms.Label();
 			this.comboMission = new System.Windows.Forms.ComboBox();
 			this.labelMission = new System.Windows.Forms.Label();
 			this.comboArea = new System.Windows.Forms.ComboBox();
@@ -78,6 +82,7 @@
 			this.groupConditions.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.gridConditions)).BeginInit();
 			this.panelControl.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.numGreatSuccessThreshold)).BeginInit();
 			this.tabMatrix.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.matrixGrid)).BeginInit();
 			this.SuspendLayout();
@@ -291,6 +296,10 @@
 			// 
 			// panelControl
 			// 
+			this.panelControl.Controls.Add(this.checkAlertGreatSuccess);
+			this.panelControl.Controls.Add(this.labelGreatSuccessRate);
+			this.panelControl.Controls.Add(this.numGreatSuccessThreshold);
+			this.panelControl.Controls.Add(this.labelGreatSuccessPercent);
 			this.panelControl.Controls.Add(this.checkAlertSupply);
 			this.panelControl.Controls.Add(this.checkAlert);
 			this.panelControl.Controls.Add(this.comboMission);
@@ -302,7 +311,7 @@
 			this.panelControl.Dock = System.Windows.Forms.DockStyle.Top;
 			this.panelControl.Location = new System.Drawing.Point(3, 3);
 			this.panelControl.Name = "panelControl";
-			this.panelControl.Size = new System.Drawing.Size(626, 52);
+			this.panelControl.Size = new System.Drawing.Size(626, 74);
 			this.panelControl.TabIndex = 0;
 			this.panelControl.Resize += new System.EventHandler(this.panelControl_Resize);
 			// 
@@ -334,6 +343,51 @@
 			this.toolTip.SetToolTip(this.checkAlertSupply, "燃料・弾薬が不足している場合も警告モーダルを表示します（OFFの場合、緊急補給を想定して編成条件不足のみ警告します）");
 			this.checkAlertSupply.UseVisualStyleBackColor = true;
 			this.checkAlertSupply.CheckedChanged += new System.EventHandler(this.checkAlertSupply_CheckedChanged);
+			// 
+			// checkAlertGreatSuccess
+			// 
+			this.checkAlertGreatSuccess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+			this.checkAlertGreatSuccess.AutoSize = true;
+			this.checkAlertGreatSuccess.Checked = false;
+			this.checkAlertGreatSuccess.Location = new System.Drawing.Point(6, 52);
+			this.checkAlertGreatSuccess.Name = "checkAlertGreatSuccess";
+			this.checkAlertGreatSuccess.Size = new System.Drawing.Size(170, 16);
+			this.checkAlertGreatSuccess.TabIndex = 8;
+			this.checkAlertGreatSuccess.Text = "大成功しない場合も警告";
+			this.toolTip.SetToolTip(this.checkAlertGreatSuccess, "遠征選択画面を開いた時と出発時に、大成功率が右の閾値を下回る艦隊 (＝大成功しない可能性がある艦隊) を警告します");
+			this.checkAlertGreatSuccess.UseVisualStyleBackColor = true;
+			this.checkAlertGreatSuccess.CheckedChanged += new System.EventHandler(this.checkAlertGreatSuccess_CheckedChanged);
+			// 
+			// labelGreatSuccessRate
+			// 
+			this.labelGreatSuccessRate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+			this.labelGreatSuccessRate.AutoSize = true;
+			this.labelGreatSuccessRate.Location = new System.Drawing.Point(180, 55);
+			this.labelGreatSuccessRate.Name = "labelGreatSuccessRate";
+			this.labelGreatSuccessRate.Size = new System.Drawing.Size(66, 16);
+			this.labelGreatSuccessRate.Text = "大成功率が";
+			// 
+			// numGreatSuccessThreshold
+			// 
+			this.numGreatSuccessThreshold.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+			this.numGreatSuccessThreshold.Location = new System.Drawing.Point(250, 51);
+			this.numGreatSuccessThreshold.Maximum = new decimal(new int[] { 100, 0, 0, 0});
+			this.numGreatSuccessThreshold.Minimum = new decimal(new int[] { 0, 0, 0, 0});
+			this.numGreatSuccessThreshold.Name = "numGreatSuccessThreshold";
+			this.numGreatSuccessThreshold.Size = new System.Drawing.Size(50, 19);
+			this.numGreatSuccessThreshold.TabIndex = 9;
+			this.numGreatSuccessThreshold.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+			this.numGreatSuccessThreshold.Value = new decimal(new int[] { 100, 0, 0, 0});
+			this.numGreatSuccessThreshold.ValueChanged += new System.EventHandler(this.numGreatSuccessThreshold_ValueChanged);
+			// 
+			// labelGreatSuccessPercent
+			// 
+			this.labelGreatSuccessPercent.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+			this.labelGreatSuccessPercent.AutoSize = true;
+			this.labelGreatSuccessPercent.Location = new System.Drawing.Point(305, 55);
+			this.labelGreatSuccessPercent.Name = "labelGreatSuccessPercent";
+			this.labelGreatSuccessPercent.Size = new System.Drawing.Size(56, 16);
+			this.labelGreatSuccessPercent.Text = "% 未満";
 			// 
 			// comboMission
 			// 
@@ -514,6 +568,7 @@
 			this.tableSummary.PerformLayout();
 			this.groupConditions.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.gridConditions)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.numGreatSuccessThreshold)).EndInit();
 			this.panelControl.ResumeLayout(false);
 			this.panelControl.PerformLayout();
 			this.tabMatrix.ResumeLayout(false);
@@ -536,6 +591,10 @@
 		private System.Windows.Forms.ComboBox comboMission;
 		private System.Windows.Forms.CheckBox checkAlert;
 		private System.Windows.Forms.CheckBox checkAlertSupply;
+		private System.Windows.Forms.CheckBox checkAlertGreatSuccess;
+		private System.Windows.Forms.Label labelGreatSuccessRate;
+		private System.Windows.Forms.NumericUpDown numGreatSuccessThreshold;
+		private System.Windows.Forms.Label labelGreatSuccessPercent;
 		private System.Windows.Forms.SplitContainer splitDetail;
 		private System.Windows.Forms.GroupBox groupSummary;
 		private System.Windows.Forms.TableLayoutPanel tableSummary;

@@ -1362,6 +1362,16 @@ namespace ElectronicObserver.Utility
 				public bool AlertSupplyDepleted { get; set; }
 
 				/// <summary>
+				/// 大成功率が閾値を下回る場合 (＝大成功しない可能性がある場合) も警告するか
+				/// </summary>
+				public bool AlertGreatSuccessBelow { get; set; }
+
+				/// <summary>
+				/// 大成功の警告を出す閾値 (%、0〜100)。大成功率がこの値未満なら警告する (0 は警告しない)
+				/// </summary>
+				public int GreatSuccessRateThreshold { get; set; }
+
+				/// <summary>
 				/// 選択中の艦隊 (2..4)
 				/// </summary>
 				public int SelectedFleetId { get; set; }
@@ -1380,6 +1390,8 @@ namespace ElectronicObserver.Utility
 				{
 					AlertOnMissionScreenOpened = true;
 					AlertSupplyDepleted = false;
+					AlertGreatSuccessBelow = false;
+					GreatSuccessRateThreshold = 100;
 					SelectedFleetId = 2;
 					SelectedTabIndex = 0;
 					TargetMissions = new int[5];
