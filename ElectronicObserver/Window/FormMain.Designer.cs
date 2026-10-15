@@ -133,6 +133,7 @@
 			this.StripMenu_Help_Help = new System.Windows.Forms.ToolStripMenuItem();
 			this.SeparatorWhitecap = new System.Windows.Forms.ToolStripSeparator();
 			this.StripMenu_Help_Version = new System.Windows.Forms.ToolStripMenuItem();
+			this.StripMenu_Help_CheckUpdate = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripStatus = new System.Windows.Forms.StatusStrip();
 			this.StripStatus_Information = new System.Windows.Forms.ToolStripStatusLabel();
 			this.StripStatus_Clock = new System.Windows.Forms.ToolStripStatusLabel();
@@ -923,7 +924,8 @@
 			this.StripMenu_Help.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.StripMenu_Help_Help,
             this.SeparatorWhitecap,
-            this.StripMenu_Help_Version});
+            this.StripMenu_Help_Version,
+            this.StripMenu_Help_CheckUpdate});
 			this.StripMenu_Help.Name = "StripMenu_Help";
 			this.StripMenu_Help.Size = new System.Drawing.Size(75, 22);
 			this.StripMenu_Help.Text = "ヘルプ(&H)";
@@ -947,6 +949,13 @@
 			this.StripMenu_Help_Version.Size = new System.Drawing.Size(203, 22);
 			this.StripMenu_Help_Version.Text = "バージョン情報(&V)";
 			this.StripMenu_Help_Version.Click += new System.EventHandler(this.StripMenu_Help_Version_Click);
+			// 
+			// StripMenu_Help_CheckUpdate
+			// 
+			this.StripMenu_Help_CheckUpdate.Name = "StripMenu_Help_CheckUpdate";
+			this.StripMenu_Help_CheckUpdate.Size = new System.Drawing.Size(203, 22);
+			this.StripMenu_Help_CheckUpdate.Text = "更新を確認(&U)...";
+			this.StripMenu_Help_CheckUpdate.Click += new System.EventHandler(this.StripMenu_Help_CheckUpdate_Click);
 			// 
 			// StripStatus
 			// 
@@ -1049,6 +1058,7 @@
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_View_Battle;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help_Version;
+		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help_CheckUpdate;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File_Configuration;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File_Close;

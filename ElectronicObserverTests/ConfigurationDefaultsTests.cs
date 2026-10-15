@@ -26,6 +26,14 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
+		public void Life_ChecksForUpdatesByDefault()
+		{
+			var config = new Configuration.ConfigurationData.ConfigLife();
+
+			Assert.True(config.CheckUpdateInformation);
+		}
+
+		[Fact]
 		public void ExpeditionCheck_DefaultsMatchSelectionHelper()
 		{
 			var config = new Configuration.ConfigurationData.ConfigFormExpeditionCheck();

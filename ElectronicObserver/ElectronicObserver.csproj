@@ -393,6 +393,7 @@
     <Compile Include="Utility\Mathematics\DateTimeHelper.cs" />
     <Compile Include="Utility\Mathematics\Fraction.cs" />
     <Compile Include="Utility\SoftwareInformation.cs" />
+    <Compile Include="Utility\UpdateChecker.cs" />
     <Compile Include="Utility\Storage\SerializableColor.cs" />
     <Compile Include="Utility\Storage\SerializableFont.cs" />
     <Compile Include="Utility\Storage\SerializableKeyValuePair.cs" />
@@ -1084,6 +1085,17 @@
     <ProjectReference Include="..\DockPanelSuite\WinFormsUI\WinFormsUI.csproj">
       <Project>{c75532c4-765b-418e-b09b-46d36b2abdb1}</Project>
       <Name>WinFormsUI</Name>
+    </ProjectReference>
+    <!-- 更新プログラム。実行時のみ必要なのでビルド順序のためだけに参照する。 -->
+    <ProjectReference Include="..\EOUpdater\EOUpdater.csproj">
+      <Project>{6b1f2a94-8c3d-4e5a-9f27-1d4c7b3e8a52}</Project>
+      <Name>EOUpdater</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <!-- 更新確認で使う共通ライブラリ (GitHub Releases クライアント)。 -->
+    <ProjectReference Include="..\EOUpdate\EOUpdate.csproj">
+      <Project>{2c4d8e17-5a3b-4f62-9c81-7e2b6d9a4f13}</Project>
+      <Name>EOUpdate</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

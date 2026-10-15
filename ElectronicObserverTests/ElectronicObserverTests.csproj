@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ElectronicObserver\ElectronicObserver.csproj" />
+    <ProjectReference Include="..\EOUpdate\EOUpdate.csproj" />
   </ItemGroup>
 
 </Project>

@@ -19,7 +19,7 @@ namespace ElectronicObserver.Window.Dialog
 		{
 			InitializeComponent();
 
-			TextVersion.Text = string.Format("{0} (ver. {1})", SoftwareInformation.VersionJapanese, SoftwareInformation.VersionEnglish);
+			TextVersion.Text = string.Format("{0} (ver. {1})", SoftwareInformation.VersionJapanese, SoftwareInformation.InstalledVersion);
 		}
 
 		private void TextAuthor_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -56,13 +56,8 @@ namespace ElectronicObserver.Window.Dialog
 		{
 			this.Icon = ResourceManager.Instance.AppIcon;
 
-			//version.txtを読み取って設定
-			StreamReader sr = new StreamReader("version.txt");
-
-			sr.ReadLine(); //1行目は読み飛ばす
-			labelLastUpdate.Text = sr.ReadLine();
-
-			sr.Close();
+			// インストール済みバージョン (更新プログラムが書き換える version.txt の 2 行目)
+			labelLastUpdate.Text = SoftwareInformation.InstalledVersion;
 		}
 
 	}
