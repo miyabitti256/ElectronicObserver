@@ -34,7 +34,7 @@
             this.ButtonClose = new System.Windows.Forms.Button();
             this.TextInformation = new System.Windows.Forms.LinkLabel();
             this.label3 = new System.Windows.Forms.Label();
-            this.labelLastUpdate = new System.Windows.Forms.Label();
+            this.LabelBaseVersion = new System.Windows.Forms.Label();
             this.TextInformation2 = new System.Windows.Forms.LinkLabel();
             this.label2 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -46,6 +46,14 @@
             this.label10 = new System.Windows.Forms.Label();
             this.TextInformation3 = new System.Windows.Forms.LinkLabel();
             this.label12 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.LabelForkVersion = new System.Windows.Forms.Label();
+            this.TextAuthorFork = new System.Windows.Forms.LinkLabel();
+            this.TextInformation4 = new System.Windows.Forms.LinkLabel();
+            this.TextHistory = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // TextVersion
@@ -82,7 +90,7 @@
             // ButtonClose
             // 
             this.ButtonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.ButtonClose.Location = new System.Drawing.Point(377, 199);
+            this.ButtonClose.Location = new System.Drawing.Point(377, 410);
             this.ButtonClose.Name = "ButtonClose";
             this.ButtonClose.Size = new System.Drawing.Size(75, 23);
             this.ButtonClose.TabIndex = 0;
@@ -109,14 +117,14 @@
             this.label3.Size = new System.Drawing.Size(435, 2);
             this.label3.TabIndex = 6;
             // 
-            // labelLastUpdate
+            // LabelBaseVersion
             // 
-            this.labelLastUpdate.AutoSize = true;
-            this.labelLastUpdate.Location = new System.Drawing.Point(127, 150);
-            this.labelLastUpdate.Name = "labelLastUpdate";
-            this.labelLastUpdate.Size = new System.Drawing.Size(77, 15);
-            this.labelLastUpdate.TabIndex = 7;
-            this.labelLastUpdate.Text = "YYYYMMDD";
+            this.LabelBaseVersion.AutoSize = true;
+            this.LabelBaseVersion.Location = new System.Drawing.Point(127, 150);
+            this.LabelBaseVersion.Name = "LabelBaseVersion";
+            this.LabelBaseVersion.Size = new System.Drawing.Size(77, 15);
+            this.LabelBaseVersion.TabIndex = 7;
+            this.LabelBaseVersion.Text = "YYYYMMDD";
             // 
             // TextInformation2
             // 
@@ -231,11 +239,102 @@
             this.label12.Size = new System.Drawing.Size(435, 2);
             this.label12.TabIndex = 14;
             // 
+            // label13
+            // 
+            this.label13.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.label13.Location = new System.Drawing.Point(16, 216);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(435, 2);
+            this.label13.TabIndex = 20;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(13, 222);
+            this.label14.Margin = new System.Windows.Forms.Padding(3);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(105, 15);
+            this.label14.TabIndex = 21;
+            this.label14.Text = "Forked Version：";
+            // 
+            // LabelForkVersion
+            // 
+            this.LabelForkVersion.AutoSize = true;
+            this.LabelForkVersion.Location = new System.Drawing.Point(127, 222);
+            this.LabelForkVersion.Name = "LabelForkVersion";
+            this.LabelForkVersion.Size = new System.Drawing.Size(77, 15);
+            this.LabelForkVersion.TabIndex = 22;
+            this.LabelForkVersion.Text = "YYYYMMDD";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(13, 243);
+            this.label15.Margin = new System.Windows.Forms.Padding(3);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(55, 15);
+            this.label15.TabIndex = 23;
+            this.label15.Text = "改変者：";
+            // 
+            // TextAuthorFork
+            // 
+            this.TextAuthorFork.AutoSize = true;
+            this.TextAuthorFork.Location = new System.Drawing.Point(74, 243);
+            this.TextAuthorFork.Name = "TextAuthorFork";
+            this.TextAuthorFork.Size = new System.Drawing.Size(83, 15);
+            this.TextAuthorFork.TabIndex = 24;
+            this.TextAuthorFork.TabStop = true;
+            this.TextAuthorFork.Text = "miyabitti256";
+            this.TextAuthorFork.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.TextAuthorFork_LinkClicked);
+            // 
+            // TextInformation4
+            // 
+            this.TextInformation4.AutoSize = true;
+            this.TextInformation4.Location = new System.Drawing.Point(13, 266);
+            this.TextInformation4.Name = "TextInformation4";
+            this.TextInformation4.Size = new System.Drawing.Size(289, 15);
+            this.TextInformation4.TabIndex = 25;
+            this.TextInformation4.TabStop = true;
+            this.TextInformation4.Text = "https://github.com/miyabitti256/ElectronicObserver";
+            this.TextInformation4.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.TextInformation4_LinkClicked);
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(13, 289);
+            this.label16.Margin = new System.Windows.Forms.Padding(3);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(65, 15);
+            this.label16.TabIndex = 26;
+            this.label16.Text = "更新履歴：";
+            // 
+            // TextHistory
+            // 
+            this.TextHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TextHistory.Location = new System.Drawing.Point(13, 308);
+            this.TextHistory.Multiline = true;
+            this.TextHistory.Name = "TextHistory";
+            this.TextHistory.ReadOnly = true;
+            this.TextHistory.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.TextHistory.Size = new System.Drawing.Size(438, 92);
+            this.TextHistory.TabIndex = 27;
+            this.TextHistory.WordWrap = false;
+            // 
             // DialogVersion
             // 
             this.AcceptButton = this.ButtonClose;
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(464, 234);
+            this.ClientSize = new System.Drawing.Size(464, 441);
+            this.Controls.Add(this.label13);
+            this.Controls.Add(this.label14);
+            this.Controls.Add(this.LabelForkVersion);
+            this.Controls.Add(this.label15);
+            this.Controls.Add(this.TextAuthorFork);
+            this.Controls.Add(this.TextInformation4);
+            this.Controls.Add(this.label16);
+            this.Controls.Add(this.TextHistory);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label10);
@@ -247,7 +346,7 @@
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.TextInformation2);
-            this.Controls.Add(this.labelLastUpdate);
+            this.Controls.Add(this.LabelBaseVersion);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.TextInformation);
             this.Controls.Add(this.ButtonClose);
@@ -277,7 +376,7 @@
 		private System.Windows.Forms.Button ButtonClose;
 		private System.Windows.Forms.LinkLabel TextInformation;
 		private System.Windows.Forms.Label label3;
-		private System.Windows.Forms.Label labelLastUpdate;
+		private System.Windows.Forms.Label LabelBaseVersion;
 		private System.Windows.Forms.LinkLabel TextInformation2;
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.Label label4;
@@ -289,5 +388,13 @@
 		private System.Windows.Forms.LinkLabel TextInformation3;
 		private System.Windows.Forms.Label label12;
 		private System.Windows.Forms.LinkLabel label9;
+		private System.Windows.Forms.Label label13;
+		private System.Windows.Forms.Label label14;
+		private System.Windows.Forms.Label label15;
+		private System.Windows.Forms.Label label16;
+		private System.Windows.Forms.Label LabelForkVersion;
+		private System.Windows.Forms.LinkLabel TextAuthorFork;
+		private System.Windows.Forms.LinkLabel TextInformation4;
+		private System.Windows.Forms.TextBox TextHistory;
 	}
 }

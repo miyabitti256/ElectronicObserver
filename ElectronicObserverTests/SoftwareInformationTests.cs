@@ -63,5 +63,75 @@ namespace ElectronicObserverTests
 					File.Delete(path);
 			}
 		}
+
+		[Fact]
+		public void BaseVersion_IsNotNewerThanTheCompiledVersion()
+		{
+			// ベースにしている本家のバージョンが本体より新しくなっていたら、取り込み漏れか書き忘れ
+			Assert.True(SoftwareInformation.BaseUpdateTime <= SoftwareInformation.UpdateTime);
+		}
+
+		[Fact]
+		public void BaseVersionEnglish_MatchesItsUpdateTime()
+		{
+			string[] parts = SoftwareInformation.BaseVersionEnglish.Split(' ');
+
+			Assert.Equal(2, parts.Length);
+			Assert.Equal(SoftwareInformation.BaseUpdateTime.ToString("yyyyMMdd"), parts[1]);
+		}
+
+		[Fact]
+		public void ForkAuthor_IsShownWithItsGitHubUrl()
+		{
+			// バージョン情報に改変者名と GitHub URL を出すための前提
+			Assert.False(string.IsNullOrWhiteSpace(SoftwareInformation.ForkAuthorName));
+
+			Assert.Contains(SoftwareInformation.ForkAuthorName, SoftwareInformation.RepositoryUrl);
+			Assert.Equal($"https://github.com/{SoftwareInformation.ForkAuthorName}", SoftwareInformation.ForkAuthorUrl);
+		}
+
+		[Fact]
+		public void InstalledVersionNotes_IsEmptyWithoutAHistory()
+		{
+			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.txt");
+			bool existed = File.Exists(path);
+			string backup = existed ? File.ReadAllText(path) : null;
+
+			try
+			{
+				File.WriteAllText(path, "2026/10/16 0:00:00\r\n4.7.1-20261016\r\n");
+
+				Assert.Equal(string.Empty, SoftwareInformation.InstalledVersionNotes);
+			}
+			finally
+			{
+				if (existed)
+					File.WriteAllText(path, backup);
+				else
+					File.Delete(path);
+			}
+		}
+
+		[Fact]
+		public void InstalledVersionNotes_ReturnsTheLinesAfterTheVersion()
+		{
+			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.txt");
+			bool existed = File.Exists(path);
+			string backup = existed ? File.ReadAllText(path) : null;
+
+			try
+			{
+				File.WriteAllText(path, "2026/10/16 0:00:00\r\n4.7.1-20261016\r\n* 変更点1\r\n* 変更点2\r\n");
+
+				Assert.Equal("* 変更点1\r\n* 変更点2", SoftwareInformation.InstalledVersionNotes);
+			}
+			finally
+			{
+				if (existed)
+					File.WriteAllText(path, backup);
+				else
+					File.Delete(path);
+			}
+		}
 	}
 }

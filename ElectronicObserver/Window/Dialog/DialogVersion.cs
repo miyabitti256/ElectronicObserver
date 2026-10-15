@@ -20,6 +20,11 @@ namespace ElectronicObserver.Window.Dialog
 			InitializeComponent();
 
 			TextVersion.Text = string.Format("{0} (ver. {1})", SoftwareInformation.VersionJapanese, SoftwareInformation.InstalledVersion);
+
+			// この Fork (改変者) の情報
+			TextAuthorFork.Text = SoftwareInformation.ForkAuthorName;
+			TextInformation4.Text = SoftwareInformation.RepositoryUrl;
+			LabelForkVersion.Text = SoftwareInformation.InstalledVersion;
 		}
 
 		private void TextAuthor_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -49,15 +54,29 @@ namespace ElectronicObserver.Window.Dialog
 
 		private void TextInformation3_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
-			System.Diagnostics.Process.Start("https://github.com/dais-k/ElectronicObserver/");
+			System.Diagnostics.Process.Start(SoftwareInformation.BaseRepositoryUrl);
+		}
+
+		private void TextAuthorFork_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+		{
+			System.Diagnostics.Process.Start(SoftwareInformation.ForkAuthorUrl);
+		}
+
+		private void TextInformation4_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+		{
+			System.Diagnostics.Process.Start(SoftwareInformation.RepositoryUrl);
 		}
 
 		private void DialogVersion_Load(object sender, EventArgs e)
 		{
 			this.Icon = ResourceManager.Instance.AppIcon;
 
-			// インストール済みバージョン (更新プログラムが書き換える version.txt の 2 行目)
-			labelLastUpdate.Text = SoftwareInformation.InstalledVersion;
+			// ベースにしている本家 (dais-k 版) のバージョン
+			LabelBaseVersion.Text = SoftwareInformation.BaseVersionEnglish;
+
+			// version.txt の 3 行目以降に書かれた更新履歴
+			string notes = SoftwareInformation.InstalledVersionNotes;
+			TextHistory.Text = notes.Length > 0 ? notes : "(更新履歴はありません)";
 		}
 
 	}

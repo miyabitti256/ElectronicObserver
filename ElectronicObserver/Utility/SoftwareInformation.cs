@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace ElectronicObserver.Utility
 {
@@ -51,6 +52,32 @@ namespace ElectronicObserver.Utility
 		/// 配布元の URL
 		/// </summary>
 		public static string RepositoryUrl => $"https://github.com/{RepositoryOwner}/{RepositoryName}";
+
+		/// <summary>
+		/// この Fork の改変者名
+		/// </summary>
+		public const string ForkAuthorName = RepositoryOwner;
+
+		/// <summary>
+		/// この Fork の改変者の URL
+		/// </summary>
+		public static string ForkAuthorUrl => $"https://github.com/{RepositoryOwner}";
+
+		/// <summary>
+		/// ベースにしている本家 (dais-k 版) のバージョン。
+		/// 本家を取り込んだら BaseUpdateTime とあわせて更新すること。
+		/// </summary>
+		public static string BaseVersionEnglish => "4.7.1 20261004";
+
+		/// <summary>
+		/// ベースにしている本家 (dais-k 版) の更新日時
+		/// </summary>
+		public static DateTime BaseUpdateTime => DateTimeHelper.CSVStringToTime("2026/10/04 00:00:00");
+
+		/// <summary>
+		/// ベースにしている本家 (dais-k 版) のリポジトリ URL
+		/// </summary>
+		public static string BaseRepositoryUrl => "https://github.com/dais-k/ElectronicObserver";
 
 		/// <summary>
 		/// 更新プログラムのファイル名
@@ -112,6 +139,22 @@ namespace ElectronicObserver.Utility
 		/// 更新プログラム (EOUpdater.exe) が存在するか
 		/// </summary>
 		public static bool IsUpdaterAvailable => File.Exists(Path.Combine(ApplicationDirectory, UpdaterFileName));
+
+		/// <summary>
+		/// version.txt の 3 行目以降 (更新履歴)。無ければ空文字。
+		/// </summary>
+		public static string InstalledVersionNotes
+		{
+			get
+			{
+				string[] lines = ReadVersionFileLines();
+
+				if (lines == null || lines.Length <= 2)
+					return string.Empty;
+
+				return string.Join("\r\n", lines.Skip(2)).Trim();
+			}
+		}
 
 		/// <summary>
 		/// 更新プログラムを起動します (更新後に本体を再起動させます)。
