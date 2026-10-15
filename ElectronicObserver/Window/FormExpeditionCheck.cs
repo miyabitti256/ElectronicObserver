@@ -18,21 +18,20 @@ namespace ElectronicObserver.Window
 	{
 		private FormMain _parent;
 		private bool _isLoaded;
-		private int[] _targetMissions = new int[5]; // 艦隊ごとの設定遠征ID (1-based, 2..4)
+
+		private int[] _targetMissions = ExpeditionSelection.SanitizeTargetMissions(null);
 		private bool _detailNeedsUpdate = false;
 		private bool _matrixNeedsUpdate = false;
 		private int _lastMissionResultDeckId = -1;
+
+		// 初期化・復元中はコンボ変更を選択状態へ書き戻さない (保存値の上書き防止)
+		private bool _suppressSelectionWriteBack = false;
 
 		public FormExpeditionCheck(FormMain parent)
 		{
 			InitializeComponent();
 			_parent = parent;
 			Icon = ResourceManager.ImageToIcon(ResourceManager.Instance.Icons.Images[(int)ResourceManager.IconContent.FormExpeditionCheck]);
-
-			// デフォルト遠征の初期化 (第2: 2(長距離), 第3: 5(海上護衛), 第4: 38(東急2))
-			_targetMissions[2] = 2;
-			_targetMissions[3] = 5;
-			_targetMissions[4] = 38;
 
 			SubscribeToApis();
 		}
@@ -283,17 +282,15 @@ namespace ElectronicObserver.Window
 				_detailNeedsUpdate = true;
 			_matrixNeedsUpdate = true;
 
+			// コンボの初期化はウィンドウの表示状態に依存させない (#10)
+			EnsureListsInitialized();
+
 			if (!Visible) return;
 
 			if (tabControl.SelectedTab == tabDetail)
 			{
 				if (affectsSelectedFleet)
 				{
-					if (comboArea.Items.Count == 0)
-					{
-						InitAreaAndMissionList();
-						SelectMission(_targetMissions[SelectedFleetId]);
-					}
 					UpdateDetailView();
 					_detailNeedsUpdate = false;
 				}
@@ -309,18 +306,11 @@ namespace ElectronicObserver.Window
 		{
 			try
 			{
-				InitAreaAndMissionList();
-				comboFleet.SelectedIndex = 0; // 第2艦隊
-
-				var config = Utility.Configuration.Config.FormExpeditionCheck;
-				if (config != null)
-				{
-					checkAlert.Checked = config.AlertOnMissionScreenOpened;
-					checkAlertSupply.Checked = config.AlertSupplyDepleted;
-				}
+				// 前回の選択状態 (艦隊・タブ・艦隊ごとの遠征) を復元する (#9)
+				ApplyConfiguration(Utility.Configuration.Config.FormExpeditionCheck);
 
 				_isLoaded = true;
-				SelectMission(_targetMissions[SelectedFleetId]);
+				EnsureListsInitialized();
 				UpdateControlPanelLayout();
 				UpdateResponsiveLayout();
 				UpdateAllViews();
@@ -333,11 +323,83 @@ namespace ElectronicObserver.Window
 			}
 		}
 
+		/// <summary>
+		/// 保存された設定値をフォームへ反映します。未設定・範囲外の値は既定値にフォールバックします。
+		/// </summary>
+		private void ApplyConfiguration(Utility.Configuration.ConfigurationData.ConfigFormExpeditionCheck config)
+		{
+			if (config == null) return;
+
+			checkAlert.Checked = config.AlertOnMissionScreenOpened;
+			checkAlertSupply.Checked = config.AlertSupplyDepleted;
+
+			// 艦隊ごとの遠征 (保存値が有効なものだけ採用し、それ以外は既定値を維持)
+			_targetMissions = ExpeditionSelection.SanitizeTargetMissions(config.TargetMissions);
+
+			// 選択中の艦隊
+			int fleetId = ExpeditionSelection.SanitizeFleetId(config.SelectedFleetId);
+			comboFleet.SelectedIndex = fleetId - ExpeditionSelection.MinFleetId;
+
+			// 選択中のタブ
+			tabControl.SelectedIndex = ExpeditionSelection.SanitizeTabIndex(config.SelectedTabIndex, tabControl.TabPages.Count);
+		}
+
+		/// <summary>
+		/// 現在の選択状態を設定へ書き戻します。永続化自体は終了時に行われます。
+		/// </summary>
+		private void SaveSelectionsToConfig()
+		{
+			var config = Utility.Configuration.Config.FormExpeditionCheck;
+			if (config == null) return;
+
+			if (comboFleet.SelectedIndex >= 0)
+				config.SelectedFleetId = SelectedFleetId;
+
+			if (tabControl.TabPages.Count > 0)
+				config.SelectedTabIndex = tabControl.SelectedIndex;
+
+			config.TargetMissions = (int[])_targetMissions.Clone();
+		}
+
+		/// <summary>
+		/// 海域・遠征コンボの初期化を、ウィンドウの表示状態に依存せず保証します。
+		/// 初期化を実行した場合のみ true を返します。遠征マスタ未受信 (api_start2 前) は何もしません。
+		/// </summary>
+		private bool EnsureListsInitialized()
+		{
+			if (comboArea.Items.Count > 0) return false;
+			if (!KCDatabase.Instance.Mission.Any()) return false;
+
+			// 初期化に伴うコンボ変更で、復元した選択状態が上書きされないようにする
+			int targetMissionId = _targetMissions[SelectedFleetId];
+			bool prevSuppress = _suppressSelectionWriteBack;
+			_suppressSelectionWriteBack = true;
+			try
+			{
+				InitAreaAndMissionList();
+				if (comboArea.Items.Count == 0) return false;
+
+				SelectMission(targetMissionId);
+				return true;
+			}
+			finally
+			{
+				_suppressSelectionWriteBack = prevSuppress;
+			}
+		}
+
 		protected override void OnVisibleChanged(EventArgs e)
 		{
 			base.OnVisibleChanged(e);
 			if (Visible && _isLoaded)
 			{
+				// 非表示中に受信したデータがあれば、ここでコンボを初期化する (#10)
+				if (EnsureListsInitialized())
+				{
+					_detailNeedsUpdate = true;
+					_matrixNeedsUpdate = true;
+				}
+
 				if (tabControl.SelectedTab == tabDetail && _detailNeedsUpdate)
 				{
 					UpdateDetailView();
@@ -354,6 +416,14 @@ namespace ElectronicObserver.Window
 		private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			if (!_isLoaded) return;
+
+			SaveSelectionsToConfig();
+
+			if (EnsureListsInitialized())
+			{
+				_detailNeedsUpdate = true;
+				_matrixNeedsUpdate = true;
+			}
 
 			if (tabControl.SelectedTab == tabDetail && _detailNeedsUpdate)
 			{
@@ -554,6 +624,7 @@ namespace ElectronicObserver.Window
 			if (!_isLoaded) return;
 			int targetId = _targetMissions[SelectedFleetId];
 			SelectMission(targetId);
+			SaveSelectionsToConfig();
 			UpdateDetailView();
 			_detailNeedsUpdate = false;
 		}
@@ -567,7 +638,11 @@ namespace ElectronicObserver.Window
 		private void comboMission_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			if (comboMission.SelectedItem == null) return;
-			_targetMissions[SelectedFleetId] = SelectedMissionId;
+			if (!_suppressSelectionWriteBack)
+			{
+				_targetMissions[SelectedFleetId] = SelectedMissionId;
+				if (_isLoaded) SaveSelectionsToConfig();
+			}
 			UpdateDetailView();
 		}
 
@@ -599,11 +674,9 @@ namespace ElectronicObserver.Window
 		public void UpdateAllViews()
 		{
 			if (!_isLoaded) return;
-			if (comboArea.Items.Count == 0)
-			{
-				InitAreaAndMissionList();
-				SelectMission(_targetMissions[SelectedFleetId]);
-			}
+
+			EnsureListsInitialized();
+
 			UpdateDetailView();
 			_detailNeedsUpdate = false;
 			UpdateMatrixView();

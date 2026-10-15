@@ -220,6 +220,7 @@
     <Compile Include="Data\MapInfoData.cs" />
     <Compile Include="Data\MaterialData.cs" />
     <Compile Include="Data\ExpeditionHelper.cs" />
+    <Compile Include="Data\ExpeditionSelection.cs" />
     <Compile Include="Data\MissionClearCondition.cs" />
     <Compile Include="Data\MissionData.cs" />
     <Compile Include="Data\QuestData.cs" />

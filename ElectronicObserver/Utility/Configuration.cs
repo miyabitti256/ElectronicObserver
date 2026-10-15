@@ -1361,10 +1361,31 @@ namespace ElectronicObserver.Utility
 				/// </summary>
 				public bool AlertSupplyDepleted { get; set; }
 
+				/// <summary>
+				/// 選択中の艦隊 (2..4)
+				/// </summary>
+				public int SelectedFleetId { get; set; }
+
+				/// <summary>
+				/// 選択中のタブ (0=詳細, 1=マトリクス)
+				/// </summary>
+				public int SelectedTabIndex { get; set; }
+
+				/// <summary>
+				/// 艦隊ごとの選択中の遠征ID (index = 艦隊番号)
+				/// </summary>
+				public int[] TargetMissions { get; set; }
+
 				public ConfigFormExpeditionCheck()
 				{
 					AlertOnMissionScreenOpened = true;
 					AlertSupplyDepleted = false;
+					SelectedFleetId = 2;
+					SelectedTabIndex = 0;
+					TargetMissions = new int[5];
+					TargetMissions[2] = 2;
+					TargetMissions[3] = 5;
+					TargetMissions[4] = 38;
 				}
 			}
 
