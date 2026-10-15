@@ -1,0 +1,100 @@
+name: Release
+
+# tag push (例: v4.7.1-20261016) で本体を Release 構成でビルドし、
+# 配布用 zip と checksums.txt を添付した GitHub Release を作成します。
+#
+# workflow_dispatch はビルドとパッケージ作成のみ行うドライランです
+# (Release は作成しません。成果物は artifact から取得できます)。
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # ElectronicObserver.sln は DockPanelSuite\WinFormsUI\WinFormsUI.csproj を参照しますが、
+  # これは本体リポジトリに含まれていない外部依存 (andanteyk フォーク) です。
+  # ローカルのビルドと同じコミットを取得します。
+  DOCKPANELSUITE_REPOSITORY: https://github.com/andanteyk/dockpanelsuite.git
+  DOCKPANELSUITE_COMMIT: 7a5eac4003cd99fbc152b1a7ebeb9efbacf62d1d
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v7
+
+      - name: DockPanelSuite を取得
+        shell: pwsh
+        run: |
+          git clone --quiet $env:DOCKPANELSUITE_REPOSITORY DockPanelSuite
+          git -C DockPanelSuite checkout --quiet $env:DOCKPANELSUITE_COMMIT
+          git -C DockPanelSuite rev-parse HEAD
+
+      - name: MSBuild をセットアップ
+        uses: microsoft/setup-msbuild@v3
+
+      - name: NuGet をセットアップ
+        uses: NuGet/setup-nuget@v4
+
+      - name: packages.config を復元
+        shell: pwsh
+        run: nuget restore ElectronicObserver.sln
+
+      - name: テストプロジェクト (SDK スタイル) を復元
+        shell: pwsh
+        run: msbuild ElectronicObserver.sln -t:Restore -p:Configuration=Release -nologo -v:m
+
+      - name: ビルド (Release)
+        shell: pwsh
+        run: msbuild ElectronicObserver.sln -p:Configuration=Release -m -nologo -v:m
+
+      - name: バージョンを決定
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $version = $env:GITHUB_REF_NAME -replace '^v', ''
+          }
+          else {
+            # 手動実行 (ドライラン) は version.txt の 2 行目をバージョンとして使う
+            $version = (Get-Content -LiteralPath 'ElectronicObserver/version.txt' -TotalCount 2)[1].Trim()
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "version: $version"
+
+      - name: パッケージ作成 (zip / checksums.txt)
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/package-release.ps1 `
+            -BinDir ElectronicObserver/bin/Release `
+            -OutputDir dist `
+            -Version '${{ steps.version.outputs.version }}'
+
+      - name: 成果物をアップロード
+        uses: actions/upload-artifact@v7
+        with:
+          name: ElectronicObserver-${{ steps.version.outputs.version }}
+          path: |
+            dist/*.zip
+            dist/checksums.txt
+          if-no-files-found: error
+
+      - name: GitHub Release を作成
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $assets = Get-ChildItem -Path dist -File | Select-Object -ExpandProperty FullName
+          gh release create $env:GITHUB_REF_NAME @assets --title $env:GITHUB_REF_NAME --generate-notes
