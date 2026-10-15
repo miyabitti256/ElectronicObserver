@@ -29,12 +29,12 @@ namespace ElectronicObserver.Utility
 		/// <summary>
 		/// バージョン(英語)
 		/// </summary>
-		public static string VersionEnglish => "4.7.4 20261019";
+		public static string VersionEnglish => "4.7.5 20261020";
 
 		/// <summary>
 		/// 更新日時
 		/// </summary>
-		public static DateTime UpdateTime => DateTimeHelper.CSVStringToTime("2026/10/19 00:00:00");
+		public static DateTime UpdateTime => DateTimeHelper.CSVStringToTime("2026/10/20 00:00:00");
 
 
 		/// <summary>
