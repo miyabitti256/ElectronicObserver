@@ -134,8 +134,11 @@
 			this.SeparatorWhitecap = new System.Windows.Forms.ToolStripSeparator();
 			this.StripMenu_Help_Version = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripMenu_Help_CheckUpdate = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
+			this.StripMenu_Help_ApplyUpdate = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripStatus = new System.Windows.Forms.StatusStrip();
 			this.StripStatus_Information = new System.Windows.Forms.ToolStripStatusLabel();
+			this.StripStatus_Update = new System.Windows.Forms.ToolStripStatusLabel();
 			this.StripStatus_Clock = new System.Windows.Forms.ToolStripStatusLabel();
 			this.UIUpdateTimer = new System.Windows.Forms.Timer(this.components);
 			this.MainDockPanel = new WeifenLuo.WinFormsUI.Docking.DockPanel();
@@ -925,7 +928,9 @@
             this.StripMenu_Help_Help,
             this.SeparatorWhitecap,
             this.StripMenu_Help_Version,
-            this.StripMenu_Help_CheckUpdate});
+            this.StripMenu_Help_CheckUpdate,
+            this.toolStripSeparator16,
+            this.StripMenu_Help_ApplyUpdate});
 			this.StripMenu_Help.Name = "StripMenu_Help";
 			this.StripMenu_Help.Size = new System.Drawing.Size(75, 22);
 			this.StripMenu_Help.Text = "ヘルプ(&H)";
@@ -957,11 +962,25 @@
 			this.StripMenu_Help_CheckUpdate.Text = "更新を確認(&U)...";
 			this.StripMenu_Help_CheckUpdate.Click += new System.EventHandler(this.StripMenu_Help_CheckUpdate_Click);
 			// 
+			// toolStripSeparator16
+			// 
+			this.toolStripSeparator16.Name = "toolStripSeparator16";
+			this.toolStripSeparator16.Size = new System.Drawing.Size(200, 6);
+			// 
+			// StripMenu_Help_ApplyUpdate
+			// 
+			this.StripMenu_Help_ApplyUpdate.Enabled = false;
+			this.StripMenu_Help_ApplyUpdate.Name = "StripMenu_Help_ApplyUpdate";
+			this.StripMenu_Help_ApplyUpdate.Size = new System.Drawing.Size(203, 22);
+			this.StripMenu_Help_ApplyUpdate.Text = "更新を適用して再起動(&R)";
+			this.StripMenu_Help_ApplyUpdate.Click += new System.EventHandler(this.StripMenu_Help_ApplyUpdate_Click);
+			// 
 			// StripStatus
 			// 
 			this.StripStatus.ImageScalingSize = new System.Drawing.Size(32, 32);
 			this.StripStatus.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.StripStatus_Information,
+            this.StripStatus_Update,
             this.StripStatus_Clock});
 			this.StripStatus.Location = new System.Drawing.Point(0, 457);
 			this.StripStatus.Name = "StripStatus";
@@ -976,6 +995,14 @@
 			this.StripStatus_Information.Spring = true;
 			this.StripStatus_Information.Text = "Now Preparing...";
 			this.StripStatus_Information.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			// 
+			// StripStatus_Update
+			// 
+			this.StripStatus_Update.Name = "StripStatus_Update";
+			this.StripStatus_Update.Size = new System.Drawing.Size(39, 18);
+			this.StripStatus_Update.Text = "Update";
+			this.StripStatus_Update.Visible = false;
+			this.StripStatus_Update.Click += new System.EventHandler(this.StripStatus_Update_Click);
 			// 
 			// StripStatus_Clock
 			// 
@@ -1059,6 +1086,9 @@
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help_Version;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help_CheckUpdate;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator16;
+		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help_ApplyUpdate;
+		private System.Windows.Forms.ToolStripStatusLabel StripStatus_Update;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File_Configuration;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File_Close;

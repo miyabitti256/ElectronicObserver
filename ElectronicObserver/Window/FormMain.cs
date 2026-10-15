@@ -48,6 +48,11 @@ namespace ElectronicObserver.Window
 		/// </summary>
 		private bool _closingForUpdate = false;
 
+		/// <summary>
+		/// 更新プログラムをバックグラウンドでダウンロードして保持する (#23)
+		/// </summary>
+		private readonly Utility.UpdateDownloader _updateDownloader = new Utility.UpdateDownloader();
+
 		#endregion
 
 
@@ -395,6 +400,11 @@ namespace ElectronicObserver.Window
 					}
 					break;
 			}
+
+
+			// 更新の進行状況 (ダウンロード中の進捗)
+			if (_updateDownloader.Status != UpdateDownloadStatus.None)
+				UpdateUpdateStatusStrip();
 
 
 			// WMP コントロールによって音量が勝手に変えられてしまうため、前回終了時の音量の再設定を試みる。
@@ -772,7 +782,7 @@ namespace ElectronicObserver.Window
 
 		/// <summary>
 		/// 配布元 (このフォーク) の最新リリースを確認します。
-		/// 新しいバージョンがあれば通知し、「更新」で更新プログラムを起動して終了します。
+		/// 新しいバージョンがあればバックグラウンドでダウンロードし、準備ができたら再起動を促します。
 		/// </summary>
 		/// <param name="manual">手動で確認した場合 true (最新でも結果を表示します)</param>
 		private async void CheckSoftwareUpdate(bool manual)
@@ -799,7 +809,7 @@ namespace ElectronicObserver.Window
 
 					case UpdateCheckStatus.UpdateAvailable:
 						Utility.Logger.Add(3, "新しいバージョンがリリースされています。 : " + result.LatestVersion);
-						NotifyUpdateAvailable(result);
+						await PrepareUpdate(result, manual);
 						break;
 
 					default:
@@ -820,8 +830,12 @@ namespace ElectronicObserver.Window
 			}
 		}
 
-		/// <summary>新しいバージョンを通知し、希望すれば更新プログラムを起動します。</summary>
-		private void NotifyUpdateAvailable(UpdateCheckResult result)
+		/// <summary>
+		/// 新しいバージョンをバックグラウンドでダウンロードします (#23)。
+		/// 本体は終了せず、ダウンロードが終わってから再起動を促します。
+		/// </summary>
+		/// <param name="manual">手動で確認した場合 true (ダウンロードを始めることを画面でも知らせます)</param>
+		private async Task PrepareUpdate(UpdateCheckResult result, bool manual)
 		{
 			if (!SoftwareInformation.IsUpdaterAvailable)
 			{
@@ -839,20 +853,93 @@ namespace ElectronicObserver.Window
 				return;
 			}
 
-			string notes = (result.Release?.Body ?? "").Trim();
-			if (notes.Length > 4000)
-				notes = notes.Substring(0, 4000) + "…";
-
-			string message =
-				"新しいバージョンがリリースされています。\r\n\r\n" +
-				$"インストール済み : {SoftwareInformation.InstalledVersion}\r\n" +
-				$"最新 : {result.LatestVersion}\r\n\r\n" +
-				(notes.Length > 0 ? $"更新内容 :\r\n{notes}\r\n\r\n" : "") +
-				"今すぐ更新しますか？\r\n(アプリケーションを終了して更新し、再起動します)";
-
-			if (MessageBox.Show(this, message, "アップデート情報", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1)
-				!= DialogResult.Yes)
+			if (_updateDownloader.Status == UpdateDownloadStatus.Downloading)
 				return;
+
+			if (_updateDownloader.IsReady && _updateDownloader.LatestVersion == result.LatestVersion)
+			{
+				// すでにダウンロード済み (再起動すれば適用できる)
+				UpdateUpdateStatusStrip();
+				return;
+			}
+
+			if (manual)
+			{
+				MessageBox.Show(this,
+					$"新しいバージョン {result.LatestVersion} がリリースされています。\r\n\r\n" +
+					"バックグラウンドでダウンロードしますので、このままゲームを続けられます。\r\n" +
+					"ダウンロードが終わったら、再起動するかをおたずねします。",
+					"アップデート情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			}
+			else
+			{
+				Utility.Logger.Add(2, $"新しいバージョン {result.LatestVersion} をバックグラウンドでダウンロードします。");
+			}
+
+			bool downloaded = await _updateDownloader.DownloadAsync(result.Release);
+			UpdateUpdateStatusStrip();
+
+			if (!downloaded)
+			{
+				Utility.Logger.Add(3, "アップデートのダウンロードに失敗しました。 : " + _updateDownloader.Error);
+
+				// 起動時の自動確認では黙って記録するだけにする (毎回の起動で出ると煩わしいため)。
+				// 手動で確認した場合は、次の起動で再試行されることも伝えておく。
+				if (manual &&
+					MessageBox.Show(this,
+						$"新しいバージョン {result.LatestVersion} のダウンロードに失敗しました。\r\n\r\n" +
+						$"{_updateDownloader.Error}\r\n\r\n" +
+						"配布ページを開きますか？",
+						"アップデート情報", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+				{
+					Process.Start(SoftwareInformation.RepositoryUrl + "/releases");
+				}
+
+				return;
+			}
+
+			NotifyUpdateReady();
+		}
+
+		/// <summary>ダウンロードが完了したことを通知し、再起動を促します。</summary>
+		private void NotifyUpdateReady()
+		{
+			string message =
+				$"新しいバージョン {_updateDownloader.LatestVersion} の準備ができました。\r\n" +
+				"再起動すると更新が適用されます。\r\n\r\n" +
+				(IsInSortie() ? "※ 出撃中です。母港に戻ってから再起動することをおすすめします。\r\n\r\n" : "") +
+				"今すぐ再起動しますか？\r\n" +
+				"(「いいえ」を選ぶとこのまま続けられます。再起動はヘルプメニューまたはステータスバーからいつでもできます)";
+
+			if (MessageBox.Show(this, message, "アップデート情報",
+				MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+			{
+				RestartForUpdate();
+			}
+		}
+
+		/// <summary>
+		/// 更新を適用するために終了し、更新プログラムに再起動させます。
+		/// 出撃中は確認します (進行中の出撃を途切れさせないため)。
+		/// </summary>
+		private void RestartForUpdate()
+		{
+			if (!_updateDownloader.IsReady)
+			{
+				MessageBox.Show(this,
+					"更新の準備ができていません。\r\n「更新を確認」で最新版をダウンロードしてください。",
+					"アップデート情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				return;
+			}
+
+			if (IsInSortie() &&
+				MessageBox.Show(this,
+					"出撃中です。再起動すると進行中の出撃の表示が途切れます。\r\n再起動しますか？",
+					"アップデート情報", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)
+				!= DialogResult.Yes)
+			{
+				return;
+			}
 
 			if (!SoftwareInformation.LaunchUpdater())
 			{
@@ -863,9 +950,67 @@ namespace ElectronicObserver.Window
 				return;
 			}
 
+			Utility.Logger.Add(2, $"バージョン {_updateDownloader.LatestVersion} を適用するため再起動します。");
+
 			// 更新プログラムは本体の終了を待ってから適用するため、ここで終了する
 			_closingForUpdate = true;
 			Close();
+		}
+
+		/// <summary>更新の進行状況をステータスバーとメニューに反映します。</summary>
+		private void UpdateUpdateStatusStrip()
+		{
+			switch (_updateDownloader.Status)
+			{
+				case UpdateDownloadStatus.Downloading:
+					StripStatus_Update.IsLink = false;
+					StripStatus_Update.Text = $"更新をダウンロード中… {_updateDownloader.Progress * 100:F0}%";
+					StripStatus_Update.ToolTipText =
+						$"新しいバージョン {_updateDownloader.LatestVersion} をバックグラウンドでダウンロードしています。";
+					StripStatus_Update.Visible = true;
+					break;
+
+				case UpdateDownloadStatus.Ready:
+					StripStatus_Update.IsLink = true;
+					StripStatus_Update.Text = "更新の準備完了（クリックで再起動）";
+					StripStatus_Update.ToolTipText =
+						$"新しいバージョン {_updateDownloader.LatestVersion} を適用できます。\r\n" +
+						"クリックすると終了して更新し、再起動します。";
+					StripStatus_Update.Visible = true;
+					break;
+
+				default:
+					StripStatus_Update.Visible = false;
+					break;
+			}
+
+			StripMenu_Help_ApplyUpdate.Enabled = _updateDownloader.IsReady;
+		}
+
+		private void StripStatus_Update_Click(object sender, EventArgs e)
+		{
+			RestartForUpdate();
+		}
+
+		private void StripMenu_Help_ApplyUpdate_Click(object sender, EventArgs e)
+		{
+			RestartForUpdate();
+		}
+
+		/// <summary>出撃中かどうか (再起動のタイミングを確認するために使う)。</summary>
+		private static bool IsInSortie()
+		{
+			try
+			{
+				var fleet = KCDatabase.Instance.Fleet;
+				if (fleet?.Fleets == null) return false;
+
+				return fleet.Fleets.Values.Any(f => f != null && f.IsInSortie);
+			}
+			catch (Exception)
+			{
+				return false;
+			}
 		}
 
 		private void StripMenu_File_Configuration_Click(object sender, EventArgs e)

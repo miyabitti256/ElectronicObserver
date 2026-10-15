@@ -256,5 +256,68 @@ namespace ElectronicObserverTests
 			Assert.Equal("4.7.1-20261016", lines[1]);
 			Assert.Equal("変更点", lines[2]);
 		}
+
+		// --- バックグラウンドダウンロード (#23) ---
+
+		[Fact]
+		public void GetDownloadDirectory_PointsToTheSharedCache()
+		{
+			string directory = UpdateLogic.GetDownloadDirectory();
+
+			Assert.True(Path.IsPathRooted(directory));
+			Assert.EndsWith("Update", directory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.Ordinal);
+			Assert.Contains("ElectronicObserver", directory, StringComparison.Ordinal);
+		}
+
+		[Fact]
+		public void IsDownloadedFileComplete_ComparesTheSize()
+		{
+			string directory = CreateTempDirectory();
+
+			try
+			{
+				string path = Path.Combine(directory, "ElectronicObserver-4.7.3-20261018.zip");
+
+				Assert.False(UpdateLogic.IsDownloadedFileComplete(path, 8));
+
+				File.WriteAllBytes(path, new byte[8]);
+
+				Assert.True(UpdateLogic.IsDownloadedFileComplete(path, 8));
+				Assert.False(UpdateLogic.IsDownloadedFileComplete(path, 9));
+
+				// サイズが分からない場合は存在すれば使えるとみなす
+				Assert.True(UpdateLogic.IsDownloadedFileComplete(path, 0));
+			}
+			finally
+			{
+				Directory.Delete(directory, true);
+			}
+		}
+
+		[Fact]
+		public void GetObsoleteZipPaths_ReturnsOnlyOtherPackages()
+		{
+			string directory = CreateTempDirectory();
+
+			try
+			{
+				string current = Path.Combine(directory, "ElectronicObserver-4.7.3-20261018.zip");
+				string older = Path.Combine(directory, "ElectronicObserver-4.7.2-20261010.zip");
+
+				File.WriteAllBytes(current, new byte[1]);
+				File.WriteAllBytes(older, new byte[1]);
+				File.WriteAllText(Path.Combine(directory, UpdateLogic.ChecksumsAssetName), "");
+
+				string[] targets = UpdateLogic.GetObsoleteZipPaths(directory, current)
+					.Select(Path.GetFileName)
+					.ToArray();
+
+				Assert.Equal(new[] { Path.GetFileName(older) }, targets);
+			}
+			finally
+			{
+				Directory.Delete(directory, true);
+			}
+		}
 	}
 }

@@ -153,10 +153,7 @@ namespace EOUpdater
 
 		private static string PrepareDownloadDirectory()
 		{
-			string directory = Path.Combine(
-				Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-				"ElectronicObserver",
-				"Update");
+			string directory = UpdateLogic.GetDownloadDirectory();
 
 			Directory.CreateDirectory(directory);
 			return directory;
@@ -164,24 +161,15 @@ namespace EOUpdater
 
 		private static async Task DownloadIfNeededAsync(IReleaseSource source, ReleaseAsset asset, string destinationPath)
 		{
-			// 前回のダウンロードが残っていれば再利用する
-			if (File.Exists(destinationPath))
+			// 本体がバックグラウンドでダウンロード済みの場合など、前回のダウンロードを再利用する
+			if (UpdateLogic.IsDownloadedFileComplete(destinationPath, asset.Size))
 			{
-				try
-				{
-					if (new FileInfo(destinationPath).Length == asset.Size)
-					{
-						Console.WriteLine($"ダウンロード済みのファイルを使用します: {asset.Name}");
-						return;
-					}
-				}
-				catch (Exception)
-				{
-					// 判定できなければダウンロードし直す
-				}
-
-				File.Delete(destinationPath);
+				Console.WriteLine($"ダウンロード済みのファイルを使用します: {asset.Name}");
+				return;
 			}
+
+			if (File.Exists(destinationPath))
+				File.Delete(destinationPath);
 
 			Console.WriteLine($"ダウンロード中: {asset.Name} ({asset.Size / 1024 / 1024} MB)");
 			await source.DownloadFileAsync(asset.DownloadUrl, destinationPath);

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -394,6 +394,7 @@
     <Compile Include="Utility\Mathematics\Fraction.cs" />
     <Compile Include="Utility\SoftwareInformation.cs" />
     <Compile Include="Utility\UpdateChecker.cs" />
+    <Compile Include="Utility\UpdateDownloader.cs" />
     <Compile Include="Utility\Storage\SerializableColor.cs" />
     <Compile Include="Utility\Storage\SerializableFont.cs" />
     <Compile Include="Utility\Storage\SerializableKeyValuePair.cs" />
