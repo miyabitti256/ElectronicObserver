@@ -505,6 +505,93 @@ namespace ElectronicObserver.Data
 
 
 		/// <summary>
+		/// 護衛隊系遠征（4/5/9/42/43/A3〜A6）の編成条件を判定します。
+		/// 軽巡を軸にした基本条件のほか、護衛空母や海防艦を使った特例編成でも成功するため、
+		/// 成立した組み合わせも返します。
+		/// </summary>
+		/// <param name="countsEscortInBaseRequirement">基本条件に海防艦を含めるかどうか（含めない場合は駆逐艦のみ）。</param>
+		/// <param name="leastSmallShipCount">基本条件で必要な隻数。</param>
+		/// <param name="lightCruiser">軽巡洋艦の隻数。</param>
+		/// <param name="trainingCruiser">練習巡洋艦の隻数。</param>
+		/// <param name="destroyer">駆逐艦の隻数。</param>
+		/// <param name="escort">海防艦の隻数。</param>
+		/// <param name="escortAircraftCarrier">護衛空母の隻数。</param>
+		public static EscortFleetCheck EvaluateEscortFleet(
+			bool countsEscortInBaseRequirement,
+			int leastSmallShipCount,
+			int lightCruiser,
+			int trainingCruiser,
+			int destroyer,
+			int escort,
+			int escortAircraftCarrier)
+		{
+			string basePattern = countsEscortInBaseRequirement
+				? $"(駆逐+海防){leastSmallShipCount}"
+				: $"駆逐{leastSmallShipCount}";
+			int baseCount = countsEscortInBaseRequirement ? destroyer + escort : destroyer;
+
+			// 上から順に見て、最初に成立した組み合わせを採用する
+			var patterns = new List<(string Name, bool Satisfied)>
+			{
+				($"軽巡1+{basePattern}", lightCruiser >= 1 && baseCount >= leastSmallShipCount),
+				("護母1+(駆逐2 or 海防2)", escortAircraftCarrier >= 1 && (destroyer >= 2 || escort >= 2)),
+				("駆逐1+海防3", destroyer >= 1 && escort >= 3),
+				("軽巡1+海防2", lightCruiser >= 1 && escort >= 2),
+				("練巡1+海防2", trainingCruiser >= 1 && escort >= 2),
+			};
+
+			string matched = patterns.FirstOrDefault(p => p.Satisfied).Name;
+
+			string currentValue = matched != null
+				? $"達成（{matched}）"
+				: $"不適合（軽巡{lightCruiser}・駆逐{destroyer}・海防{escort}・護母{escortAircraftCarrier}・練巡{trainingCruiser}）";
+
+			return new EscortFleetCheck(
+				matched != null,
+				$"軽巡1+{basePattern}等",
+				matched,
+				$"護衛隊(軽巡1{basePattern}他)",
+				currentValue);
+		}
+
+
+		/// <summary>
+		/// 護衛隊系遠征の編成条件の判定結果です。
+		/// </summary>
+		public readonly struct EscortFleetCheck
+		{
+			/// <summary>編成条件を満たすかどうか。</summary>
+			public bool IsSatisfied { get; }
+
+			/// <summary>基本条件の表示名（例: 軽巡1+(駆逐+海防)2等）。</summary>
+			public string RequirementText { get; }
+
+			/// <summary>成立した組み合わせ（例: 駆逐1+海防3）。成立していない場合は null。</summary>
+			public string MatchedPatternText { get; }
+
+			/// <summary>成立しなかった場合の理由（例: 護衛隊(軽巡1(駆逐+海防)2他)）。</summary>
+			public string FailureReasonText { get; }
+
+			/// <summary>現状の表示（例: 達成（駆逐1+海防3） / 不適合（軽巡0・…））。</summary>
+			public string CurrentValueText { get; }
+
+			public EscortFleetCheck(
+				bool isSatisfied,
+				string requirementText,
+				string matchedPatternText,
+				string failureReasonText,
+				string currentValueText)
+			{
+				IsSatisfied = isSatisfied;
+				RequirementText = requirementText;
+				MatchedPatternText = matchedPatternText;
+				FailureReasonText = failureReasonText;
+				CurrentValueText = currentValueText;
+			}
+		}
+
+
+		/// <summary>
 		/// 遠征可否判定の結果を保持します。
 		/// </summary>
 		/// <summary>
@@ -674,113 +761,44 @@ namespace ElectronicObserver.Data
 			public MissionClearConditionResult CheckEscortLeaderCount(int leastCount) =>
 				CheckShipCount(s => s.MasterShip.ShipType == ShipTypes.LightCruiser || s.MasterShip.ShipType == ShipTypes.TrainingCruiser || s.MasterShip.IsEscortAircraftCarrier, leastCount, "(軽巡+練巡+護衛空母)");
 
-			public MissionClearConditionResult CheckEscortFleetDDDE2() //軽巡+(駆逐+海防)2
+			/// <summary>軽巡1+(駆逐+海防)2（遠征4/5/9/42）</summary>
+			public MissionClearConditionResult CheckEscortFleetDDDE2() =>
+				CheckEscortFleet(true, 2, members.Count(s => s.MasterShip.IsEscortAircraftCarrier));
+
+			/// <summary>軽巡1+駆逐2（遠征42/A4）</summary>
+			public MissionClearConditionResult CheckEscortFleetDD2() =>
+				CheckEscortFleet(false, 2, members.Count(s => s.MasterShip.IsEscortAircraftCarrier));
+
+			/// <summary>軽巡1+(駆逐+海防)3（A3）</summary>
+			public MissionClearConditionResult CheckEscortFleetDDDE3() =>
+				CheckEscortFleet(true, 3, members.Count(s => s.MasterShip.ShipType == ShipTypes.LightAircraftCarrier && s.ASWBase > 0));
+
+			/// <summary>軽巡1+駆逐3（A5/A6）</summary>
+			public MissionClearConditionResult CheckEscortFleetDD3() =>
+				CheckEscortFleet(false, 3, members.Count(s => s.MasterShip.ShipType == ShipTypes.LightAircraftCarrier && s.ASWBase > 0));
+
+			/// <summary>軽巡1+駆逐4（43）</summary>
+			public MissionClearConditionResult CheckEscortFleetDD4() =>
+				CheckEscortFleet(false, 4, members.Count(s => s.MasterShip.ShipType == ShipTypes.LightAircraftCarrier && s.ASWBase > 0));
+
+			private MissionClearConditionResult CheckEscortFleet(bool countsEscortInBaseRequirement, int leastSmallShipCount, int escortAircraftCarrier)
 			{
 				int lightCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.LightCruiser);
 				int destroyer = members.Count(s => s.MasterShip.ShipType == ShipTypes.Destroyer);
 				int trainingCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.TrainingCruiser);
 				int escort = members.Count(s => s.MasterShip.ShipType == ShipTypes.Escort);
-				int escortAircraftCarrier = members.Count(s => s.MasterShip.IsEscortAircraftCarrier);
 
-				bool ok = (lightCruiser >= 1 && (destroyer + escort) >= 2) ||
-					(escortAircraftCarrier >= 1 && (destroyer >= 2 || escort >= 2)) ||
-					(destroyer >= 1 && escort >= 3) ||
-					(escort >= 2 && (lightCruiser >= 1 || trainingCruiser >= 1));
+				var check = EvaluateEscortFleet(
+					countsEscortInBaseRequirement,
+					leastSmallShipCount,
+					lightCruiser,
+					trainingCruiser,
+					destroyer,
+					escort,
+					escortAircraftCarrier);
 
-				Assert(
-					ok,
-					//() => "[軽巡+(駆逐+海防)2 or 護衛空母+(駆逐2 or 海防2) or 駆逐+海防3 or 軽巡+海防2 or 練巡+海防2]"       // 厳密だけど長いので
-					() => "護衛隊(軽巡1(駆逐+海防)2他)"
-					);
-				AddDetail("編成条件", "軽巡1+(駆逐+海防)2等", ok ? "達成" : "不適合", ok);
-				return this;
-			}
-
-			public MissionClearConditionResult CheckEscortFleetDD2() //軽巡+駆逐2
-			{
-				int lightCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.LightCruiser);
-				int destroyer = members.Count(s => s.MasterShip.ShipType == ShipTypes.Destroyer);
-				int trainingCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.TrainingCruiser);
-				int escort = members.Count(s => s.MasterShip.ShipType == ShipTypes.Escort);
-				int escortAircraftCarrier = members.Count(s => s.MasterShip.IsEscortAircraftCarrier);
-
-				bool ok = (lightCruiser >= 1 && destroyer >= 2) ||
-					(escortAircraftCarrier >= 1 && (destroyer >= 2 || escort >= 2)) ||
-					(destroyer >= 1 && escort >= 3) ||
-					(escort >= 2 && (lightCruiser >= 1 || trainingCruiser >= 1));
-
-				Assert(
-					ok,
-					//() => "[軽巡+駆逐2 or 護衛空母+(駆逐2 or 海防2) or 駆逐+海防3 or 軽巡+海防2 or 練巡+海防2]"       // 厳密だけど長いので
-					() => "護衛隊(軽巡1駆逐2他)"
-					);
-				AddDetail("編成条件", "軽巡1+駆逐2等", ok ? "達成" : "不適合", ok);
-				return this;
-			}
-
-			public MissionClearConditionResult CheckEscortFleetDDDE3()
-			{
-				int lightCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.LightCruiser);
-				int destroyer = members.Count(s => s.MasterShip.ShipType == ShipTypes.Destroyer);
-				int trainingCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.TrainingCruiser);
-				int escort = members.Count(s => s.MasterShip.ShipType == ShipTypes.Escort);
-				int escortAircraftCarrier = members.Count(s => s.MasterShip.ShipType == ShipTypes.LightAircraftCarrier && s.ASWBase > 0);
-
-				bool ok = (lightCruiser >= 1 && (destroyer + escort) >= 3) ||
-					(escortAircraftCarrier >= 1 && (destroyer >= 2 || escort >= 2)) ||
-					(destroyer >= 1 && escort >= 3) ||
-					(escort >= 2 && (lightCruiser >= 1 || trainingCruiser >= 1));
-
-				Assert(
-					ok,
-					//() => "[軽巡+(駆逐+海防)3 or 護衛空母+(駆逐2 or 海防2) or 駆逐+海防3 or 軽巡+海防2 or 練巡+海防2]"       // 厳密だけど長いので
-					() => "護衛隊(軽巡1(駆逐+海防)3他)"
-					);
-				AddDetail("編成条件", "軽巡1+(駆逐+海防)3等", ok ? "達成" : "不適合", ok);
-				return this;
-			}
-			
-			public MissionClearConditionResult CheckEscortFleetDD3()
-			{
-				int lightCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.LightCruiser);
-				int destroyer = members.Count(s => s.MasterShip.ShipType == ShipTypes.Destroyer);
-				int trainingCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.TrainingCruiser);
-				int escort = members.Count(s => s.MasterShip.ShipType == ShipTypes.Escort);
-				int escortAircraftCarrier = members.Count(s => s.MasterShip.ShipType == ShipTypes.LightAircraftCarrier && s.ASWBase > 0);
-
-				bool ok = (lightCruiser >= 1 && destroyer >= 3) ||
-					(escortAircraftCarrier >= 1 && (destroyer >= 2 || escort >= 2)) ||
-					(destroyer >= 1 && escort >= 3) ||
-					(escort >= 2 && (lightCruiser >= 1 || trainingCruiser >= 1));
-
-				Assert(
-					ok,
-					//() => "[軽巡+駆逐3 or 護衛空母+(駆逐2 or 海防2) or 駆逐+海防3 or 軽巡+海防2 or 練巡+海防2]"       // 厳密だけど長いので
-					() => "護衛隊(軽巡1駆逐3他)"
-					);
-				AddDetail("編成条件", "軽巡1+駆逐3等", ok ? "達成" : "不適合", ok);
-				return this;
-			}
-
-			public MissionClearConditionResult CheckEscortFleetDD4()
-			{
-				int lightCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.LightCruiser);
-				int destroyer = members.Count(s => s.MasterShip.ShipType == ShipTypes.Destroyer);
-				int trainingCruiser = members.Count(s => s.MasterShip.ShipType == ShipTypes.TrainingCruiser);
-				int escort = members.Count(s => s.MasterShip.ShipType == ShipTypes.Escort);
-				int escortAircraftCarrier = members.Count(s => s.MasterShip.ShipType == ShipTypes.LightAircraftCarrier && s.ASWBase > 0);
-
-				bool ok = (lightCruiser >= 1 && destroyer >= 4) ||
-					(escortAircraftCarrier >= 1 && (destroyer >= 2 || escort >= 2)) ||
-					(destroyer >= 1 && escort >= 3) ||
-					(escort >= 2 && (lightCruiser >= 1 || trainingCruiser >= 1));
-
-				Assert(
-					ok,
-					//() => "[軽巡+(駆逐+海防)4 or 軽巡+海防2 or 護衛空母+(駆逐2 or 海防2) or 駆逐+海防3 or 練巡+海防2]"       // 厳密だけど長いので
-					() => "護衛隊(軽巡1駆逐4他)"
-					);
-				AddDetail("編成条件", "軽巡1+駆逐4等", ok ? "達成" : "不適合", ok);
+				Assert(check.IsSatisfied, () => check.FailureReasonText);
+				AddDetail("編成条件", check.RequirementText, targetFleet == null ? "-" : check.CurrentValueText, check.IsSatisfied);
 				return this;
 			}
 
