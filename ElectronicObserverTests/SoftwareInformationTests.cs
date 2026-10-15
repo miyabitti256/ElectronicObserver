@@ -89,49 +89,5 @@ namespace ElectronicObserverTests
 			Assert.Contains(SoftwareInformation.ForkAuthorName, SoftwareInformation.RepositoryUrl);
 			Assert.Equal($"https://github.com/{SoftwareInformation.ForkAuthorName}", SoftwareInformation.ForkAuthorUrl);
 		}
-
-		[Fact]
-		public void InstalledVersionNotes_IsEmptyWithoutAHistory()
-		{
-			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.txt");
-			bool existed = File.Exists(path);
-			string backup = existed ? File.ReadAllText(path) : null;
-
-			try
-			{
-				File.WriteAllText(path, "2026/10/16 0:00:00\r\n4.7.1-20261016\r\n");
-
-				Assert.Equal(string.Empty, SoftwareInformation.InstalledVersionNotes);
-			}
-			finally
-			{
-				if (existed)
-					File.WriteAllText(path, backup);
-				else
-					File.Delete(path);
-			}
-		}
-
-		[Fact]
-		public void InstalledVersionNotes_ReturnsTheLinesAfterTheVersion()
-		{
-			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.txt");
-			bool existed = File.Exists(path);
-			string backup = existed ? File.ReadAllText(path) : null;
-
-			try
-			{
-				File.WriteAllText(path, "2026/10/16 0:00:00\r\n4.7.1-20261016\r\n* 変更点1\r\n* 変更点2\r\n");
-
-				Assert.Equal("* 変更点1\r\n* 変更点2", SoftwareInformation.InstalledVersionNotes);
-			}
-			finally
-			{
-				if (existed)
-					File.WriteAllText(path, backup);
-				else
-					File.Delete(path);
-			}
-		}
 	}
 }

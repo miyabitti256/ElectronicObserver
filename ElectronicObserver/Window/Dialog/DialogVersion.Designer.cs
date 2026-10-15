@@ -49,11 +49,9 @@
             this.label13 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
             this.LabelForkVersion = new System.Windows.Forms.Label();
             this.TextAuthorFork = new System.Windows.Forms.LinkLabel();
             this.TextInformation4 = new System.Windows.Forms.LinkLabel();
-            this.TextHistory = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // TextVersion
@@ -90,7 +88,7 @@
             // ButtonClose
             // 
             this.ButtonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.ButtonClose.Location = new System.Drawing.Point(377, 410);
+            this.ButtonClose.Location = new System.Drawing.Point(377, 285);
             this.ButtonClose.Name = "ButtonClose";
             this.ButtonClose.Size = new System.Drawing.Size(75, 23);
             this.ButtonClose.TabIndex = 0;
@@ -298,43 +296,17 @@
             this.TextInformation4.Text = "https://github.com/miyabitti256/ElectronicObserver";
             this.TextInformation4.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.TextInformation4_LinkClicked);
             // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(13, 289);
-            this.label16.Margin = new System.Windows.Forms.Padding(3);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(65, 15);
-            this.label16.TabIndex = 26;
-            this.label16.Text = "更新履歴：";
-            // 
-            // TextHistory
-            // 
-            this.TextHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.TextHistory.Location = new System.Drawing.Point(13, 308);
-            this.TextHistory.Multiline = true;
-            this.TextHistory.Name = "TextHistory";
-            this.TextHistory.ReadOnly = true;
-            this.TextHistory.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.TextHistory.Size = new System.Drawing.Size(438, 92);
-            this.TextHistory.TabIndex = 27;
-            this.TextHistory.WordWrap = false;
-            // 
             // DialogVersion
             // 
             this.AcceptButton = this.ButtonClose;
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(464, 441);
+            this.ClientSize = new System.Drawing.Size(464, 320);
             this.Controls.Add(this.label13);
             this.Controls.Add(this.label14);
             this.Controls.Add(this.LabelForkVersion);
             this.Controls.Add(this.label15);
             this.Controls.Add(this.TextAuthorFork);
             this.Controls.Add(this.TextInformation4);
-            this.Controls.Add(this.label16);
-            this.Controls.Add(this.TextHistory);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label10);
@@ -391,10 +363,8 @@
 		private System.Windows.Forms.Label label13;
 		private System.Windows.Forms.Label label14;
 		private System.Windows.Forms.Label label15;
-		private System.Windows.Forms.Label label16;
 		private System.Windows.Forms.Label LabelForkVersion;
 		private System.Windows.Forms.LinkLabel TextAuthorFork;
 		private System.Windows.Forms.LinkLabel TextInformation4;
-		private System.Windows.Forms.TextBox TextHistory;
 	}
 }

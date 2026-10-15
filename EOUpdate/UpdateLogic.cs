@@ -156,5 +156,58 @@ namespace ElectronicObserver.Update
 
 			return builder.ToString();
 		}
+
+		/// <summary>
+		/// 配布 zip / checksums.txt を置くディレクトリ。
+		/// 本体がバックグラウンドでダウンロードし、更新プログラムがそれを使って適用するため、
+		/// 両者で同じ場所を指す必要がある。
+		/// </summary>
+		public static string GetDownloadDirectory()
+		{
+			return Path.Combine(
+				Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+				"ElectronicObserver",
+				"Update");
+		}
+
+		/// <summary>
+		/// ダウンロード済みのファイルが使える状態か。
+		/// 途中までしか無い (サイズが違う) 場合は false。expectedSize が 0 以下ならサイズは問わない。
+		/// </summary>
+		public static bool IsDownloadedFileComplete(string path, long expectedSize)
+		{
+			if (string.IsNullOrEmpty(path)) return false;
+
+			try
+			{
+				var info = new FileInfo(path);
+				if (!info.Exists) return false;
+
+				return expectedSize <= 0 || info.Length == expectedSize;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
+		/// <summary>キャッシュの掃除用: 指定した zip 以外の古い配布 zip。</summary>
+		public static IReadOnlyList<string> GetObsoleteZipPaths(string directory, string currentZipPath)
+		{
+			var targets = new List<string>();
+			if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory)) return targets;
+
+			string current = string.IsNullOrEmpty(currentZipPath) ? null : Path.GetFullPath(currentZipPath);
+
+			foreach (string file in Directory.EnumerateFiles(directory, ZipAssetPrefix + "*" + ZipAssetExtension, SearchOption.TopDirectoryOnly))
+			{
+				if (current != null && string.Equals(Path.GetFullPath(file), current, StringComparison.OrdinalIgnoreCase))
+					continue;
+
+				targets.Add(file);
+			}
+
+			return targets;
+		}
 	}
 }

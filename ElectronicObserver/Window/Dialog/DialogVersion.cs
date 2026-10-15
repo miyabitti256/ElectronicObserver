@@ -73,10 +73,6 @@ namespace ElectronicObserver.Window.Dialog
 
 			// ベースにしている本家 (dais-k 版) のバージョン
 			LabelBaseVersion.Text = SoftwareInformation.BaseVersionEnglish;
-
-			// version.txt の 3 行目以降に書かれた更新履歴
-			string notes = SoftwareInformation.InstalledVersionNotes;
-			TextHistory.Text = notes.Length > 0 ? notes : "(更新履歴はありません)";
 		}
 
 	}
