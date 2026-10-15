@@ -58,5 +58,42 @@ namespace ElectronicObserverTests
 		{
 			Assert.Equal(0.0, ExpeditionHelper.CalculateGreatSuccessRate(null, 2));
 		}
+
+		// --- 大成功しない可能性がある場合の警告 (#34) ---
+
+		[Theory]
+		[InlineData(1.0, 100, false)]   // 大成功確定 (100%) は閾値 100% で警告しない
+		[InlineData(0.96, 100, true)]   // 5/6 隻キラ (96%) は警告する
+		[InlineData(0.621, 100, true)]
+		[InlineData(0.0, 100, true)]
+		[InlineData(0.8, 80, false)]    // 閾値ちょうどは警告しない
+		[InlineData(0.79, 80, true)]
+		[InlineData(0.5, 0, false)]     // 閾値 0 は「警告しない」
+		[InlineData(0.0, 0, false)]
+		public void IsGreatSuccessRateBelowThreshold_ReturnsExpectedResult(double rate, int thresholdPercent, bool expected)
+		{
+			Assert.Equal(expected, ExpeditionHelper.IsGreatSuccessRateBelowThreshold(rate, thresholdPercent));
+		}
+
+		[Fact]
+		public void GetGreatSuccessWarningText_IncludesRateSparklesAndThreshold()
+		{
+			string text = ExpeditionHelper.GetGreatSuccessWarningText(0.621, 100, 4, 6, 0, 0);
+
+			Assert.Contains("大成功しない可能性があります", text);
+			Assert.Contains("62.1%", text);
+			Assert.Contains("キラ 4/6", text);
+			Assert.Contains("閾値 100%", text);
+			Assert.DoesNotContain("缶", text);
+		}
+
+		[Fact]
+		public void GetGreatSuccessWarningText_IncludesDrumsForDrumExpeditions()
+		{
+			// 遠征38: ドラム缶 10 個が必要
+			string text = ExpeditionHelper.GetGreatSuccessWarningText(0.5, 100, 6, 6, 3, ExpeditionHelper.GetGreatSuccessDrumRequirement(38));
+
+			Assert.Contains("缶 3/10", text);
+		}
 	}
 }

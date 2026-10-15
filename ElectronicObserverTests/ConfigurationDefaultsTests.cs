@@ -20,6 +20,8 @@ namespace ElectronicObserverTests
 
 			Assert.True(config.AlertOnMissionScreenOpened);
 			Assert.False(config.AlertSupplyDepleted);
+			Assert.False(config.AlertGreatSuccessBelow);
+			Assert.Equal(100, config.GreatSuccessRateThreshold);
 			Assert.Equal(2, config.SelectedFleetId);
 			Assert.Equal(0, config.SelectedTabIndex);
 			Assert.Equal(new[] { 0, 0, 2, 5, 38 }, config.TargetMissions);
@@ -49,6 +51,8 @@ namespace ElectronicObserverTests
 			{
 				AlertOnMissionScreenOpened = false,
 				AlertSupplyDepleted = true,
+				AlertGreatSuccessBelow = true,
+				GreatSuccessRateThreshold = 75,
 				SelectedFleetId = 4,
 				SelectedTabIndex = 1,
 				TargetMissions = new[] { 0, 0, 7, 0, 123 },
@@ -63,6 +67,8 @@ namespace ElectronicObserverTests
 
 			Assert.False(restored.AlertOnMissionScreenOpened);
 			Assert.True(restored.AlertSupplyDepleted);
+			Assert.True(restored.AlertGreatSuccessBelow);
+			Assert.Equal(75, restored.GreatSuccessRateThreshold);
 			Assert.Equal(4, restored.SelectedFleetId);
 			Assert.Equal(1, restored.SelectedTabIndex);
 			Assert.Equal(new[] { 0, 0, 7, 0, 123 }, restored.TargetMissions);

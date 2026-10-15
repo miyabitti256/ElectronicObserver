@@ -113,6 +113,29 @@ namespace ElectronicObserver.Data
 		}
 
 		/// <summary>
+		/// 大成功率が閾値 (%) を下回るか、つまり大成功しない可能性があるかを判定します。
+		/// 閾値 0 は「警告しない」として常に false を返します。
+		/// </summary>
+		public static bool IsGreatSuccessRateBelowThreshold(double rate, int thresholdPercent)
+		{
+			if (thresholdPercent <= 0) return false;
+
+			return rate * 100.0 < thresholdPercent - 1e-6;
+		}
+
+		/// <summary>
+		/// 大成功しない可能性がある場合の警告文を作ります (純粋関数)。
+		/// </summary>
+		public static string GetGreatSuccessWarningText(double rate, int thresholdPercent, int sparkleCount, int totalShips, int drumCount, int drumRequirement)
+		{
+			string detail = $"キラ {sparkleCount}/{totalShips}";
+			if (drumRequirement > 0)
+				detail += $"・缶 {drumCount}/{drumRequirement}";
+
+			return $"大成功しない可能性があります: 大成功率 {rate:P1}（{detail}）／閾値 {thresholdPercent}%";
+		}
+
+		/// <summary>
 		/// 大成功条件の解説テキストを取得します。
 		/// </summary>
 		public static string GetGreatSuccessConditionDescription(int missionId)

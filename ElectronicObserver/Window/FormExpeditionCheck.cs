@@ -333,6 +333,11 @@ namespace ElectronicObserver.Window
 			checkAlert.Checked = config.AlertOnMissionScreenOpened;
 			checkAlertSupply.Checked = config.AlertSupplyDepleted;
 
+			// 大成功しない可能性がある場合の警告 (既定 OFF・閾値 100%)
+			checkAlertGreatSuccess.Checked = config.AlertGreatSuccessBelow;
+			numGreatSuccessThreshold.Value = ExpeditionSelection.SanitizeGreatSuccessRateThreshold(config.GreatSuccessRateThreshold);
+			UpdateGreatSuccessThresholdEnabled();
+
 			// 艦隊ごとの遠征 (保存値が有効なものだけ採用し、それ以外は既定値を維持)
 			_targetMissions = ExpeditionSelection.SanitizeTargetMissions(config.TargetMissions);
 
@@ -457,6 +462,51 @@ namespace ElectronicObserver.Window
 			}
 		}
 
+		private void checkAlertGreatSuccess_CheckedChanged(object sender, EventArgs e)
+		{
+			UpdateGreatSuccessThresholdEnabled();
+
+			if (!_isLoaded) return;
+			var config = Utility.Configuration.Config.FormExpeditionCheck;
+			if (config != null)
+			{
+				config.AlertGreatSuccessBelow = checkAlertGreatSuccess.Checked;
+			}
+		}
+
+		private void numGreatSuccessThreshold_ValueChanged(object sender, EventArgs e)
+		{
+			if (!_isLoaded) return;
+			var config = Utility.Configuration.Config.FormExpeditionCheck;
+			if (config != null)
+			{
+				config.GreatSuccessRateThreshold = (int)numGreatSuccessThreshold.Value;
+			}
+		}
+
+		/// <summary>
+		/// 閾値の入力欄は、大成功の警告がONのときだけ操作できるようにします。
+		/// </summary>
+		private void UpdateGreatSuccessThresholdEnabled()
+		{
+			numGreatSuccessThreshold.Enabled = checkAlertGreatSuccess.Checked;
+			labelGreatSuccessRate.Enabled = checkAlertGreatSuccess.Checked;
+			labelGreatSuccessPercent.Enabled = checkAlertGreatSuccess.Checked;
+		}
+
+		/// <summary>
+		/// 設定されている大成功の警告閾値 (%)。範囲外・未設定は既定値 (100%)。
+		/// </summary>
+		private int GreatSuccessRateThreshold
+		{
+			get
+			{
+				var config = Utility.Configuration.Config.FormExpeditionCheck;
+				int saved = config?.GreatSuccessRateThreshold ?? ExpeditionSelection.DefaultGreatSuccessRateThreshold;
+				return ExpeditionSelection.SanitizeGreatSuccessRateThreshold(saved);
+			}
+		}
+
 		private void FormExpeditionCheck_Resize(object sender, EventArgs e)
 		{
 			try
@@ -517,8 +567,8 @@ namespace ElectronicObserver.Window
 
 			panelControl.SuspendLayout();
 
-			// 安定した2行配置（高さ 52px）
-			panelControl.Height = 52;
+			// 安定した3行配置（高さ 74px）
+			panelControl.Height = 74;
 
 			// 1行目: [艦隊] [海域] [遠征]
 			labelFleet.Location = new Point(4, 7);
@@ -540,6 +590,19 @@ namespace ElectronicObserver.Window
 
 			checkAlertSupply.Location = new Point(165, 30);
 			checkAlertSupply.Size = new Size(100, 16);
+
+			// 3行目: [大成功しない場合も警告] [大成功率が] [100] [% 未満]
+			checkAlertGreatSuccess.Location = new Point(6, 52);
+			checkAlertGreatSuccess.Size = new Size(170, 16);
+
+			labelGreatSuccessRate.Location = new Point(180, 55);
+			labelGreatSuccessRate.Size = new Size(66, 16);
+
+			numGreatSuccessThreshold.Location = new Point(250, 51);
+			numGreatSuccessThreshold.Size = new Size(50, 19);
+
+			labelGreatSuccessPercent.Location = new Point(305, 55);
+			labelGreatSuccessPercent.Size = new Size(56, 16);
 
 			panelControl.ResumeLayout();
 		}
@@ -927,14 +990,32 @@ namespace ElectronicObserver.Window
 				bool isAmmoEmpty = fleet.MembersInstance.Any(s => s != null && s.AmmoRate < 1);
 				bool isSupplyEmpty = isFuelEmpty || isAmmoEmpty;
 
+				// 大成功しない可能性がある場合の警告 (チェックONのときだけ)
+				double gsRate = ExpeditionHelper.CalculateGreatSuccessRate(fleet, missionId);
+				bool greatSuccessRisk = checkAlertGreatSuccess.Checked &&
+					ExpeditionHelper.IsGreatSuccessRateBelowThreshold(gsRate, GreatSuccessRateThreshold);
+
 				// 未補給のみで、かつ「未補給も警告」がOFFの場合はモーダル警告の対象外（緊急補給で対応可能）
-				if (!result.IsSuceeded || (isSupplyEmpty && checkAlertSupply.Checked))
+				if (!result.IsSuceeded || (isSupplyEmpty && checkAlertSupply.Checked) || greatSuccessRisk)
 				{
 					var reasons = new List<string>(result.FailureReason);
 					if (isSupplyEmpty)
 						reasons.Add("燃料/弾薬が未補給です");
 
-					warnings.Add($"【第{fleetId}艦隊: {fleet.Name}】\r\n設定遠征: [{mission.DisplayID}] {mission.Name}\r\n失敗原因: {string.Join(", ", reasons)}");
+					var lines = new List<string>();
+					if (reasons.Any())
+						lines.Add($"失敗原因: {string.Join(", ", reasons)}");
+
+					if (greatSuccessRisk)
+						lines.Add(ExpeditionHelper.GetGreatSuccessWarningText(
+							gsRate,
+							GreatSuccessRateThreshold,
+							fleet.MembersInstance.Count(s => s != null && s.Condition > 49),
+							fleet.MembersInstance.Count(s => s != null),
+							CountDrums(fleet),
+							ExpeditionHelper.GetGreatSuccessDrumRequirement(missionId)));
+
+					warnings.Add($"【第{fleetId}艦隊: {fleet.Name}】\r\n設定遠征: [{mission.DisplayID}] {mission.Name}\r\n" + string.Join("\r\n", lines));
 				}
 				else if (isSupplyEmpty && !checkAlertSupply.Checked)
 				{
@@ -952,7 +1033,7 @@ namespace ElectronicObserver.Window
 
 				System.Media.SystemSounds.Exclamation.Play();
 				MessageBox.Show(
-					"遠征条件を満たしていない艦隊があります！\r\n出撃前に編成や補給を確認してください。\r\n\r\n" + string.Join("\r\n\r\n", warnings),
+					"確認が必要な艦隊があります！\r\n出撃前に編成・補給・キラ状態を確認してください。\r\n\r\n" + string.Join("\r\n\r\n", warnings),
 					"遠征可否チェック警告",
 					MessageBoxButtons.OK,
 					MessageBoxIcon.Warning);
@@ -974,22 +1055,48 @@ namespace ElectronicObserver.Window
 			bool isFuelEmpty = fleet.MembersInstance.Any(s => s != null && s.FuelRate < 1);
 			bool isAmmoEmpty = fleet.MembersInstance.Any(s => s != null && s.AmmoRate < 1);
 
-			if (!result.IsSuceeded || isFuelEmpty || isAmmoEmpty)
+			// 大成功しない可能性がある場合の警告 (チェックONのときだけ)
+			double gsRate = ExpeditionHelper.CalculateGreatSuccessRate(fleet, missionId);
+			bool greatSuccessRisk = checkAlertGreatSuccess.Checked &&
+				ExpeditionHelper.IsGreatSuccessRateBelowThreshold(gsRate, GreatSuccessRateThreshold);
+
+			if (!result.IsSuceeded || isFuelEmpty || isAmmoEmpty || greatSuccessRisk)
 			{
 				var reasons = new List<string>(result.FailureReason);
 				if (isFuelEmpty || isAmmoEmpty)
 					reasons.Add("燃料/弾薬未補給");
 
-				string msg = $"⚠️ 出発警告: 第{fleetId}艦隊が遠征 [{mission.DisplayID}] {mission.Name} の条件を満たしていません！ 理由: {string.Join(", ", reasons)}";
+				if (greatSuccessRisk)
+					reasons.Add(ExpeditionHelper.GetGreatSuccessWarningText(
+						gsRate,
+						GreatSuccessRateThreshold,
+						fleet.MembersInstance.Count(s => s != null && s.Condition > 49),
+						fleet.MembersInstance.Count(s => s != null),
+						CountDrums(fleet),
+						ExpeditionHelper.GetGreatSuccessDrumRequirement(missionId)));
+
+				string msg = $"⚠️ 出発警告: 第{fleetId}艦隊の遠征 [{mission.DisplayID}] {mission.Name} に確認が必要な点があります！ 理由: {string.Join(", ", reasons)}";
 				Utility.Logger.Add(3, msg);
 
 				System.Media.SystemSounds.Hand.Play();
 				MessageBox.Show(
-					$"⚠️ 出発警告: 第{fleetId}艦隊が遠征 [{mission.DisplayID}] {mission.Name} の条件を満たしていません！\r\n\r\n理由: {string.Join(", ", reasons)}",
-					"遠征失敗警告",
+					$"⚠️ 出発警告: 第{fleetId}艦隊の遠征 [{mission.DisplayID}] {mission.Name} に確認が必要な点があります！\r\n\r\n理由: {string.Join(", ", reasons)}",
+					"遠征警告",
 					MessageBoxButtons.OK,
-					MessageBoxIcon.Error);
+					MessageBoxIcon.Warning);
 			}
+		}
+
+		/// <summary>
+		/// 艦隊が装備しているドラム缶の数を数えます。
+		/// </summary>
+		private static int CountDrums(FleetData fleet)
+		{
+			if (fleet == null) return 0;
+
+			return fleet.MembersInstance
+				.Where(s => s != null)
+				.Sum(s => s.AllSlotInstance.Count(e => e != null && e.MasterEquipment.CategoryType == EquipmentTypes.TransportContainer));
 		}
 
 		protected override string GetPersistString()
