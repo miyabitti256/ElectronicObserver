@@ -191,6 +191,26 @@ namespace ElectronicObserver.Update
 			}
 		}
 
+		/// <summary>
+		/// ダウンロード済みのチェックサムファイルを、指定した配布ファイルの検証に使えるかどうか。
+		///
+		/// バージョンが変わってもファイルサイズが同じことがあるため (実際に 105 バイトのままだった)、
+		/// サイズだけでは判断できない。中身にその配布ファイルのハッシュが載っているかで判断する。
+		/// </summary>
+		public static bool CanReuseChecksumsFile(string checksumsPath, string fileName, long expectedSize)
+		{
+			if (!IsDownloadedFileComplete(checksumsPath, expectedSize)) return false;
+
+			try
+			{
+				return ParseChecksum(File.ReadAllText(checksumsPath), fileName) != null;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
 		/// <summary>キャッシュの掃除用: 指定した zip 以外の古い配布 zip。</summary>
 		public static IReadOnlyList<string> GetObsoleteZipPaths(string directory, string currentZipPath)
 		{
