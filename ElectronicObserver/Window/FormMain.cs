@@ -901,26 +901,20 @@ namespace ElectronicObserver.Window
 			NotifyUpdateReady();
 		}
 
-		/// <summary>ダウンロードが完了したことを通知し、再起動を促します。</summary>
+		/// <summary>ダウンロードが完了したことを知らせ、再起動を促します。</summary>
 		private void NotifyUpdateReady()
 		{
-			string message =
+			MessageBox.Show(this,
 				$"新しいバージョン {_updateDownloader.LatestVersion} の準備ができました。\r\n" +
 				"再起動すると更新が適用されます。\r\n\r\n" +
-				(IsInSortie() ? "※ 出撃中です。母港に戻ってから再起動することをおすすめします。\r\n\r\n" : "") +
-				"今すぐ再起動しますか？\r\n" +
-				"(「いいえ」を選ぶとこのまま続けられます。再起動はメニューバー右端のボタン、またはヘルプメニューからいつでもできます)";
-
-			if (MessageBox.Show(this, message, "アップデート情報",
-				MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-			{
-				RestartForUpdate();
-			}
+				"再起動は、メニューバー右端の「更新の準備完了」ボタンから行えます。\r\n" +
+				"タイミングの良いときに再起動してください。",
+				"アップデート情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
 		/// <summary>
 		/// 更新を適用するために終了し、更新プログラムに再起動させます。
-		/// 出撃中は確認します (進行中の出撃を途切れさせないため)。
+		/// 取り消せない操作なので、必ず確認してから実行する。
 		/// </summary>
 		private void RestartForUpdate()
 		{
@@ -932,10 +926,12 @@ namespace ElectronicObserver.Window
 				return;
 			}
 
-			if (IsInSortie() &&
-				MessageBox.Show(this,
-					"出撃中です。再起動すると進行中の出撃の表示が途切れます。\r\n再起動しますか？",
-					"アップデート情報", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)
+			// 押し間違いで終了してしまわないよう、必ずワンクッション置く
+			if (MessageBox.Show(this,
+				$"バージョン {_updateDownloader.LatestVersion} を適用するために再起動します。\r\n" +
+				"再起動すると、ゲームの画面も読み込み直します。\r\n\r\n" +
+				"よろしいですか？",
+				"アップデート情報", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2)
 				!= DialogResult.Yes)
 			{
 				return;
@@ -975,7 +971,7 @@ namespace ElectronicObserver.Window
 					StripMenu_Update.Text = "更新の準備完了（クリックで再起動）";
 					StripMenu_Update.ToolTipText =
 						$"新しいバージョン {_updateDownloader.LatestVersion} を適用できます。\r\n" +
-						"クリックすると終了して更新し、再起動します。";
+						"クリックすると確認のうえ終了して更新し、再起動します。";
 					StripMenu_Update.Visible = true;
 					break;
 
@@ -995,22 +991,6 @@ namespace ElectronicObserver.Window
 		private void StripMenu_Help_ApplyUpdate_Click(object sender, EventArgs e)
 		{
 			RestartForUpdate();
-		}
-
-		/// <summary>出撃中かどうか (再起動のタイミングを確認するために使う)。</summary>
-		private static bool IsInSortie()
-		{
-			try
-			{
-				var fleet = KCDatabase.Instance.Fleet;
-				if (fleet?.Fleets == null) return false;
-
-				return fleet.Fleets.Values.Any(f => f != null && f.IsInSortie);
-			}
-			catch (Exception)
-			{
-				return false;
-			}
 		}
 
 		private void StripMenu_File_Configuration_Click(object sender, EventArgs e)
