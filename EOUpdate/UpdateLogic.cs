@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ElectronicObserver.Update
 {
@@ -151,10 +152,85 @@ namespace ElectronicObserver.Update
 			builder.AppendLine(date.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture));
 			builder.AppendLine(release.Version);
 
-			if (!string.IsNullOrWhiteSpace(release.Body))
-				builder.AppendLine(release.Body.Trim());
+			string notes = SanitizeReleaseNotes(release.Body);
+			if (!string.IsNullOrWhiteSpace(notes))
+				builder.AppendLine(notes);
 
 			return builder.ToString();
+		}
+
+		/// <summary>
+		/// GitHub のリリース本文を、アプリ内 (テキスト表示) で崩れない形に整形する。
+		/// 見出し記号・強調・コード・リンク・自動生成の変更履歴リンクなどの markdown を除去する。
+		/// </summary>
+		public static string SanitizeReleaseNotes(string releaseNotes)
+		{
+			if (string.IsNullOrWhiteSpace(releaseNotes)) return null;
+
+			var lines = new List<string>();
+			bool inComment = false;
+
+			foreach (string rawLine in releaseNotes.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
+			{
+				string line = rawLine.Trim();
+
+				// HTML コメントは (複数行でも) 表示しない
+				if (inComment)
+				{
+					if (line.Contains("-->")) inComment = false;
+					continue;
+				}
+				if (line.StartsWith("<!--", StringComparison.Ordinal))
+				{
+					if (!line.Contains("-->")) inComment = true;
+					continue;
+				}
+
+				if (line.Length == 0)
+				{
+					// 連続する空行は 1 つにまとめる
+					if (lines.Count > 0 && lines[lines.Count - 1].Length > 0) lines.Add("");
+					continue;
+				}
+
+				// 表示する意味のない行は落とす
+				if (line == "---" || line == "***" || line == "___") continue;
+				if (line.StartsWith("**Full Changelog**", StringComparison.Ordinal)) continue;
+				if (line.StartsWith("Full Changelog", StringComparison.Ordinal)) continue;
+				if (line.Contains("made their first contribution")) continue;
+
+				// 見出し記号 (#) を除去する
+				line = line.TrimStart('#').Trim();
+				if (line.Length == 0) continue;
+
+				// インラインの装飾を除去する (リンクは URL を落とす前に処理する)
+				line = Regex.Replace(line, @"\*\*(.+?)\*\*", "$1");
+				line = Regex.Replace(line, @"__(.+?)__", "$1");
+				line = Regex.Replace(line, @"`([^`]+)`", "$1");
+				line = Regex.Replace(line, @"\[([^\]]+)\]\([^)]*\)", "$1");
+
+				// "* item by @user in https://github.com/o/r/pull/27" → "* item (#27)"
+				line = Regex.Replace(line, @"\s+by\s+@[\w-]+\s+in\s+https?://\S*?/(?:pull|issues)/(\d+)\S*", " (#$1)");
+				// 残った URL と、それを導く語を除去する
+				line = Regex.Replace(line, @"\s+(?:by\s+@[\w-]+\s+)?in\s+https?://\S+", "");
+				line = Regex.Replace(line, @"\s*https?://\S+", "");
+				line = Regex.Replace(line, @"\s{2,}", " ");
+
+				// 箇条書きの記号を "* " に統一する
+				if (line.StartsWith("- ", StringComparison.Ordinal) || line.StartsWith("+ ", StringComparison.Ordinal))
+					line = "* " + line.Substring(2).Trim();
+
+				line = line.TrimEnd();
+				if (line.Length == 0) continue;
+
+				lines.Add(line);
+			}
+
+			while (lines.Count > 0 && lines[lines.Count - 1].Length == 0) lines.RemoveAt(lines.Count - 1);
+
+			if (lines.Count == 0) return null;
+
+			return string.Join("\n", lines);
 		}
 
 		/// <summary>
