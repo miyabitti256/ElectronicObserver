@@ -404,7 +404,7 @@ namespace ElectronicObserver.Window
 
 			// 更新の進行状況 (ダウンロード中の進捗)
 			if (_updateDownloader.Status != UpdateDownloadStatus.None)
-				UpdateUpdateStatusStrip();
+				UpdateUpdateIndicator();
 
 
 			// WMP コントロールによって音量が勝手に変えられてしまうため、前回終了時の音量の再設定を試みる。
@@ -859,7 +859,7 @@ namespace ElectronicObserver.Window
 			if (_updateDownloader.IsReady && _updateDownloader.LatestVersion == result.LatestVersion)
 			{
 				// すでにダウンロード済み (再起動すれば適用できる)
-				UpdateUpdateStatusStrip();
+				UpdateUpdateIndicator();
 				return;
 			}
 
@@ -877,7 +877,7 @@ namespace ElectronicObserver.Window
 			}
 
 			bool downloaded = await _updateDownloader.DownloadAsync(result.Release);
-			UpdateUpdateStatusStrip();
+			UpdateUpdateIndicator();
 
 			if (!downloaded)
 			{
@@ -909,7 +909,7 @@ namespace ElectronicObserver.Window
 				"再起動すると更新が適用されます。\r\n\r\n" +
 				(IsInSortie() ? "※ 出撃中です。母港に戻ってから再起動することをおすすめします。\r\n\r\n" : "") +
 				"今すぐ再起動しますか？\r\n" +
-				"(「いいえ」を選ぶとこのまま続けられます。再起動はヘルプメニューまたはステータスバーからいつでもできます)";
+				"(「いいえ」を選ぶとこのまま続けられます。再起動はメニューバー右端のボタン、またはヘルプメニューからいつでもできます)";
 
 			if (MessageBox.Show(this, message, "アップデート情報",
 				MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
@@ -957,37 +957,37 @@ namespace ElectronicObserver.Window
 			Close();
 		}
 
-		/// <summary>更新の進行状況をステータスバーとメニューに反映します。</summary>
-		private void UpdateUpdateStatusStrip()
+		/// <summary>更新の状況をメニューバー右端のボタンとヘルプメニューに反映します。</summary>
+		private void UpdateUpdateIndicator()
 		{
 			switch (_updateDownloader.Status)
 			{
 				case UpdateDownloadStatus.Downloading:
-					StripStatus_Update.IsLink = false;
-					StripStatus_Update.Text = $"更新をダウンロード中… {_updateDownloader.Progress * 100:F0}%";
-					StripStatus_Update.ToolTipText =
+					StripMenu_Update.Enabled = false;
+					StripMenu_Update.Text = $"更新をダウンロード中… {_updateDownloader.Progress * 100:F0}%";
+					StripMenu_Update.ToolTipText =
 						$"新しいバージョン {_updateDownloader.LatestVersion} をバックグラウンドでダウンロードしています。";
-					StripStatus_Update.Visible = true;
+					StripMenu_Update.Visible = true;
 					break;
 
 				case UpdateDownloadStatus.Ready:
-					StripStatus_Update.IsLink = true;
-					StripStatus_Update.Text = "更新の準備完了（クリックで再起動）";
-					StripStatus_Update.ToolTipText =
+					StripMenu_Update.Enabled = true;
+					StripMenu_Update.Text = "更新の準備完了（クリックで再起動）";
+					StripMenu_Update.ToolTipText =
 						$"新しいバージョン {_updateDownloader.LatestVersion} を適用できます。\r\n" +
 						"クリックすると終了して更新し、再起動します。";
-					StripStatus_Update.Visible = true;
+					StripMenu_Update.Visible = true;
 					break;
 
 				default:
-					StripStatus_Update.Visible = false;
+					StripMenu_Update.Visible = false;
 					break;
 			}
 
 			StripMenu_Help_ApplyUpdate.Enabled = _updateDownloader.IsReady;
 		}
 
-		private void StripStatus_Update_Click(object sender, EventArgs e)
+		private void StripMenu_Update_Click(object sender, EventArgs e)
 		{
 			RestartForUpdate();
 		}

@@ -136,9 +136,9 @@
 			this.StripMenu_Help_CheckUpdate = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
 			this.StripMenu_Help_ApplyUpdate = new System.Windows.Forms.ToolStripMenuItem();
+			this.StripMenu_Update = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripStatus = new System.Windows.Forms.StatusStrip();
 			this.StripStatus_Information = new System.Windows.Forms.ToolStripStatusLabel();
-			this.StripStatus_Update = new System.Windows.Forms.ToolStripStatusLabel();
 			this.StripStatus_Clock = new System.Windows.Forms.ToolStripStatusLabel();
 			this.UIUpdateTimer = new System.Windows.Forms.Timer(this.components);
 			this.MainDockPanel = new WeifenLuo.WinFormsUI.Docking.DockPanel();
@@ -153,12 +153,22 @@
             this.StripMenu_View,
             this.StripMenu_Tool,
             this.StripMenu_Debug,
-            this.StripMenu_Help});
+            this.StripMenu_Help,
+            this.StripMenu_Update});
 			this.StripMenu.Location = new System.Drawing.Point(0, 0);
 			this.StripMenu.Name = "StripMenu";
+			this.StripMenu.ShowItemToolTips = true;
 			this.StripMenu.Size = new System.Drawing.Size(640, 26);
 			this.StripMenu.TabIndex = 2;
 			this.StripMenu.Text = "menuStrip1";
+			// 
+			// StripMenu_Update
+			// 
+			this.StripMenu_Update.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+			this.StripMenu_Update.Name = "StripMenu_Update";
+			this.StripMenu_Update.Size = new System.Drawing.Size(0, 22);
+			this.StripMenu_Update.Visible = false;
+			this.StripMenu_Update.Click += new System.EventHandler(this.StripMenu_Update_Click);
 			// 
 			// StripMenu_File
 			// 
@@ -980,7 +990,6 @@
 			this.StripStatus.ImageScalingSize = new System.Drawing.Size(32, 32);
 			this.StripStatus.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.StripStatus_Information,
-            this.StripStatus_Update,
             this.StripStatus_Clock});
 			this.StripStatus.Location = new System.Drawing.Point(0, 457);
 			this.StripStatus.Name = "StripStatus";
@@ -995,14 +1004,6 @@
 			this.StripStatus_Information.Spring = true;
 			this.StripStatus_Information.Text = "Now Preparing...";
 			this.StripStatus_Information.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// StripStatus_Update
-			// 
-			this.StripStatus_Update.Name = "StripStatus_Update";
-			this.StripStatus_Update.Size = new System.Drawing.Size(39, 18);
-			this.StripStatus_Update.Text = "Update";
-			this.StripStatus_Update.Visible = false;
-			this.StripStatus_Update.Click += new System.EventHandler(this.StripStatus_Update_Click);
 			// 
 			// StripStatus_Clock
 			// 
@@ -1088,7 +1089,8 @@
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help_CheckUpdate;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator16;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Help_ApplyUpdate;
-		private System.Windows.Forms.ToolStripStatusLabel StripStatus_Update;
+		/// <summary>メニューバー右端の更新状況 (再起動して適用するボタン)</summary>
+		private System.Windows.Forms.ToolStripMenuItem StripMenu_Update;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File_Configuration;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_File_Close;
