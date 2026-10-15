@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ElectronicObserver.Update;
-using EOUpdater;
 using Xunit;
 
 namespace ElectronicObserverTests

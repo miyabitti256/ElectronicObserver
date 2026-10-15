@@ -5,9 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using ElectronicObserver.Update;
 
-namespace EOUpdater
+namespace ElectronicObserver.Update
 {
 	/// <summary>
 	/// 更新処理のうち環境に依存しないロジック。
