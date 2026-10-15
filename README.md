@@ -35,9 +35,36 @@ wikiを丸ごと移植する方法がわかりません。
 
 ## ダウンロード
 
-[リリースページ](https://github.com/dais-k/ElectronicObserver/releases) を参照してください。
+[リリースページ](https://github.com/miyabitti256/ElectronicObserver/releases) を参照してください。
 
 更新内容・履歴はリリースページを確認してください。
+
+
+## ビルド
+
+* Visual Studio 2022 (または Build Tools) と .NET Framework 4.8 Developer Pack
+* ウィンドウレイアウトに使う [DockPanelSuite](https://github.com/andanteyk/dockpanelsuite) は
+  このリポジトリに含まれていないため、`DockPanelSuite` ディレクトリに別途クローンしてください。
+
+```powershell
+git clone https://github.com/andanteyk/dockpanelsuite.git DockPanelSuite
+git -C DockPanelSuite checkout 7a5eac4003cd99fbc152b1a7ebeb9efbacf62d1d
+
+nuget restore ElectronicObserver.sln
+msbuild ElectronicObserver\ElectronicObserver.csproj -p:Configuration=Release
+```
+
+(`nuget` / `msbuild` は Visual Studio の開発者コマンドプロンプトなど、PATH が通った状態で実行してください。)
+
+配布用の zip と `checksums.txt` を作成する場合:
+
+```powershell
+.\scripts\package-release.ps1 -BinDir ElectronicObserver\bin\Release -OutputDir dist -Version 4.7.1-20261016
+```
+
+`v*` 形式のタグを push すると GitHub Actions がビルドを行い、zip と `checksums.txt` を
+添付した Release を作成します (`.github/workflows/release.yml`)。
+手動実行 (`workflow_dispatch`) はビルドとパッケージ作成のみ行うドライランです。
 
 
 ## 開発者の皆様へ

@@ -170,3 +170,6 @@ packages/
 /ElectronicObserver/BrowserCache
 /ElectronicObserver/ScreenShot
 /ElectronicObserver/GPUCache
+
+# 配布用パッケージの出力先 (scripts/package-release.ps1)
+/dist/
