@@ -25,10 +25,14 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
-		public void InstalledVersionTime_IsNotInTheFuture()
+		public void InstalledVersionTime_IsNotTooFarInTheFuture()
 		{
-			// 開発中のビルドで「未来のバージョン」になり、更新が永久に来なくなるのを防ぐ
-			Assert.True(SoftwareInformation.InstalledVersionTime <= DateTime.Now.AddDays(1));
+			// このフォークは「まだ使われていない日付」をバージョンにする
+			// (同じ日に何度リリースしても更新が届くようにするため) ので、
+			// 数日先の日付になることがある。桁を間違えたような日付だけを弾く。
+			Assert.True(
+				SoftwareInformation.InstalledVersionTime <= DateTime.Now.AddDays(7),
+				$"インストール済みバージョンの日付が未来すぎます: {SoftwareInformation.InstalledVersionTime:yyyy/MM/dd}");
 		}
 
 		[Fact]
