@@ -62,3 +62,20 @@ wikiを丸ごと移植する方法がわかりません。
 * パラオ版開発:[yosxpeee](https://github.com/yosxpeee/ElectronicObserver)	
 
 
+## アップデート
+
+本体から最新版へ更新できます。配布元はこの Fork の[リリース](https://github.com/miyabitti256/ElectronicObserver/releases)です。
+
+* 起動時（「設定」→「その他」→「アップデートを確認する」が有効なとき）と、「ヘルプ」→「更新を確認」の手動操作で最新版を確認します
+* 新しいバージョンがあれば通知され、「はい」を選ぶと更新プログラム (`EOUpdater.exe`) が起動します
+* 更新プログラムは本体と内蔵ブラウザの終了を待ってから、配布 zip をダウンロードし `checksums.txt` の SHA-256 で検証して上書き展開し、本体を再起動します
+* `Settings` / `Record` / `KCAPI` / `BrowserCache` などのユーザーデータには触れません
+
+### リリース手順（開発者向け）
+
+1. `ElectronicObserver/Utility/SoftwareInformation.cs` の `VersionEnglish` と `UpdateTime` を新しい日付に更新する
+2. `ElectronicObserver/version.txt` の 1 行目（日付）と 2 行目（バージョン）を更新する
+3. `v<バージョン>-<YYYYMMDD>` 形式（例: `v4.7.1-20261016`）のタグを push すると、GitHub Actions がビルドして Release を作成する
+4. 更新確認はタグの日付（`YYYYMMDD`）とインストール済みの日付を比較するため、1〜3 の日付を揃えること
+
+

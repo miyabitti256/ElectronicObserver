@@ -1271,7 +1271,6 @@
 			// Life_CheckUpdateInformation
 			// 
 			this.Life_CheckUpdateInformation.AutoSize = true;
-			this.Life_CheckUpdateInformation.Enabled = false;
 			this.Life_CheckUpdateInformation.Location = new System.Drawing.Point(11, 85);
 			this.Life_CheckUpdateInformation.Name = "Life_CheckUpdateInformation";
 			this.Life_CheckUpdateInformation.Size = new System.Drawing.Size(131, 19);

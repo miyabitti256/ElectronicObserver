@@ -393,6 +393,7 @@
     <Compile Include="Utility\Mathematics\DateTimeHelper.cs" />
     <Compile Include="Utility\Mathematics\Fraction.cs" />
     <Compile Include="Utility\SoftwareInformation.cs" />
+    <Compile Include="Utility\UpdateChecker.cs" />
     <Compile Include="Utility\Storage\SerializableColor.cs" />
     <Compile Include="Utility\Storage\SerializableFont.cs" />
     <Compile Include="Utility\Storage\SerializableKeyValuePair.cs" />

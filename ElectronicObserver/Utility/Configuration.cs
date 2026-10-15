@@ -551,7 +551,7 @@ namespace ElectronicObserver.Utility
 					ConfirmOnClosing = true;
 					TopMost = false;
 					LayoutFilePath = @"Settings\WindowLayout.zip";
-					CheckUpdateInformation = false;
+					CheckUpdateInformation = true;
 					ShowStatusBar = true;
 					ClockFormat = 0;
 					LockLayout = false;
@@ -2000,6 +2000,12 @@ namespace ElectronicObserver.Utility
 
 			if (dt <= DateTimeHelper.CSVStringToTime("2020/06/07 23:00:00"))
 				Update460_AddSallyAreaColorScheme();
+
+
+			// 更新確認 (#13) を実装。それ以前のバージョンで保存された設定では
+			// 更新確認が無効になっているため、一度だけ有効にする (以降は利用者の設定を尊重する)。
+			if (dt < DateTimeHelper.CSVStringToTime("2026/10/16 00:00:00"))
+				Config.Life.CheckUpdateInformation = true;
 
 
 			Config.VersionUpdateTime = DateTimeHelper.TimeToCSVString(SoftwareInformation.UpdateTime);

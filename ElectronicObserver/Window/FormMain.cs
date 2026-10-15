@@ -43,6 +43,11 @@ namespace ElectronicObserver.Window
 
 		private DateTime _prevPlayTimeRecorded = DateTime.MinValue;
 
+		/// <summary>
+		/// 更新の適用のために終了するとき true (終了確認ダイアログを出さない)
+		/// </summary>
+		private bool _closingForUpdate = false;
+
 		#endregion
 
 
@@ -212,7 +217,7 @@ namespace ElectronicObserver.Window
 
 
 
-			SoftwareInformation.CheckUpdate();
+			CheckSoftwareUpdate(false);
 
 			// デバッグ: 開始時にAPIリストを読み込む
 			if (Configuration.Config.Debug.LoadAPIListOnLoad)
@@ -429,7 +434,7 @@ namespace ElectronicObserver.Window
 		private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
 		{
 
-			if (Utility.Configuration.Config.Life.ConfirmOnClosing)
+			if (Utility.Configuration.Config.Life.ConfirmOnClosing && !_closingForUpdate)
 			{
 				if (MessageBox.Show(SoftwareInformation.SoftwareNameJapanese + " を終了しますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2)
 					== System.Windows.Forms.DialogResult.No)
@@ -758,6 +763,109 @@ namespace ElectronicObserver.Window
 				dialog.ShowDialog(this);
 			}
 
+		}
+
+		private void StripMenu_Help_CheckUpdate_Click(object sender, EventArgs e)
+		{
+			CheckSoftwareUpdate(true);
+		}
+
+		/// <summary>
+		/// 配布元 (このフォーク) の最新リリースを確認します。
+		/// 新しいバージョンがあれば通知し、「更新」で更新プログラムを起動して終了します。
+		/// </summary>
+		/// <param name="manual">手動で確認した場合 true (最新でも結果を表示します)</param>
+		private async void CheckSoftwareUpdate(bool manual)
+		{
+			if (!manual && !Utility.Configuration.Config.Life.CheckUpdateInformation)
+				return;
+
+			try
+			{
+				UpdateCheckResult result = await UpdateChecker.CheckAsync();
+
+				switch (result.Status)
+				{
+					case UpdateCheckStatus.UpToDate:
+						Utility.Logger.Add(1, "お使いのバージョンは最新です。");
+
+						if (manual)
+						{
+							MessageBox.Show(this,
+								$"お使いのバージョンは最新です。\r\n\r\nインストール済み : {SoftwareInformation.InstalledVersion}\r\n最新 : {result.LatestVersion}",
+								"アップデート情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
+						}
+						break;
+
+					case UpdateCheckStatus.UpdateAvailable:
+						Utility.Logger.Add(3, "新しいバージョンがリリースされています。 : " + result.LatestVersion);
+						NotifyUpdateAvailable(result);
+						break;
+
+					default:
+						Utility.Logger.Add(3, "アップデート情報の取得に失敗しました。");
+
+						if (manual)
+						{
+							MessageBox.Show(this,
+								"アップデート情報の取得に失敗しました。\r\n\r\n" + result.Error?.Message,
+								"アップデート情報", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+						}
+						break;
+				}
+			}
+			catch (Exception ex)
+			{
+				Utility.ErrorReporter.SendErrorReport(ex, "アップデートの確認に失敗しました。");
+			}
+		}
+
+		/// <summary>新しいバージョンを通知し、希望すれば更新プログラムを起動します。</summary>
+		private void NotifyUpdateAvailable(UpdateCheckResult result)
+		{
+			if (!SoftwareInformation.IsUpdaterAvailable)
+			{
+				Utility.Logger.Add(3, SoftwareInformation.UpdaterFileName + " が見つかりません。");
+
+				if (MessageBox.Show(this,
+					$"新しいバージョン {result.LatestVersion} がリリースされています。\r\n" +
+					$"ただし更新プログラム ({SoftwareInformation.UpdaterFileName}) が見つかりません。\r\n\r\n" +
+					"配布ページを開きますか？",
+					"アップデート情報", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+				{
+					Process.Start(SoftwareInformation.RepositoryUrl + "/releases");
+				}
+
+				return;
+			}
+
+			string notes = (result.Release?.Body ?? "").Trim();
+			if (notes.Length > 4000)
+				notes = notes.Substring(0, 4000) + "…";
+
+			string message =
+				"新しいバージョンがリリースされています。\r\n\r\n" +
+				$"インストール済み : {SoftwareInformation.InstalledVersion}\r\n" +
+				$"最新 : {result.LatestVersion}\r\n\r\n" +
+				(notes.Length > 0 ? $"更新内容 :\r\n{notes}\r\n\r\n" : "") +
+				"今すぐ更新しますか？\r\n(アプリケーションを終了して更新し、再起動します)";
+
+			if (MessageBox.Show(this, message, "アップデート情報", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1)
+				!= DialogResult.Yes)
+				return;
+
+			if (!SoftwareInformation.LaunchUpdater())
+			{
+				MessageBox.Show(this,
+					$"更新プログラム ({SoftwareInformation.UpdaterFileName}) を起動できませんでした。\r\n" +
+					"お手数ですが手動で更新してください。",
+					"アップデート情報", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				return;
+			}
+
+			// 更新プログラムは本体の終了を待ってから適用するため、ここで終了する
+			_closingForUpdate = true;
+			Close();
 		}
 
 		private void StripMenu_File_Configuration_Click(object sender, EventArgs e)
