@@ -351,10 +351,10 @@
 			this.checkAlertGreatSuccess.Checked = false;
 			this.checkAlertGreatSuccess.Location = new System.Drawing.Point(6, 52);
 			this.checkAlertGreatSuccess.Name = "checkAlertGreatSuccess";
-			this.checkAlertGreatSuccess.Size = new System.Drawing.Size(170, 16);
+			this.checkAlertGreatSuccess.Size = new System.Drawing.Size(210, 16);
 			this.checkAlertGreatSuccess.TabIndex = 8;
-			this.checkAlertGreatSuccess.Text = "大成功しない場合も警告";
-			this.toolTip.SetToolTip(this.checkAlertGreatSuccess, "遠征選択画面を開いた時と出発時に、大成功率が右の閾値を下回る艦隊 (＝大成功しない可能性がある艦隊) を警告します");
+			this.checkAlertGreatSuccess.Text = "第2艦隊: 大成功しない場合も警告";
+			this.toolTip.SetToolTip(this.checkAlertGreatSuccess, "遠征選択画面を開いた時と出発時に、大成功率が右の閾値を下回る艦隊 (＝大成功しない可能性がある艦隊) を警告します (第2〜4艦隊で個別に設定できます)");
 			this.checkAlertGreatSuccess.UseVisualStyleBackColor = true;
 			this.checkAlertGreatSuccess.CheckedChanged += new System.EventHandler(this.checkAlertGreatSuccess_CheckedChanged);
 			// 
@@ -362,7 +362,7 @@
 			// 
 			this.labelGreatSuccessRate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
 			this.labelGreatSuccessRate.AutoSize = true;
-			this.labelGreatSuccessRate.Location = new System.Drawing.Point(180, 55);
+			this.labelGreatSuccessRate.Location = new System.Drawing.Point(250, 55);
 			this.labelGreatSuccessRate.Name = "labelGreatSuccessRate";
 			this.labelGreatSuccessRate.Size = new System.Drawing.Size(66, 16);
 			this.labelGreatSuccessRate.Text = "大成功率が";
@@ -370,7 +370,7 @@
 			// numGreatSuccessThreshold
 			// 
 			this.numGreatSuccessThreshold.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
-			this.numGreatSuccessThreshold.Location = new System.Drawing.Point(250, 51);
+			this.numGreatSuccessThreshold.Location = new System.Drawing.Point(320, 51);
 			this.numGreatSuccessThreshold.Maximum = new decimal(new int[] { 100, 0, 0, 0});
 			this.numGreatSuccessThreshold.Minimum = new decimal(new int[] { 0, 0, 0, 0});
 			this.numGreatSuccessThreshold.Name = "numGreatSuccessThreshold";
@@ -384,7 +384,7 @@
 			// 
 			this.labelGreatSuccessPercent.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
 			this.labelGreatSuccessPercent.AutoSize = true;
-			this.labelGreatSuccessPercent.Location = new System.Drawing.Point(305, 55);
+			this.labelGreatSuccessPercent.Location = new System.Drawing.Point(375, 55);
 			this.labelGreatSuccessPercent.Name = "labelGreatSuccessPercent";
 			this.labelGreatSuccessPercent.Size = new System.Drawing.Size(56, 16);
 			this.labelGreatSuccessPercent.Text = "% 未満";
