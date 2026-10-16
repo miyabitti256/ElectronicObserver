@@ -104,5 +104,6 @@ msbuild ElectronicObserver\ElectronicObserver.csproj -p:Configuration=Release
 2. `ElectronicObserver/version.txt` の 1 行目（日付）と 2 行目（バージョン）を更新する
 3. `v<バージョン>-<YYYYMMDD>` 形式（例: `v4.7.1-20261016`）のタグを push すると、GitHub Actions がビルドして Release を作成する
 4. 更新確認はタグの日付（`YYYYMMDD`）とインストール済みの日付を比較するため、1〜3 の日付を揃えること
+5. PR・Issue・リリースノートなど公開される文章には、開発環境や実環境の絶対パス（`C:\Users\...` など）を書かない。実機での確認を書くときは「実環境」とだけ表記する
 
 
