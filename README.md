@@ -122,5 +122,6 @@ msbuild ElectronicObserver\ElectronicObserver.csproj -p:Configuration=Release
   ```
 
 * 手動で実行するときは Actions の `Sync upstream` を `workflow_dispatch` で起動します（`dry_run` を有効にすると push も PR 作成もせず結果だけ確認できます）
+* このワークフローが PR を作るには、リポジトリの Settings → Actions → General で「Allow GitHub Actions to create and approve pull requests」を有効にしておく必要があります（無効のままだと PR 作成で止まり、設定を案内するメッセージを出して失敗します）
 
 
