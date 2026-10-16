@@ -1,0 +1,383 @@
+name: Sync upstream
+
+# 本家 (既定: dais-k/ElectronicObserver) の develop を定期的に取り込み、develop への PR を作ります。
+#
+# - 取り込みは「develop に本家をマージしたコミットを載せたブランチ」を作って PR にします。
+#   本家の変更点が PR の差分としてそのまま見えます。
+# - コンフリクトは自動解決しません (-X ours / -X theirs は本家の修正や自分の変更を壊すため)。
+#   検知したら Issue を立てて人に渡します。PR は作りません。
+# - PR ができたらビルドとテスト (ci.yml) をマージ結果に対して実行します。
+#   GITHUB_TOKEN で作った PR では pull_request イベントのワークフローが起動しないため、
+#   ここから ci.yml を直接呼び出します。
+#
+# 手元でコンフリクトを解決するとき:
+#   git fetch origin
+#   git fetch upstream
+#   git checkout -b sync/upstream-<date> origin/develop
+#   git merge upstream/develop      # 対立を直してコミット
+#   git push origin HEAD
+
+on:
+  schedule:
+    # 毎日 06:00 JST (21:00 UTC)
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+    inputs:
+      upstream_repository:
+        description: '本家のリポジトリ (owner/repo)'
+        required: false
+        default: dais-k/ElectronicObserver
+      upstream_branch:
+        description: '取り込む本家のブランチ'
+        required: false
+        default: develop
+      base_branch:
+        description: '取り込み先 (PR のベース)'
+        required: false
+        default: develop
+      dry_run:
+        description: 'push と PR 作成をせず、結果だけ表示する'
+        type: boolean
+        required: false
+        default: false
+      auto_merge:
+        description: 'ビルドとテストが通ったら自動でマージする'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPOSITORY: ${{ inputs.upstream_repository || 'dais-k/ElectronicObserver' }}
+  UPSTREAM_BRANCH: ${{ inputs.upstream_branch || 'develop' }}
+  BASE_BRANCH: ${{ inputs.base_branch || 'develop' }}
+  DRY_RUN: ${{ inputs.dry_run }}
+  AUTO_MERGE: ${{ inputs.auto_merge }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      state: ${{ steps.merge.outputs.state || steps.check.outputs.state }}
+      branch: ${{ steps.push.outputs.branch }}
+      pr: ${{ steps.pr.outputs.number }}
+      pushed: ${{ steps.push.outputs.pushed }}
+      files: ${{ steps.merge.outputs.files }}
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.base_branch || 'develop' }}
+          fetch-depth: 0
+
+      - name: git ユーザーを設定
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: 本家を取得
+        id: upstream
+        shell: pwsh
+        run: |
+          $remotes = git remote
+          if ($remotes -contains 'upstream') { git remote remove upstream }
+          git remote add upstream "https://github.com/$env:UPSTREAM_REPOSITORY.git"
+          git fetch --no-tags upstream $env:UPSTREAM_BRANCH
+
+          $sha = (git rev-parse FETCH_HEAD).Trim()
+          $new = (git rev-list --count "HEAD..$sha").Trim()
+          "sha=$sha" >> $env:GITHUB_OUTPUT
+          "new_commits=$new" >> $env:GITHUB_OUTPUT
+          Write-Host "本家 $($env:UPSTREAM_REPOSITORY) $($env:UPSTREAM_BRANCH) = $sha (未取り込み $new 件)"
+
+      - name: 取り込みが必要か判定
+        id: check
+        shell: pwsh
+        env:
+          UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
+        run: |
+          git merge-base --is-ancestor $env:UPSTREAM_SHA HEAD
+          if ($LASTEXITCODE -eq 0) {
+            "needed=false" >> $env:GITHUB_OUTPUT
+            "state=up-to-date" >> $env:GITHUB_OUTPUT
+            Write-Host '本家の変更はすべて取り込み済みです'
+          } else {
+            "needed=true" >> $env:GITHUB_OUTPUT
+          }
+          exit 0
+
+      - name: ブランチ名を決める
+        id: branch
+        if: steps.check.outputs.needed == 'true'
+        shell: pwsh
+        run: |
+          $date = (Get-Date).ToUniversalTime().AddHours(9).ToString('yyyyMMdd')
+          "name=sync/upstream-$date" >> $env:GITHUB_OUTPUT
+          "date=$date" >> $env:GITHUB_OUTPUT
+          Write-Host "同期ブランチ: sync/upstream-$date"
+
+      - name: 取り込みを試す (コンフリクト検知)
+        id: merge
+        if: steps.check.outputs.needed == 'true'
+        shell: pwsh
+        env:
+          SYNC_BRANCH: ${{ steps.branch.outputs.name }}
+        run: |
+          $baseSha = (git rev-parse HEAD).Trim()
+          git checkout -B $env:SYNC_BRANCH $baseSha
+
+          git merge --no-ff --no-edit "upstream/$env:UPSTREAM_BRANCH" *> merge.log
+          $code = $LASTEXITCODE
+          Get-Content merge.log | Write-Host
+
+          if ($code -eq 0) {
+            "state=merged" >> $env:GITHUB_OUTPUT
+            git log --oneline --no-merges "$baseSha..upstream/$($env:UPSTREAM_BRANCH)" | Out-File -Encoding utf8 commits.txt
+            git diff --stat "$baseSha...upstream/$($env:UPSTREAM_BRANCH)" | Out-File -Encoding utf8 diffstat.txt
+            Write-Host 'コンフリクトはありません'
+          } else {
+            "state=conflicted" >> $env:GITHUB_OUTPUT
+            $files = @(git diff --name-only --diff-filter=U)
+            $files -join "`n" | Out-File -Encoding utf8 conflicts.txt
+            "files=$($files -join ', ')" >> $env:GITHUB_OUTPUT
+            git merge --abort
+            Write-Host "コンフリクトが $($files.Count) 件あります: $($files -join ', ')"
+          }
+          exit 0
+
+      - name: 既存の同期 PR を探す
+        id: find
+        if: steps.merge.outputs.state == 'merged'
+        shell: pwsh
+        run: |
+          $prs = gh pr list --state open --limit 100 --json number,headRefName | ConvertFrom-Json
+          $sync = @($prs | Where-Object { $_.headRefName -like 'sync/upstream-*' })
+          if ($sync.Count -gt 0) {
+            $target = $sync[0]
+            Write-Host "既存の同期 PR #$($target.number) ($($target.headRefName)) を更新します"
+            "number=$($target.number)" >> $env:GITHUB_OUTPUT
+            "branch=$($target.headRefName)" >> $env:GITHUB_OUTPUT
+          } else {
+            "branch=${{ steps.branch.outputs.name }}" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: ブランチを push
+        id: push
+        if: steps.merge.outputs.state == 'merged'
+        shell: pwsh
+        env:
+          TARGET_BRANCH: ${{ steps.find.outputs.branch }}
+        run: |
+          if ($env:DRY_RUN -eq 'true') {
+            Write-Host "[dry-run] push しません: $env:TARGET_BRANCH"
+            "pushed=false" >> $env:GITHUB_OUTPUT
+          } else {
+            git push --force origin "HEAD:refs/heads/$env:TARGET_BRANCH"
+            "pushed=true" >> $env:GITHUB_OUTPUT
+          }
+          "branch=$env:TARGET_BRANCH" >> $env:GITHUB_OUTPUT
+
+      - name: PR を作成 / 更新
+        id: pr
+        if: steps.merge.outputs.state == 'merged'
+        shell: pwsh
+        env:
+          TARGET_BRANCH: ${{ steps.find.outputs.branch }}
+          EXISTING_PR: ${{ steps.find.outputs.number }}
+          UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
+          NEW_COMMITS: ${{ steps.upstream.outputs.new_commits }}
+          SYNC_DATE: ${{ steps.branch.outputs.date }}
+        run: |
+          $fence = '```'
+          $commits = (Get-Content commits.txt -Encoding utf8) -join "`n"
+          $diffstat = (Get-Content diffstat.txt -Encoding utf8) -join "`n"
+          $lines = @(
+            "本家 ``$($env:UPSTREAM_REPOSITORY)`` の ``$($env:UPSTREAM_BRANCH)`` を develop に取り込む自動生成の PR です。",
+            "",
+            "- 本家の HEAD: ``$($env:UPSTREAM_SHA)``",
+            "- 未取り込みのコミット: $($env:NEW_COMMITS) 件",
+            "- コンフリクト: なし（取り込みを試して確認済み）",
+            "",
+            "### 取り込むコミット",
+            "",
+            $fence,
+            $commits,
+            $fence,
+            "",
+            "### 差分",
+            "",
+            $fence,
+            $diffstat,
+            $fence,
+            "",
+            "ビルドとテストはこのブランチに対して CI (``ci.yml``) を実行して確認します（``GITHUB_TOKEN`` で作った PR では ``pull_request`` のワークフローが起動しないため、同期ワークフローから直接呼び出しています）。",
+            "",
+            "問題なければマージしてください。"
+          )
+          $body = $lines -join "`n"
+          $body | Out-File -Encoding utf8 pr-body.md
+
+          if ($env:DRY_RUN -eq 'true') {
+            Write-Host '[dry-run] PR は作成・更新しません'
+            Write-Host $body
+            "number=" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+
+          if ($env:EXISTING_PR) {
+            gh pr comment $env:EXISTING_PR --body-file pr-body.md
+            "number=$env:EXISTING_PR" >> $env:GITHUB_OUTPUT
+          } else {
+            $title = "chore(sync): 本家 $($env:UPSTREAM_BRANCH) の変更を取り込む ($($env:SYNC_DATE))"
+            gh pr create --base $env:BASE_BRANCH --head $env:TARGET_BRANCH --title $title --body-file pr-body.md
+            $num = (gh pr view $env:TARGET_BRANCH --json number -q .number).Trim()
+            "number=$num" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: コンフリクトを通知する
+        if: steps.merge.outputs.state == 'conflicted'
+        shell: pwsh
+        env:
+          UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
+          SYNC_DATE: ${{ steps.branch.outputs.date }}
+        run: |
+          $fence = '```'
+          $files = @(Get-Content -Encoding utf8 conflicts.txt | Where-Object { $_ })
+          $bullets = ($files | ForEach-Object { "- ``$_``" }) -join "`n"
+          $runUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+
+          Write-Host "コンフリクト: $($files -join ', ')"
+
+          if ($env:DRY_RUN -eq 'true') {
+            Write-Host '[dry-run] Issue は作成しません'
+            exit 0
+          }
+
+          $labels = gh label list --limit 200 --json name | ConvertFrom-Json
+          if (-not (@($labels.name) -contains 'sync-conflict')) {
+            gh label create sync-conflict --color d73a4a --description '本家との取り込みでコンフリクトが発生' | Out-Null
+          }
+
+          $lines = @(
+            "本家との取り込みでコンフリクトが発生しました。CI では自動解決しません（``-X ours`` / ``-X theirs`` は本家の修正や自分の変更を壊すため）。手元で解決して push してください。",
+            "",
+            "- 本家: ``$($env:UPSTREAM_REPOSITORY)`` の ``$($env:UPSTREAM_BRANCH)``",
+            "- 本家の HEAD: ``$($env:UPSTREAM_SHA)``",
+            "- ワークフローの実行: $runUrl",
+            "",
+            "### 対立しているファイル",
+            "",
+            $bullets,
+            "",
+            "### 手元での解決手順",
+            "",
+            $fence,
+            "git fetch origin",
+            "git fetch upstream",
+            "git checkout -b sync/upstream-$($env:SYNC_DATE) origin/develop",
+            "git merge upstream/develop",
+            "# 対立を直してコミット",
+            "git push origin HEAD",
+            $fence,
+            "",
+            "解決して push すれば、次回の実行（または手動実行）で取り込みが通ります。"
+          )
+          $issueBody = $lines -join "`n"
+          $issueBody | Out-File -Encoding utf8 conflict-issue.md
+
+          $open = @(gh issue list --state open --label sync-conflict --limit 10 --json number | ConvertFrom-Json)
+          if ($open.Count -gt 0) {
+            gh issue comment $open[0].number --body-file conflict-issue.md
+            Write-Host "既存の Issue #$($open[0].number) に追記しました"
+          } else {
+            gh issue create --title '本家との取り込みでコンフリクトが発生しています' --label sync-conflict --body-file conflict-issue.md
+          }
+
+      - name: ジョブのサマリを書き出す
+        if: always()
+        shell: pwsh
+        run: |
+          $lines = @(
+            '### upstream sync',
+            '',
+            "- 本家: $env:UPSTREAM_REPOSITORY $env:UPSTREAM_BRANCH",
+            "- 本家の HEAD: ``${{ steps.upstream.outputs.sha }}``",
+            "- 未取り込み: ${{ steps.upstream.outputs.new_commits }} 件",
+            "- 状態: ${{ steps.merge.outputs.state || steps.check.outputs.state }}",
+            "- 同期ブランチ: ``${{ steps.find.outputs.branch }}``"
+          )
+          if ('${{ steps.merge.outputs.state }}' -eq 'conflicted') {
+            $lines += "- 対立ファイル: ${{ steps.merge.outputs.files }}"
+          }
+          $lines -join "`n" | Out-File -Encoding utf8 -Append $env:GITHUB_STEP_SUMMARY
+          exit 0
+
+  # マージ結果のビルドとテスト (ci.yml を呼び出す)
+  build:
+    needs: sync
+    if: needs.sync.outputs.state == 'merged' && needs.sync.outputs.pushed == 'true'
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ needs.sync.outputs.branch }}
+
+  report:
+    needs:
+      - sync
+      - build
+    if: always() && needs.sync.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: 結果を PR にコメントする
+        if: needs.sync.outputs.state == 'merged' && needs.sync.outputs.pr != ''
+        shell: pwsh
+        env:
+          PR: ${{ needs.sync.outputs.pr }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          $result = if ($env:BUILD_RESULT -eq 'success') { 'ビルドとテストは成功しました。マージできます。' } else { "ビルドまたはテストが失敗しました（``$($env:BUILD_RESULT)``）。ログを確認してください。" }
+          $lines = @(
+            'ビルドとテストの結果です。',
+            '',
+            "- 結果: ``$($env:BUILD_RESULT)``",
+            "- 実行: $env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID",
+            '',
+            $result
+          )
+          ($lines -join "`n") | Out-File -Encoding utf8 pr-result.md
+          gh pr comment $env:PR --body-file pr-result.md
+
+      - name: 自動マージ
+        if: needs.sync.outputs.state == 'merged' && needs.sync.outputs.pr != '' && needs.build.result == 'success'
+        shell: pwsh
+        env:
+          PR: ${{ needs.sync.outputs.pr }}
+        run: |
+          if ($env:AUTO_MERGE -ne 'true') {
+            Write-Host '自動マージは無効です (auto_merge=false)。PR を確認してマージしてください。'
+            exit 0
+          }
+          gh pr merge $env:PR --merge --delete-branch
+
+      - name: コンフリクト Issue を閉じる
+        if: (needs.sync.outputs.state == 'merged' || needs.sync.outputs.state == 'up-to-date') && needs.build.result != 'failure'
+        shell: pwsh
+        run: |
+          $open = @(gh issue list --state open --label sync-conflict --limit 10 --json number | ConvertFrom-Json)
+          if ($open.Count -gt 0) {
+            gh issue close $open[0].number --comment '取り込みが通ったので閉じます'
+            Write-Host "Issue #$($open[0].number) を閉じました"
+          }

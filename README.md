@@ -106,4 +106,21 @@ msbuild ElectronicObserver\ElectronicObserver.csproj -p:Configuration=Release
 4. 更新確認はタグの日付（`YYYYMMDD`）とインストール済みの日付を比較するため、1〜3 の日付を揃えること
 5. PR・Issue・リリースノートなど公開される文章には、開発環境や実環境の絶対パス（`C:\Users\...` など）を書かない。実機での確認を書くときは「実環境」とだけ表記する
 
+### 本家（upstream）の取り込み
+
+本家 `dais-k/ElectronicObserver` の `develop` は `.github/workflows/sync-upstream.yml` が毎日 06:00 (JST) に確認し、未取り込みがあれば `develop` への PR を作ります。
+
+* 取り込みは「本家を develop にマージしたコミット」の PR になり、その PR に対してビルドとテスト (`.github/workflows/ci.yml`) が実行されます
+* コンフリクトは自動解決しません。検知すると `sync-conflict` ラベルの Issue が立ち、対立しているファイルが書かれます。手元で解決して push してください
+
+  ```
+  git fetch origin
+  git fetch upstream
+  git checkout -b sync/upstream-<date> origin/develop
+  git merge upstream/develop   # 対立を直してコミット
+  git push origin HEAD
+  ```
+
+* 手動で実行するときは Actions の `Sync upstream` を `workflow_dispatch` で起動します（`dry_run` を有効にすると push も PR 作成もせず結果だけ確認できます）
+
 

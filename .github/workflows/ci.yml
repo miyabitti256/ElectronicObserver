@@ -1,0 +1,97 @@
+name: CI
+
+# PR と、他のワークフロー (sync-upstream) から呼び出して、本体のビルドとテストを行います。
+# 配布物の作成は行いません (それは release.yml の役割です)。
+#
+# - pull_request: develop への PR のマージコミットを検証します
+# - workflow_call: sync-upstream などから ref を指定して呼び出します
+#   (GITHUB_TOKEN で作った PR では pull_request のワークフローが起動しないため、
+#    同期ワークフローからは直接このワークフローを呼び出します)
+# - workflow_dispatch: 手動で任意の ref を検証します
+
+on:
+  pull_request:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'ビルドする ref (既定: このワークフローを実行した ref)'
+        required: false
+        default: ''
+  workflow_call:
+    inputs:
+      ref:
+        description: 'ビルドする ref (既定: 呼び出し元の ref)'
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  # ElectronicObserver.sln は DockPanelSuite\WinFormsUI\WinFormsUI.csproj を参照しますが、
+  # これは本体リポジトリに含まれていない外部依存 (andanteyk フォーク) です。
+  # ローカルのビルドと同じコミットを取得します。
+  DOCKPANELSUITE_REPOSITORY: https://github.com/andanteyk/dockpanelsuite.git
+  DOCKPANELSUITE_COMMIT: 7a5eac4003cd99fbc152b1a7ebeb9efbacf62d1d
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: DockPanelSuite を取得
+        shell: pwsh
+        run: |
+          git clone --quiet $env:DOCKPANELSUITE_REPOSITORY DockPanelSuite
+          git -C DockPanelSuite checkout --quiet $env:DOCKPANELSUITE_COMMIT
+          git -C DockPanelSuite rev-parse HEAD
+
+      - name: MSBuild をセットアップ
+        uses: microsoft/setup-msbuild@v3
+
+      - name: NuGet をセットアップ
+        uses: NuGet/setup-nuget@v4
+
+      - name: packages.config を復元
+        shell: pwsh
+        run: nuget restore ElectronicObserver.sln
+
+      - name: テストプロジェクト (SDK スタイル) を復元
+        shell: pwsh
+        run: msbuild ElectronicObserver.sln -t:Restore -p:Configuration=Release -nologo -v:m
+
+      - name: ビルド (Release)
+        shell: pwsh
+        run: msbuild ElectronicObserver.sln -p:Configuration=Release -m -nologo -v:m
+
+      - name: テスト (xUnit)
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if (-not (Test-Path $vswhere)) { throw "vswhere.exe が見つかりません: $vswhere" }
+          $vs = (& $vswhere -latest -products * -property installationPath | Select-Object -First 1).Trim()
+          $vstest = Join-Path $vs 'Common7\IDE\Extensions\TestPlatform\vstest.console.exe'
+          if (-not (Test-Path $vstest)) { throw "vstest.console.exe が見つかりません: $vstest" }
+
+          $dll = 'ElectronicObserverTests\bin\Release\net48\ElectronicObserverTests.dll'
+          if (-not (Test-Path $dll)) { throw "テストアセンブリが見つかりません: $dll" }
+
+          & $vstest $dll '/Logger:console;verbosity=minimal' 2>&1 | Tee-Object -FilePath test.log
+          $code = $LASTEXITCODE
+
+          # 結果をジョブのサマリにも出す
+          $fence = '```'
+          $tail = Get-Content test.log -Tail 20
+          @('### テスト結果', '', $fence, ($tail -join "`n"), $fence, '') -join "`n" |
+            Out-File -Encoding utf8 -Append $env:GITHUB_STEP_SUMMARY
+
+          if ($code -ne 0) { throw "テストが失敗しました (exit $code)" }
+          Write-Host 'テストはすべて成功しました'
