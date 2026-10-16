@@ -52,16 +52,74 @@ namespace ElectronicObserver.Data
 		}
 
 		/// <summary>
-		/// 大成功の警告閾値を検証し、範囲外 (0〜100 の外) は既定 (100%) にフォールバックします。
-		/// </summary>
-		public static int SanitizeGreatSuccessRateThreshold(int saved)
-		{
-			return (saved >= 0 && saved <= 100) ? saved : DefaultGreatSuccessRateThreshold;
-		}
-
-		/// <summary>
 		/// 大成功の警告閾値の既定値 (%)。
 		/// </summary>
 		public const int DefaultGreatSuccessRateThreshold = 100;
+
+		/// <summary>
+		/// 保存された艦隊ごとの「大成功しない場合も警告」を検証し、未設定・範囲外は既定 (OFF) で補います。
+		/// 戻り値の index は艦隊番号で、2〜4 を使用します。
+		/// </summary>
+		public static bool[] SanitizeGreatSuccessAlerts(bool[] saved)
+		{
+			var result = new bool[MaxFleetId + 1];
+			if (saved == null) return result;
+
+			for (int fleetId = MinFleetId; fleetId <= MaxFleetId && fleetId < saved.Length; fleetId++)
+				result[fleetId] = saved[fleetId];
+
+			return result;
+		}
+
+		/// <summary>
+		/// 保存された艦隊ごとの大成功の警告閾値を検証し、未設定・範囲外は既定 (100%) で補います。
+		/// 戻り値の index は艦隊番号で、2〜4 を使用します。
+		/// </summary>
+		public static int[] SanitizeGreatSuccessThresholds(int[] saved)
+		{
+			var result = new int[MaxFleetId + 1];
+			for (int i = 0; i < result.Length; i++)
+				result[i] = DefaultGreatSuccessRateThreshold;
+
+			if (saved == null) return result;
+
+			for (int fleetId = MinFleetId; fleetId <= MaxFleetId && fleetId < saved.Length; fleetId++)
+			{
+				if (saved[fleetId] >= 0 && saved[fleetId] <= 100)
+					result[fleetId] = saved[fleetId];
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// 指定した艦隊の「大成功しない場合も警告」が有効か (保存値が無い・不正な場合は既定 = OFF)。
+		/// </summary>
+		public static bool IsGreatSuccessAlertEnabled(bool[] saved, int fleetId)
+		{
+			var values = SanitizeGreatSuccessAlerts(saved);
+			return fleetId >= 0 && fleetId < values.Length && values[fleetId];
+		}
+
+		/// <summary>
+		/// 指定した艦隊の大成功の警告閾値 (保存値が無い・不正な場合は既定 = 100%)。
+		/// </summary>
+		public static int GetGreatSuccessThreshold(int[] saved, int fleetId)
+		{
+			var values = SanitizeGreatSuccessThresholds(saved);
+			return (fleetId >= 0 && fleetId < values.Length) ? values[fleetId] : DefaultGreatSuccessRateThreshold;
+		}
+
+		/// <summary>
+		/// 指定した艦隊で「大成功しない可能性がある」警告を出すべきか。
+		/// その艦隊のチェックが ON で、かつ大成功率がその艦隊の閾値を下回る場合のみ true です
+		/// (艦隊ごとに独立して判定します)。
+		/// </summary>
+		public static bool ShouldWarnGreatSuccess(bool[] alerts, int[] thresholds, int fleetId, double rate)
+		{
+			if (!IsGreatSuccessAlertEnabled(alerts, fleetId)) return false;
+
+			return ExpeditionHelper.IsGreatSuccessRateBelowThreshold(rate, GetGreatSuccessThreshold(thresholds, fleetId));
+		}
 	}
 }

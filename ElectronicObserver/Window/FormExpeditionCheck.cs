@@ -333,17 +333,15 @@ namespace ElectronicObserver.Window
 			checkAlert.Checked = config.AlertOnMissionScreenOpened;
 			checkAlertSupply.Checked = config.AlertSupplyDepleted;
 
-			// 大成功しない可能性がある場合の警告 (既定 OFF・閾値 100%)
-			checkAlertGreatSuccess.Checked = config.AlertGreatSuccessBelow;
-			numGreatSuccessThreshold.Value = ExpeditionSelection.SanitizeGreatSuccessRateThreshold(config.GreatSuccessRateThreshold);
-			UpdateGreatSuccessThresholdEnabled();
-
 			// 艦隊ごとの遠征 (保存値が有効なものだけ採用し、それ以外は既定値を維持)
 			_targetMissions = ExpeditionSelection.SanitizeTargetMissions(config.TargetMissions);
 
 			// 選択中の艦隊
 			int fleetId = ExpeditionSelection.SanitizeFleetId(config.SelectedFleetId);
 			comboFleet.SelectedIndex = fleetId - ExpeditionSelection.MinFleetId;
+
+			// 選択中の艦隊の「大成功しない場合も警告」設定を表示 (既定 OFF・閾値 100%)
+			UpdateGreatSuccessSettings();
 
 			// 選択中のタブ
 			tabControl.SelectedIndex = ExpeditionSelection.SanitizeTabIndex(config.SelectedTabIndex, tabControl.TabPages.Count);
@@ -466,21 +464,33 @@ namespace ElectronicObserver.Window
 		{
 			UpdateGreatSuccessThresholdEnabled();
 
-			if (!_isLoaded) return;
+			if (!_isLoaded || _suppressSelectionWriteBack) return;
+
 			var config = Utility.Configuration.Config.FormExpeditionCheck;
-			if (config != null)
+			if (config == null) return;
+
+			int fleetId = SelectedFleetId;
+			var alerts = ExpeditionSelection.SanitizeGreatSuccessAlerts(config.AlertGreatSuccessBelowByFleet);
+			if (fleetId >= 0 && fleetId < alerts.Length)
 			{
-				config.AlertGreatSuccessBelow = checkAlertGreatSuccess.Checked;
+				alerts[fleetId] = checkAlertGreatSuccess.Checked;
+				config.AlertGreatSuccessBelowByFleet = alerts;
 			}
 		}
 
 		private void numGreatSuccessThreshold_ValueChanged(object sender, EventArgs e)
 		{
-			if (!_isLoaded) return;
+			if (!_isLoaded || _suppressSelectionWriteBack) return;
+
 			var config = Utility.Configuration.Config.FormExpeditionCheck;
-			if (config != null)
+			if (config == null) return;
+
+			int fleetId = SelectedFleetId;
+			var thresholds = ExpeditionSelection.SanitizeGreatSuccessThresholds(config.GreatSuccessRateThresholdByFleet);
+			if (fleetId >= 0 && fleetId < thresholds.Length)
 			{
-				config.GreatSuccessRateThreshold = (int)numGreatSuccessThreshold.Value;
+				thresholds[fleetId] = (int)numGreatSuccessThreshold.Value;
+				config.GreatSuccessRateThresholdByFleet = thresholds;
 			}
 		}
 
@@ -495,16 +505,31 @@ namespace ElectronicObserver.Window
 		}
 
 		/// <summary>
-		/// 設定されている大成功の警告閾値 (%)。範囲外・未設定は既定値 (100%)。
+		/// 選択中の艦隊の「大成功しない場合も警告」設定を設定欄へ反映します (艦隊ごとに独立)。
+		/// 反映中の変更を設定へ書き戻さないよう、抑制フラグを立ててから行います。
 		/// </summary>
-		private int GreatSuccessRateThreshold
+		private void UpdateGreatSuccessSettings()
 		{
-			get
+			var config = Utility.Configuration.Config.FormExpeditionCheck;
+			int fleetId = SelectedFleetId;
+
+			bool enabled = ExpeditionSelection.IsGreatSuccessAlertEnabled(config?.AlertGreatSuccessBelowByFleet, fleetId);
+			int threshold = ExpeditionSelection.GetGreatSuccessThreshold(config?.GreatSuccessRateThresholdByFleet, fleetId);
+
+			bool prevSuppress = _suppressSelectionWriteBack;
+			_suppressSelectionWriteBack = true;
+			try
 			{
-				var config = Utility.Configuration.Config.FormExpeditionCheck;
-				int saved = config?.GreatSuccessRateThreshold ?? ExpeditionSelection.DefaultGreatSuccessRateThreshold;
-				return ExpeditionSelection.SanitizeGreatSuccessRateThreshold(saved);
+				checkAlertGreatSuccess.Text = $"第{fleetId}艦隊: 大成功しない場合も警告";
+				checkAlertGreatSuccess.Checked = enabled;
+				numGreatSuccessThreshold.Value = threshold;
 			}
+			finally
+			{
+				_suppressSelectionWriteBack = prevSuppress;
+			}
+
+			UpdateGreatSuccessThresholdEnabled();
 		}
 
 		private void FormExpeditionCheck_Resize(object sender, EventArgs e)
@@ -591,17 +616,18 @@ namespace ElectronicObserver.Window
 			checkAlertSupply.Location = new Point(165, 30);
 			checkAlertSupply.Size = new Size(100, 16);
 
-			// 3行目: [大成功しない場合も警告] [大成功率が] [100] [% 未満]
+			// 3行目: [第n艦隊: 大成功しない場合も警告] [大成功率が] [100] [% 未満]
+			// (チェックボックスの文言は選択中の艦隊に合わせて実行時に更新される)
 			checkAlertGreatSuccess.Location = new Point(6, 52);
-			checkAlertGreatSuccess.Size = new Size(170, 16);
+			checkAlertGreatSuccess.Size = new Size(210, 16);
 
-			labelGreatSuccessRate.Location = new Point(180, 55);
+			labelGreatSuccessRate.Location = new Point(250, 55);
 			labelGreatSuccessRate.Size = new Size(66, 16);
 
-			numGreatSuccessThreshold.Location = new Point(250, 51);
+			numGreatSuccessThreshold.Location = new Point(320, 51);
 			numGreatSuccessThreshold.Size = new Size(50, 19);
 
-			labelGreatSuccessPercent.Location = new Point(305, 55);
+			labelGreatSuccessPercent.Location = new Point(375, 55);
 			labelGreatSuccessPercent.Size = new Size(56, 16);
 
 			panelControl.ResumeLayout();
@@ -688,6 +714,7 @@ namespace ElectronicObserver.Window
 			int targetId = _targetMissions[SelectedFleetId];
 			SelectMission(targetId);
 			SaveSelectionsToConfig();
+			UpdateGreatSuccessSettings();
 			UpdateDetailView();
 			_detailNeedsUpdate = false;
 		}
@@ -990,10 +1017,12 @@ namespace ElectronicObserver.Window
 				bool isAmmoEmpty = fleet.MembersInstance.Any(s => s != null && s.AmmoRate < 1);
 				bool isSupplyEmpty = isFuelEmpty || isAmmoEmpty;
 
-				// 大成功しない可能性がある場合の警告 (チェックONのときだけ)
+				// 大成功しない可能性がある場合の警告 (艦隊ごとのチェックがONのときだけ)
+				var config = Utility.Configuration.Config.FormExpeditionCheck;
+				int gsThreshold = ExpeditionSelection.GetGreatSuccessThreshold(config?.GreatSuccessRateThresholdByFleet, fleetId);
 				double gsRate = ExpeditionHelper.CalculateGreatSuccessRate(fleet, missionId);
-				bool greatSuccessRisk = checkAlertGreatSuccess.Checked &&
-					ExpeditionHelper.IsGreatSuccessRateBelowThreshold(gsRate, GreatSuccessRateThreshold);
+				bool greatSuccessRisk = ExpeditionSelection.ShouldWarnGreatSuccess(
+					config?.AlertGreatSuccessBelowByFleet, config?.GreatSuccessRateThresholdByFleet, fleetId, gsRate);
 
 				// 未補給のみで、かつ「未補給も警告」がOFFの場合はモーダル警告の対象外（緊急補給で対応可能）
 				if (!result.IsSuceeded || (isSupplyEmpty && checkAlertSupply.Checked) || greatSuccessRisk)
@@ -1009,7 +1038,7 @@ namespace ElectronicObserver.Window
 					if (greatSuccessRisk)
 						lines.Add(ExpeditionHelper.GetGreatSuccessWarningText(
 							gsRate,
-							GreatSuccessRateThreshold,
+							gsThreshold,
 							fleet.MembersInstance.Count(s => s != null && s.Condition > 49),
 							fleet.MembersInstance.Count(s => s != null),
 							CountDrums(fleet),
@@ -1055,10 +1084,12 @@ namespace ElectronicObserver.Window
 			bool isFuelEmpty = fleet.MembersInstance.Any(s => s != null && s.FuelRate < 1);
 			bool isAmmoEmpty = fleet.MembersInstance.Any(s => s != null && s.AmmoRate < 1);
 
-			// 大成功しない可能性がある場合の警告 (チェックONのときだけ)
+			// 大成功しない可能性がある場合の警告 (艦隊ごとのチェックがONのときだけ)
+			var config = Utility.Configuration.Config.FormExpeditionCheck;
+			int gsThreshold = ExpeditionSelection.GetGreatSuccessThreshold(config?.GreatSuccessRateThresholdByFleet, fleetId);
 			double gsRate = ExpeditionHelper.CalculateGreatSuccessRate(fleet, missionId);
-			bool greatSuccessRisk = checkAlertGreatSuccess.Checked &&
-				ExpeditionHelper.IsGreatSuccessRateBelowThreshold(gsRate, GreatSuccessRateThreshold);
+			bool greatSuccessRisk = ExpeditionSelection.ShouldWarnGreatSuccess(
+				config?.AlertGreatSuccessBelowByFleet, config?.GreatSuccessRateThresholdByFleet, fleetId, gsRate);
 
 			if (!result.IsSuceeded || isFuelEmpty || isAmmoEmpty || greatSuccessRisk)
 			{
@@ -1069,7 +1100,7 @@ namespace ElectronicObserver.Window
 				if (greatSuccessRisk)
 					reasons.Add(ExpeditionHelper.GetGreatSuccessWarningText(
 						gsRate,
-						GreatSuccessRateThreshold,
+						gsThreshold,
 						fleet.MembersInstance.Count(s => s != null && s.Condition > 49),
 						fleet.MembersInstance.Count(s => s != null),
 						CountDrums(fleet),

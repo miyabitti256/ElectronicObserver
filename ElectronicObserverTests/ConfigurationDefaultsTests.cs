@@ -20,8 +20,8 @@ namespace ElectronicObserverTests
 
 			Assert.True(config.AlertOnMissionScreenOpened);
 			Assert.False(config.AlertSupplyDepleted);
-			Assert.False(config.AlertGreatSuccessBelow);
-			Assert.Equal(100, config.GreatSuccessRateThreshold);
+			Assert.Equal(new bool[] { false, false, false, false, false }, config.AlertGreatSuccessBelowByFleet);
+			Assert.Equal(new int[] { 100, 100, 100, 100, 100 }, config.GreatSuccessRateThresholdByFleet);
 			Assert.Equal(2, config.SelectedFleetId);
 			Assert.Equal(0, config.SelectedTabIndex);
 			Assert.Equal(new[] { 0, 0, 2, 5, 38 }, config.TargetMissions);
@@ -42,6 +42,8 @@ namespace ElectronicObserverTests
 
 			Assert.Equal(ExpeditionSelection.DefaultTargetMissions, config.TargetMissions);
 			Assert.Equal(ExpeditionSelection.MinFleetId, config.SelectedFleetId);
+			Assert.Equal(ExpeditionSelection.SanitizeGreatSuccessAlerts(null), config.AlertGreatSuccessBelowByFleet);
+			Assert.Equal(ExpeditionSelection.SanitizeGreatSuccessThresholds(null), config.GreatSuccessRateThresholdByFleet);
 		}
 
 		[Fact]
@@ -51,8 +53,8 @@ namespace ElectronicObserverTests
 			{
 				AlertOnMissionScreenOpened = false,
 				AlertSupplyDepleted = true,
-				AlertGreatSuccessBelow = true,
-				GreatSuccessRateThreshold = 75,
+				AlertGreatSuccessBelowByFleet = new[] { false, false, true, false, true },
+				GreatSuccessRateThresholdByFleet = new[] { 100, 100, 75, 100, 90 },
 				SelectedFleetId = 4,
 				SelectedTabIndex = 1,
 				TargetMissions = new[] { 0, 0, 7, 0, 123 },
@@ -67,8 +69,8 @@ namespace ElectronicObserverTests
 
 			Assert.False(restored.AlertOnMissionScreenOpened);
 			Assert.True(restored.AlertSupplyDepleted);
-			Assert.True(restored.AlertGreatSuccessBelow);
-			Assert.Equal(75, restored.GreatSuccessRateThreshold);
+			Assert.Equal(new[] { false, false, true, false, true }, restored.AlertGreatSuccessBelowByFleet);
+			Assert.Equal(new[] { 100, 100, 75, 100, 90 }, restored.GreatSuccessRateThresholdByFleet);
 			Assert.Equal(4, restored.SelectedFleetId);
 			Assert.Equal(1, restored.SelectedTabIndex);
 			Assert.Equal(new[] { 0, 0, 7, 0, 123 }, restored.TargetMissions);
