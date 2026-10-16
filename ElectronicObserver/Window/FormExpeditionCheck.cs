@@ -567,8 +567,8 @@ namespace ElectronicObserver.Window
 
 			panelControl.SuspendLayout();
 
-			// 安定した3行配置（高さ 74px）
-			panelControl.Height = 74;
+			// 安定した3行配置（高さ 80px。3行目と下の枠がくっつかないよう余白を確保する）
+			panelControl.Height = 80;
 
 			// 1行目: [艦隊] [海域] [遠征]
 			labelFleet.Location = new Point(4, 7);
