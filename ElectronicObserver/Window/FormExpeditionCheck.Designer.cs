@@ -311,7 +311,7 @@
 			this.panelControl.Dock = System.Windows.Forms.DockStyle.Top;
 			this.panelControl.Location = new System.Drawing.Point(3, 3);
 			this.panelControl.Name = "panelControl";
-			this.panelControl.Size = new System.Drawing.Size(626, 74);
+			this.panelControl.Size = new System.Drawing.Size(626, 80);
 			this.panelControl.TabIndex = 0;
 			this.panelControl.Resize += new System.EventHandler(this.panelControl_Resize);
 			// 
