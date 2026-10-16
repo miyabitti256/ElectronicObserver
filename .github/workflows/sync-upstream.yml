@@ -340,6 +340,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # checkout しないジョブなので、gh にリポジトリを教える
+      GH_REPO: ${{ github.repository }}
     steps:
       - name: 結果を PR にコメントする
         if: needs.sync.outputs.state == 'merged' && needs.sync.outputs.pr != ''
@@ -376,6 +378,11 @@ jobs:
         if: (needs.sync.outputs.state == 'merged' || needs.sync.outputs.state == 'up-to-date') && needs.build.result != 'failure'
         shell: pwsh
         run: |
+          $labels = gh label list --limit 200 --json name | ConvertFrom-Json
+          if (-not (@($labels.name) -contains 'sync-conflict')) {
+            Write-Host 'sync-conflict ラベルの Issue はありません'
+            exit 0
+          }
           $open = @(gh issue list --state open --label sync-conflict --limit 10 --json number | ConvertFrom-Json)
           if ($open.Count -gt 0) {
             gh issue close $open[0].number --comment '取り込みが通ったので閉じます'
