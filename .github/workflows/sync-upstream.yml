@@ -242,6 +242,14 @@ jobs:
           } else {
             $title = "chore(sync): 本家 $($env:UPSTREAM_BRANCH) の変更を取り込む ($($env:SYNC_DATE))"
             gh pr create --base $env:BASE_BRANCH --head $env:TARGET_BRANCH --title $title --body-file pr-body.md
+            if ($LASTEXITCODE -ne 0) {
+              $hint = @(
+                'PR を作成できませんでした。',
+                'リポジトリの Settings → Actions → General の「Allow GitHub Actions to create and approve pull requests」を有効にすると、このワークフローが PR を作成できるようになります。',
+                '有効にできない場合は、push された同期ブランチを手元で確認して `git fetch origin` → `git merge origin/<branch>` してください。'
+              ) -join "`n"
+              throw $hint
+            }
             $num = (gh pr view $env:TARGET_BRANCH --json number -q .number).Trim()
             "number=$num" >> $env:GITHUB_OUTPUT
           }
@@ -340,6 +348,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # checkout しないジョブなので、gh にリポジトリを教える
+      GH_REPO: ${{ github.repository }}
     steps:
       - name: 結果を PR にコメントする
         if: needs.sync.outputs.state == 'merged' && needs.sync.outputs.pr != ''
@@ -376,6 +386,15 @@ jobs:
         if: (needs.sync.outputs.state == 'merged' || needs.sync.outputs.state == 'up-to-date') && needs.build.result != 'failure'
         shell: pwsh
         run: |
+          if ($env:DRY_RUN -eq 'true') {
+            Write-Host '[dry-run] Issue は閉じません'
+            exit 0
+          }
+          $labels = gh label list --limit 200 --json name | ConvertFrom-Json
+          if (-not (@($labels.name) -contains 'sync-conflict')) {
+            Write-Host 'sync-conflict ラベルの Issue はありません'
+            exit 0
+          }
           $open = @(gh issue list --state open --label sync-conflict --limit 10 --json number | ConvertFrom-Json)
           if ($open.Count -gt 0) {
             gh issue close $open[0].number --comment '取り込みが通ったので閉じます'
