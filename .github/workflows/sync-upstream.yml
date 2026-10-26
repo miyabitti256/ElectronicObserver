@@ -61,12 +61,14 @@ env:
   BASE_BRANCH: ${{ inputs.base_branch || 'develop' }}
   DRY_RUN: ${{ inputs.dry_run }}
   AUTO_MERGE: ${{ inputs.auto_merge }}
+  GH_REPO: ${{ github.repository }}
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
     outputs:
       state: ${{ steps.merge.outputs.state || steps.check.outputs.state }}
       branch: ${{ steps.push.outputs.branch }}
