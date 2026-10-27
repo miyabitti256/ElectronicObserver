@@ -3,7 +3,7 @@ name: CI
 # PR と、他のワークフロー (sync-upstream) から呼び出して、本体のビルドとテストを行います。
 # 配布物の作成は行いません (それは release.yml の役割です)。
 #
-# - pull_request: develop への PR のマージコミットを検証します
+# - pull_request: main / develop への PR のマージコミットを検証します
 # - workflow_call: sync-upstream などから ref を指定して呼び出します
 #   (GITHUB_TOKEN で作った PR では pull_request のワークフローが起動しないため、
 #    同期ワークフローからは直接このワークフローを呼び出します)
@@ -12,6 +12,7 @@ name: CI
 on:
   pull_request:
     branches:
+      - main
       - develop
   workflow_dispatch:
     inputs:

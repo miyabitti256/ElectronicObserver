@@ -1,8 +1,8 @@
 name: Sync upstream
 
-# 本家 (既定: dais-k/ElectronicObserver) の develop を定期的に取り込み、develop への PR を作ります。
+# 本家 (既定: dais-k/ElectronicObserver) の develop を定期的に取り込み、main への PR を作ります。
 #
-# - 取り込みは「develop に本家をマージしたコミットを載せたブランチ」を作って PR にします。
+# - 取り込みは「main に本家をマージしたコミットを載せたブランチ」を作って PR にします。
 #   本家の変更点が PR の差分としてそのまま見えます。
 # - コンフリクトは自動解決しません (-X ours / -X theirs は本家の修正や自分の変更を壊すため)。
 #   検知したら Issue を立てて人に渡します。PR は作りません。
@@ -13,7 +13,7 @@ name: Sync upstream
 # 手元でコンフリクトを解決するとき:
 #   git fetch origin
 #   git fetch upstream
-#   git checkout -b sync/upstream-<date> origin/develop
+#   git checkout -b sync/upstream-<date> origin/main
 #   git merge upstream/develop      # 対立を直してコミット
 #   git push origin HEAD
 
@@ -34,7 +34,7 @@ on:
       base_branch:
         description: '取り込み先 (PR のベース)'
         required: false
-        default: develop
+        default: main
       dry_run:
         description: 'push と PR 作成をせず、結果だけ表示する'
         type: boolean
@@ -58,7 +58,7 @@ concurrency:
 env:
   UPSTREAM_REPOSITORY: ${{ inputs.upstream_repository || 'dais-k/ElectronicObserver' }}
   UPSTREAM_BRANCH: ${{ inputs.upstream_branch || 'develop' }}
-  BASE_BRANCH: ${{ inputs.base_branch || 'develop' }}
+  BASE_BRANCH: ${{ inputs.base_branch || 'main' }}
   DRY_RUN: ${{ inputs.dry_run }}
   AUTO_MERGE: ${{ inputs.auto_merge }}
   GH_REPO: ${{ github.repository }}
@@ -80,7 +80,7 @@ jobs:
       - name: チェックアウト
         uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.base_branch || 'develop' }}
+          ref: ${{ inputs.base_branch || 'main' }}
           fetch-depth: 0
 
       - name: git ユーザーを設定
@@ -206,7 +206,7 @@ jobs:
           $commits = (Get-Content commits.txt -Encoding utf8) -join "`n"
           $diffstat = (Get-Content diffstat.txt -Encoding utf8) -join "`n"
           $lines = @(
-            "本家 ``$($env:UPSTREAM_REPOSITORY)`` の ``$($env:UPSTREAM_BRANCH)`` を develop に取り込む自動生成の PR です。",
+            "本家 ``$($env:UPSTREAM_REPOSITORY)`` の ``$($env:UPSTREAM_BRANCH)`` を main に取り込む自動生成の PR です。",
             "",
             "- 本家の HEAD: ``$($env:UPSTREAM_SHA)``",
             "- 未取り込みのコミット: $($env:NEW_COMMITS) 件",
@@ -296,7 +296,7 @@ jobs:
             $fence,
             "git fetch origin",
             "git fetch upstream",
-            "git checkout -b sync/upstream-$($env:SYNC_DATE) origin/develop",
+            "git checkout -b sync/upstream-$($env:SYNC_DATE) origin/main",
             "git merge upstream/develop",
             "# 対立を直してコミット",
             "git push origin HEAD",
