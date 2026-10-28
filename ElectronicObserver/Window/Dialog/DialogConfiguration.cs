@@ -752,26 +752,11 @@ namespace ElectronicObserver.Window.Dialog
 			config.FormBrowser.KeepHQLevel = FormBrowser_ScreenShot_KeepHQLevel.Checked;
 			config.FormBrowser.AdmiralNameMaskMode = FormBrowser_ScreenShot_MaskMode.SelectedIndex;
 			config.FormBrowser.MaskOnlyOnHomeport = FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked;
-			bool liveMaskChanged =
-				config.FormBrowser.LiveAdmiralNameMask != FormBrowser_LiveAdmiralNameMask.Checked ||
-				config.FormBrowser.LiveAdmiralNameMaskText != (string.IsNullOrWhiteSpace(FormBrowser_LiveAdmiralNameMaskText.Text) ? "提督" : FormBrowser_LiveAdmiralNameMaskText.Text) ||
-				config.FormBrowser.LiveAdmiralNameCustomTarget != FormBrowser_LiveAdmiralNameCustomTarget.Text.Trim();
-
 			config.FormBrowser.LiveAdmiralNameMask = FormBrowser_LiveAdmiralNameMask.Checked;
 			config.FormBrowser.LiveAdmiralNameMaskText = string.IsNullOrWhiteSpace(FormBrowser_LiveAdmiralNameMaskText.Text)
 				? "提督"
 				: FormBrowser_LiveAdmiralNameMaskText.Text;
 			config.FormBrowser.LiveAdmiralNameCustomTarget = FormBrowser_LiveAdmiralNameCustomTarget.Text.Trim();
-
-			// Why not apply dynamically during gameplay: プレイ中の動的介入による描画崩れや予期せぬ挙動を防ぎ、起動時HTML注入のみで安全に動作させるため再起動を要求する
-			if (liveMaskChanged)
-			{
-				MessageBox.Show(
-					"提督名置換設定を変更しました。\r\n安全のため、設定は七四式電子観測儀の再起動後に反映されます。",
-					"設定変更",
-					MessageBoxButtons.OK,
-					MessageBoxIcon.Information);
-			}
 			if (FormBrowser_ToolMenuDockStyle.SelectedIndex == 4)
 			{
 				config.FormBrowser.IsToolMenuVisible = false;

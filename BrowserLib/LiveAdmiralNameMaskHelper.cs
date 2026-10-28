@@ -100,10 +100,12 @@ namespace BrowserLib
 					var m = window.__eoAdmiralMask;
 					if (m && m.enabled && data && typeof data === 'object') {{
 						// 自分自身の提督名 (api_port/port, api_get_member/basic, etc.)
+						// Why not require targetName match for self: 初回ログイン時の母港画面表示の時点で即座に置換を反映させるため
 						if (data.api_data && typeof data.api_data.api_nickname === 'string') {{
-							if (!m.targetName || data.api_data.api_nickname === m.targetName || data.api_data.api_nickname.indexOf(m.targetName) !== -1) {{
-								data.api_data.api_nickname = m.maskText;
+							if (!m.targetName) {{
+								m.targetName = data.api_data.api_nickname;
 							}}
+							data.api_data.api_nickname = m.maskText;
 						}}
 						// 演習相手やランキング等のリスト内
 						if (data.api_data && Array.isArray(data.api_data.api_list)) {{

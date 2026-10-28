@@ -2730,13 +2730,14 @@ namespace ElectronicObserver.Window.Dialog
 			this.label_LiveAdmiralNameMaskText.Name = "label_LiveAdmiralNameMaskText";
 			this.label_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(48, 15);
 			this.label_LiveAdmiralNameMaskText.TabIndex = 24;
-			this.label_LiveAdmiralNameMaskText.Text = "置換名:";
+			this.label_LiveAdmiralNameMaskText.Text = "置換名 *:";
 			// 
 			// FormBrowser_LiveAdmiralNameMaskText
 			// 
-			this.FormBrowser_LiveAdmiralNameMaskText.Location = new System.Drawing.Point(445, 105);
+			this.FormBrowser_LiveAdmiralNameMaskText.Location = new System.Drawing.Point(455, 105);
 			this.FormBrowser_LiveAdmiralNameMaskText.Name = "FormBrowser_LiveAdmiralNameMaskText";
-			this.FormBrowser_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(110, 23);
+			this.FormBrowser_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(100, 23);
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMaskText, "提督名の置換後の名前を指定します。\r\n* この変更は再起動後に反映されます。");
 			this.FormBrowser_LiveAdmiralNameMaskText.TabIndex = 25;
 
 			// 
