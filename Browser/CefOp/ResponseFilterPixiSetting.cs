@@ -1,18 +1,28 @@
-﻿using CefSharp;
+using CefSharp;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Browser.CefOp
 {
 	/// <summary>
-	/// スクリーンショット撮影に必要なデータを挿入します。
+	/// ゲーム画面の HTML を加工し、スクリーンショット用描画設定や提督名マスク用スクリプトを挿入します。
 	/// </summary>
 	public class ResponseFilterPixiSetting : IResponseFilter
 	{
+		private readonly bool preserveDrawingBuffer;
+		private readonly bool maskEnabled;
+		private readonly string targetName;
+		private readonly string maskText;
+
+		public ResponseFilterPixiSetting(bool preserveDrawingBuffer = true, bool maskEnabled = false, string targetName = "", string maskText = "提督")
+		{
+			this.preserveDrawingBuffer = preserveDrawingBuffer;
+			this.maskEnabled = maskEnabled;
+			this.targetName = targetName;
+			this.maskText = maskText;
+		}
+
 		public bool InitFilter() => true;
 
 		public FilterStatus Filter(Stream dataIn, out long dataInRead, Stream dataOut, out long dataOutWritten)
@@ -28,12 +38,13 @@ namespace Browser.CefOp
 			{
 				string raw = reader.ReadToEnd();
 
-				// note: preserveDrawingBuffer = true 設定時に動作が重くなる可能性がある
-				// が、 false だとスクリーンショットがハードコピー(Graphics.CopyFromScreen 等)でしか取れなくなる
-				// 描画直後に保存処理(toDataUrl)を行うと false でも撮れるらしいが、外部からの操作でそれができるかは不明
-				string replaced = raw.Replace(
-					@"/pixi.js""></script>",
-					@"/pixi.js""></script><script>PIXI.settings.RENDER_OPTIONS.preserveDrawingBuffer=true;</script>");
+				// Why not modify network/API responses: ゲーム通信データには一切触れず、表示直前のクライアント側描画層のみで完結させるため
+				string replaced = BrowserLib.LiveAdmiralNameMaskHelper.InjectIntoHtml(
+					raw,
+					preserveDrawingBuffer,
+					maskEnabled,
+					targetName,
+					maskText);
 
 				var bytes = Encoding.UTF8.GetBytes(replaced);
 				dataOut.Write(bytes, 0, bytes.Length);

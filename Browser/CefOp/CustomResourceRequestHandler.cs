@@ -1,31 +1,39 @@
-﻿using CefSharp;
+using CefSharp;
 using CefSharp.Handler;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Browser.CefOp
 {
 	public class CustomResourceRequestHandler : ResourceRequestHandler
 	{
+		private readonly Func<BrowserLib.BrowserConfiguration> configProvider;
 
-		bool pixiSettingEnabled;
+		public CustomResourceRequestHandler(Func<BrowserLib.BrowserConfiguration> configProvider) : base()
+		{
+			this.configProvider = configProvider;
+		}
 
 		public CustomResourceRequestHandler(bool pixiSettingEnabled) : base()
 		{
-			this.pixiSettingEnabled = pixiSettingEnabled;
+			this.configProvider = () => new BrowserLib.BrowserConfiguration { PreserveDrawingBuffer = pixiSettingEnabled };
 		}
-
 
 		/// <summary>
 		/// レスポンスの置換制御を行います。
 		/// </summary>
 		protected override IResponseFilter GetResourceResponseFilter(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, IResponse response)
 		{
-			if (pixiSettingEnabled && request.Url.Contains(@"/kcs2/index.php"))
-				return new ResponseFilterPixiSetting();
+			var conf = configProvider?.Invoke();
+			bool needFilter = conf != null && (conf.PreserveDrawingBuffer || conf.LiveAdmiralNameMask);
+
+			if (needFilter && request.Url.Contains(@"/kcs2/index.php"))
+			{
+				return new ResponseFilterPixiSetting(
+					conf.PreserveDrawingBuffer,
+					conf.LiveAdmiralNameMask,
+					conf.RealAdmiralName,
+					conf.LiveAdmiralNameMaskText);
+			}
 
 			return base.GetResourceResponseFilter(chromiumWebBrowser, browser, frame, request, response);
 		}
@@ -43,6 +51,5 @@ namespace Browser.CefOp
 
 			return base.OnBeforeResourceLoad(chromiumWebBrowser, browser, frame, request, callback);
 		}
-
 	}
 }

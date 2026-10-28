@@ -1,4 +1,4 @@
-﻿namespace ElectronicObserver.Window.Dialog
+namespace ElectronicObserver.Window.Dialog
 {
 	partial class DialogConfiguration
 	{
@@ -225,6 +225,9 @@
 			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport = new System.Windows.Forms.CheckBox();
 			this.labelScreenShot_MaskMode = new System.Windows.Forms.Label();
 			this.FormBrowser_ScreenShot_MaskMode = new System.Windows.Forms.ComboBox();
+			this.FormBrowser_LiveAdmiralNameMask = new System.Windows.Forms.CheckBox();
+			this.label_LiveAdmiralNameMaskText = new System.Windows.Forms.Label();
+			this.FormBrowser_LiveAdmiralNameMaskText = new System.Windows.Forms.TextBox();
 			this.label17 = new System.Windows.Forms.Label();
 			this.label16 = new System.Windows.Forms.Label();
 			this.FormBrowser_IsEnabled = new System.Windows.Forms.CheckBox();
@@ -2394,7 +2397,7 @@
 			// FormBrowser_SavesBrowserLog
 			// 
 			this.FormBrowser_SavesBrowserLog.AutoSize = true;
-			this.FormBrowser_SavesBrowserLog.Location = new System.Drawing.Point(282, 257);
+			this.FormBrowser_SavesBrowserLog.Location = new System.Drawing.Point(282, 280);
 			this.FormBrowser_SavesBrowserLog.Name = "FormBrowser_SavesBrowserLog";
 			this.FormBrowser_SavesBrowserLog.Size = new System.Drawing.Size(180, 19);
 			this.FormBrowser_SavesBrowserLog.TabIndex = 17;
@@ -2406,7 +2409,7 @@
 			// FormBrowser_ForceColorProfile
 			// 
 			this.FormBrowser_ForceColorProfile.AutoSize = true;
-			this.FormBrowser_ForceColorProfile.Location = new System.Drawing.Point(282, 232);
+			this.FormBrowser_ForceColorProfile.Location = new System.Drawing.Point(282, 255);
 			this.FormBrowser_ForceColorProfile.Name = "FormBrowser_ForceColorProfile";
 			this.FormBrowser_ForceColorProfile.Size = new System.Drawing.Size(216, 19);
 			this.FormBrowser_ForceColorProfile.TabIndex = 16;
@@ -2417,7 +2420,7 @@
 			// FormBrowser_PreserveDrawingBuffer
 			// 
 			this.FormBrowser_PreserveDrawingBuffer.AutoSize = true;
-			this.FormBrowser_PreserveDrawingBuffer.Location = new System.Drawing.Point(6, 257);
+			this.FormBrowser_PreserveDrawingBuffer.Location = new System.Drawing.Point(6, 280);
 			this.FormBrowser_PreserveDrawingBuffer.Name = "FormBrowser_PreserveDrawingBuffer";
 			this.FormBrowser_PreserveDrawingBuffer.Size = new System.Drawing.Size(145, 19);
 			this.FormBrowser_PreserveDrawingBuffer.TabIndex = 15;
@@ -2430,7 +2433,7 @@
 			// 
 			this.label20.AutoSize = true;
 			this.label20.ForeColor = System.Drawing.Color.Red;
-			this.label20.Location = new System.Drawing.Point(9, 290);
+			this.label20.Location = new System.Drawing.Point(9, 310);
 			this.label20.Name = "label20";
 			this.label20.Size = new System.Drawing.Size(241, 15);
 			this.label20.TabIndex = 14;
@@ -2439,7 +2442,7 @@
 			// FormBrowser_HardwareAccelerationEnabled
 			// 
 			this.FormBrowser_HardwareAccelerationEnabled.AutoSize = true;
-			this.FormBrowser_HardwareAccelerationEnabled.Location = new System.Drawing.Point(6, 232);
+			this.FormBrowser_HardwareAccelerationEnabled.Location = new System.Drawing.Point(6, 255);
 			this.FormBrowser_HardwareAccelerationEnabled.Name = "FormBrowser_HardwareAccelerationEnabled";
 			this.FormBrowser_HardwareAccelerationEnabled.Size = new System.Drawing.Size(230, 19);
 			this.FormBrowser_HardwareAccelerationEnabled.TabIndex = 13;
@@ -2533,9 +2536,12 @@
 			this.groupBox2.Controls.Add(this.FormBrowser_ScreenShot_MaskOnlyOnHomeport);
 			this.groupBox2.Controls.Add(this.labelScreenShot_MaskMode);
 			this.groupBox2.Controls.Add(this.FormBrowser_ScreenShot_MaskMode);
+			this.groupBox2.Controls.Add(this.FormBrowser_LiveAdmiralNameMask);
+			this.groupBox2.Controls.Add(this.label_LiveAdmiralNameMaskText);
+			this.groupBox2.Controls.Add(this.FormBrowser_LiveAdmiralNameMaskText);
 			this.groupBox2.Location = new System.Drawing.Point(6, 116);
 			this.groupBox2.Name = "groupBox2";
-			this.groupBox2.Size = new System.Drawing.Size(670, 110);
+			this.groupBox2.Size = new System.Drawing.Size(670, 135);
 			this.groupBox2.TabIndex = 0;
 			this.groupBox2.TabStop = false;
 			this.groupBox2.Text = "スクリーンショット";
@@ -2683,6 +2689,34 @@
 			this.FormBrowser_ScreenShot_MaskMode.Size = new System.Drawing.Size(121, 23);
 			this.FormBrowser_ScreenShot_MaskMode.TabIndex = 20;
 			this.FormBrowser_ScreenShot_MaskMode.SelectedIndexChanged += new System.EventHandler(this.FormBrowser_ScreenShot_MaskMode_SelectedIndexChanged);
+			// 
+			// FormBrowser_LiveAdmiralNameMask
+			// 
+			this.FormBrowser_LiveAdmiralNameMask.AutoSize = true;
+			this.FormBrowser_LiveAdmiralNameMask.Location = new System.Drawing.Point(6, 107);
+			this.FormBrowser_LiveAdmiralNameMask.Name = "FormBrowser_LiveAdmiralNameMask";
+			this.FormBrowser_LiveAdmiralNameMask.Size = new System.Drawing.Size(180, 19);
+			this.FormBrowser_LiveAdmiralNameMask.TabIndex = 21;
+			this.FormBrowser_LiveAdmiralNameMask.Text = "ゲーム画面上の提督名も隠す";
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMask, "ゲーム画面に表示される提督名を指定した名前にリアルタイムで置き換えます。\r\n通信パケットには一切影響を与えません。");
+			this.FormBrowser_LiveAdmiralNameMask.UseVisualStyleBackColor = true;
+			this.FormBrowser_LiveAdmiralNameMask.CheckedChanged += new System.EventHandler(this.FormBrowser_LiveAdmiralNameMask_CheckedChanged);
+			// 
+			// label_LiveAdmiralNameMaskText
+			// 
+			this.label_LiveAdmiralNameMaskText.AutoSize = true;
+			this.label_LiveAdmiralNameMaskText.Location = new System.Drawing.Point(239, 108);
+			this.label_LiveAdmiralNameMaskText.Name = "label_LiveAdmiralNameMaskText";
+			this.label_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(81, 15);
+			this.label_LiveAdmiralNameMaskText.TabIndex = 22;
+			this.label_LiveAdmiralNameMaskText.Text = "置換後の名前:";
+			// 
+			// FormBrowser_LiveAdmiralNameMaskText
+			// 
+			this.FormBrowser_LiveAdmiralNameMaskText.Location = new System.Drawing.Point(328, 105);
+			this.FormBrowser_LiveAdmiralNameMaskText.Name = "FormBrowser_LiveAdmiralNameMaskText";
+			this.FormBrowser_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(120, 23);
+			this.FormBrowser_LiveAdmiralNameMaskText.TabIndex = 23;
 
 			// 
 			// label17
@@ -3520,5 +3554,8 @@
 		private System.Windows.Forms.CheckBox FormBrowser_ScreenShot_MaskOnlyOnHomeport;
 		private System.Windows.Forms.Label labelScreenShot_MaskMode;
 		private System.Windows.Forms.ComboBox FormBrowser_ScreenShot_MaskMode;
+		private System.Windows.Forms.CheckBox FormBrowser_LiveAdmiralNameMask;
+		private System.Windows.Forms.Label label_LiveAdmiralNameMaskText;
+		private System.Windows.Forms.TextBox FormBrowser_LiveAdmiralNameMaskText;
 	}
 }

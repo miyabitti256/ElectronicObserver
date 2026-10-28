@@ -1,10 +1,6 @@
-﻿using CefSharp;
+using CefSharp;
 using CefSharp.Handler;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Browser.CefOp
 {
@@ -13,20 +9,22 @@ namespace Browser.CefOp
 		public delegate void RenderProcessTerminatedEventHandler(string message);
 		public event RenderProcessTerminatedEventHandler RenderProcessTerminated;
 
-		bool pixiSettingEnabled;
+		private readonly Func<BrowserLib.BrowserConfiguration> configProvider;
 
-
+		public CustomRequestHandler(Func<BrowserLib.BrowserConfiguration> configProvider) : base()
+		{
+			this.configProvider = configProvider;
+		}
 
 		public CustomRequestHandler(bool pixiSettingEnabled) : base()
 		{
-			this.pixiSettingEnabled = pixiSettingEnabled;
+			this.configProvider = () => new BrowserLib.BrowserConfiguration { PreserveDrawingBuffer = pixiSettingEnabled };
 		}
 
 		protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool isNavigation, bool isDownload, string requestInitiator, ref bool disableDefaultHandling)
 		{
-			return new CustomResourceRequestHandler(pixiSettingEnabled);
+			return new CustomResourceRequestHandler(configProvider);
 		}
-
 
 		/// <summary>
 		/// 戻る/進む操作をブロックします。
@@ -43,11 +41,8 @@ namespace Browser.CefOp
 		/// <summary>
 		/// 描画プロセスが何らかの理由で落ちた際の処理を行います。
 		/// </summary>
-		protected override void OnRenderProcessTerminated(IWebBrowser browserControl, IBrowser browser, CefTerminationStatus status, int errorCode, string errorMessage) //現行Cef
-		//protected override void OnRenderProcessTerminated(IWebBrowser browserControl, IBrowser browser, CefTerminationStatus status) //Cef102
+		protected override void OnRenderProcessTerminated(IWebBrowser browserControl, IBrowser browser, CefTerminationStatus status, int errorCode, string errorMessage)
 		{
-			// note: out of memory (例外コード: 0xe0000008) でクラッシュした場合、このイベントは呼ばれない
-
 			string ret = "ブラウザの描画プロセスが";
 			switch (status)
 			{

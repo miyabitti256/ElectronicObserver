@@ -173,6 +173,24 @@ namespace BrowserLib
 		public bool MaskOnlyOnHomeport { get; set; }
 
 		/// <summary>
+		/// ブラウザ画面上の提督名を隠すか
+		/// </summary>
+		[DataMember]
+		public bool LiveAdmiralNameMask { get; set; }
+
+		/// <summary>
+		/// ブラウザ画面上で提督名を隠す際の置換名
+		/// </summary>
+		[DataMember]
+		public string LiveAdmiralNameMaskText { get; set; }
+
+		/// <summary>
+		/// 取得済みの実際の提督名（マスク対象）
+		/// </summary>
+		[DataMember]
+		public string RealAdmiralName { get; set; }
+
+		/// <summary>
 		/// ツールメニューの配置
 		/// </summary>
 		[DataMember]

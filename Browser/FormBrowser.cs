@@ -1,4 +1,4 @@
-using Browser.CefOp;
+﻿using Browser.CefOp;
 using BrowserLib;
 using CefSharp;
 using CefSharp.WinForms;
@@ -465,7 +465,7 @@ namespace Browser
 			Cef.Initialize(settings, false, (IBrowserProcessHandler)null);
 
 
-			var requestHandler = new CustomRequestHandler(pixiSettingEnabled: Configuration.PreserveDrawingBuffer);
+			var requestHandler = new CustomRequestHandler(() => Configuration);
 			requestHandler.RenderProcessTerminated += (mes) => AddLog(3, mes);
 
 			Browser = new ChromiumWebBrowser(@"about:blank")
@@ -520,6 +520,7 @@ namespace Browser
 			ToolMenu.Dock = (DockStyle)Configuration.ToolMenuDockStyle;
 			ToolMenu.Visible = Configuration.IsToolMenuVisible;
 			ToolMenu_Other_ClearCache.Visible = conf.EnableDebugMenu;
+			UpdateLiveAdmiralNameMask();
 		}
 
 		private void ConfigurationUpdated()
@@ -716,6 +717,32 @@ namespace Browser
 			catch
 			{
 				return false;
+			}
+		}
+
+
+		/// <summary>
+		/// 提督名のクライアントサイド表示マスク設定をブラウザに反映します。
+		/// </summary>
+		private void UpdateLiveAdmiralNameMask()
+		{
+			try
+			{
+				if (!IsBrowserInitialized) return;
+				var frame = GetKanColleFrame();
+				if (frame == null) return;
+
+				// Why not modify network/API responses: 通信パケットは一切改変せず、画面描画直前のJSレイヤーでのみ置換するため
+				string script = BrowserLib.LiveAdmiralNameMaskHelper.GenerateUpdateScript(
+					Configuration.LiveAdmiralNameMask,
+					Configuration.RealAdmiralName,
+					Configuration.LiveAdmiralNameMaskText);
+
+				frame.ExecuteJavaScriptAsync(script);
+			}
+			catch (Exception ex)
+			{
+				AddLog(3, "提督名マスク更新に失敗しました: " + ex.Message);
 			}
 		}
 
@@ -929,6 +956,15 @@ namespace Browser
 
 		private void Browser_FrameLoadEnd(object sender, FrameLoadEndEventArgs e)
 		{
+			try
+			{
+				if (IsKanColleFrame(e.Frame))
+				{
+					UpdateLiveAdmiralNameMask();
+				}
+			}
+			catch { }
+
 			if (!Configuration.AppliesStyleSheet)
 				return;
 

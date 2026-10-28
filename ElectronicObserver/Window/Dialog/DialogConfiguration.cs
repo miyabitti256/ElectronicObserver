@@ -82,6 +82,7 @@ namespace ElectronicObserver.Window.Dialog
 			Debug_EnableDebugMenu_CheckedChanged(null, new EventArgs());
 			FormFleet_FixShipNameWidth_CheckedChanged(null, new EventArgs());
 			FormBrowser_ScreenShot_MaskAdmiralName_CheckedChanged(null, new EventArgs());
+			FormBrowser_LiveAdmiralNameMask_CheckedChanged(null, new EventArgs());
 		}
 
 
@@ -507,6 +508,8 @@ namespace ElectronicObserver.Window.Dialog
 			FormBrowser_ScreenShot_KeepHQLevel.Checked = config.FormBrowser.KeepHQLevel;
 			FormBrowser_ScreenShot_MaskMode.SelectedIndex = Math.Max(0, Math.Min(2, config.FormBrowser.AdmiralNameMaskMode));
 			FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked = config.FormBrowser.MaskOnlyOnHomeport;
+			FormBrowser_LiveAdmiralNameMask.Checked = config.FormBrowser.LiveAdmiralNameMask;
+			FormBrowser_LiveAdmiralNameMaskText.Text = config.FormBrowser.LiveAdmiralNameMaskText ?? "提督";
 
 			if (!config.FormBrowser.IsToolMenuVisible)
 				FormBrowser_ToolMenuDockStyle.SelectedIndex = 4;
@@ -748,6 +751,10 @@ namespace ElectronicObserver.Window.Dialog
 			config.FormBrowser.KeepHQLevel = FormBrowser_ScreenShot_KeepHQLevel.Checked;
 			config.FormBrowser.AdmiralNameMaskMode = FormBrowser_ScreenShot_MaskMode.SelectedIndex;
 			config.FormBrowser.MaskOnlyOnHomeport = FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked;
+			config.FormBrowser.LiveAdmiralNameMask = FormBrowser_LiveAdmiralNameMask.Checked;
+			config.FormBrowser.LiveAdmiralNameMaskText = string.IsNullOrWhiteSpace(FormBrowser_LiveAdmiralNameMaskText.Text)
+				? "提督"
+				: FormBrowser_LiveAdmiralNameMaskText.Text;
 			if (FormBrowser_ToolMenuDockStyle.SelectedIndex == 4)
 			{
 				config.FormBrowser.IsToolMenuVisible = false;
@@ -918,6 +925,13 @@ namespace ElectronicObserver.Window.Dialog
 		{
 			// 切り取り (index 2) の場合は上部ヘッダーごと切り取られるため「司令部Lvは隠さない」を無効化
 			FormBrowser_ScreenShot_KeepHQLevel.Enabled = FormBrowser_ScreenShot_MaskAdmiralName.Checked && FormBrowser_ScreenShot_MaskMode.SelectedIndex != 2;
+		}
+
+		private void FormBrowser_LiveAdmiralNameMask_CheckedChanged(object sender, EventArgs e)
+		{
+			bool enabled = FormBrowser_LiveAdmiralNameMask.Checked;
+			FormBrowser_LiveAdmiralNameMaskText.Enabled = enabled;
+			label_LiveAdmiralNameMaskText.Enabled = enabled;
 		}
 
 

@@ -1049,6 +1049,16 @@ namespace ElectronicObserver.Utility
 				public bool MaskOnlyOnHomeport { get; set; }
 
 				/// <summary>
+				/// ブラウザ画面上の提督名を隠すか
+				/// </summary>
+				public bool LiveAdmiralNameMask { get; set; }
+
+				/// <summary>
+				/// ブラウザ画面上で提督名を隠す際の置換名
+				/// </summary>
+				public string LiveAdmiralNameMaskText { get; set; }
+
+				/// <summary>
 				/// ツールメニューの配置
 				/// </summary>
 				public DockStyle ToolMenuDockStyle { get; set; }
@@ -1102,6 +1112,8 @@ namespace ElectronicObserver.Utility
 					KeepHQLevel = false;
 					AdmiralNameMaskMode = 0;
 					MaskOnlyOnHomeport = true;
+					LiveAdmiralNameMask = false;
+					LiveAdmiralNameMaskText = "提督";
 					ToolMenuDockStyle = DockStyle.Top;
 					IsToolMenuVisible = true;
 					ConfirmAtRefresh = true;
