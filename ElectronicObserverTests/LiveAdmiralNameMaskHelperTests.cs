@@ -43,6 +43,7 @@ namespace ElectronicObserverTests
 			Assert.Contains("CanvasRenderingContext2D.prototype.strokeText", script);
 			Assert.Contains("CanvasRenderingContext2D.prototype.measureText", script);
 			Assert.Contains("PIXI.Text.prototype", script);
+			Assert.Contains("PIXI.Text.prototype._renderWebGL", script);
 			Assert.Contains("window.__setAdmiralMask", script);
 		}
 
@@ -55,15 +56,29 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
-		public void GenerateUpdateScript_ProducesValidCall()
+		public void GenerateUpdateScript_ProducesValidCallWithSelfInitialization()
 		{
 			string script = LiveAdmiralNameMaskHelper.GenerateUpdateScript(true, "吹雪", "司令官");
 
-			Assert.Equal("if (window.__setAdmiralMask) { window.__setAdmiralMask(true, \"吹雪\", \"司令官\"); }", script);
+			Assert.Contains("if (typeof window.__setAdmiralMask === 'undefined')", script);
+			Assert.Contains("window.__setAdmiralMask(true, \"吹雪\", \"司令官\");", script);
 		}
 
 		[Fact]
-		public void InjectIntoHtml_InsertsScriptAfterPixiJs()
+		public void InjectIntoHtml_InsertsScriptAfterPixiMinJs()
+		{
+			string html = "<html><head><script src=\"https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.8/pixi.min.js\"></script></head><body></body></html>";
+
+			string modified = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: true, targetName: "提督A", maskText: "司令官");
+
+			Assert.Contains("pixi.min.js\"></script><script>", modified);
+			Assert.Contains("PIXI.settings.RENDER_OPTIONS.preserveDrawingBuffer=true;", modified);
+			Assert.Contains("window.__eoAdmiralMask", modified);
+			Assert.Contains("司令官", modified);
+		}
+
+		[Fact]
+		public void InjectIntoHtml_InsertsScriptAfterStandardPixiJs()
 		{
 			string html = "<html><head><script src=\"/kcs2/js/pixi.js\"></script></head><body></body></html>";
 
@@ -78,7 +93,7 @@ namespace ElectronicObserverTests
 		[Fact]
 		public void InjectIntoHtml_OmitsPreserveDrawingBuffer_WhenDisabled()
 		{
-			string html = "<html><head><script src=\"/kcs2/js/pixi.js\"></script></head><body></body></html>";
+			string html = "<html><head><script src=\"https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.8/pixi.min.js\"></script></head><body></body></html>";
 
 			string modified = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: false, maskEnabled: true, targetName: "提督A", maskText: "提督");
 
@@ -87,13 +102,14 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
-		public void InjectIntoHtml_ReturnsOriginal_WhenPixiTagNotFound()
+		public void InjectIntoHtml_FallsBackToBeforeHead_WhenPixiTagNotFound()
 		{
 			string html = "<html><head></head><body>No Pixi Here</body></html>";
 
 			string result = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: true, targetName: "提督", maskText: "提督");
 
-			Assert.Equal(html, result);
+			Assert.Contains("<script>", result);
+			Assert.Contains("</head>", result);
 		}
 
 		[Fact]
@@ -103,6 +119,7 @@ namespace ElectronicObserverTests
 
 			Assert.False(config.LiveAdmiralNameMask);
 			Assert.Equal("提督", config.LiveAdmiralNameMaskText);
+			Assert.Equal("", config.LiveAdmiralNameCustomTarget);
 		}
 
 		[Fact]

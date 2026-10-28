@@ -24,15 +24,15 @@ namespace Browser.CefOp
 		protected override IResponseFilter GetResourceResponseFilter(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, IResponse response)
 		{
 			var conf = configProvider?.Invoke();
-			bool needFilter = conf != null && (conf.PreserveDrawingBuffer || conf.LiveAdmiralNameMask);
 
-			if (needFilter && request.Url.Contains(@"/kcs2/index.php"))
+			// Why not require conf.LiveAdmiralNameMask == true: 起動時にOFFであってもフック機構自体を先行注入しておき、後からONになった際に即時反映可能にするため
+			if (request.Url.Contains(@"/kcs2/index.php"))
 			{
 				return new ResponseFilterPixiSetting(
-					conf.PreserveDrawingBuffer,
-					conf.LiveAdmiralNameMask,
-					conf.RealAdmiralName,
-					conf.LiveAdmiralNameMaskText);
+					conf?.PreserveDrawingBuffer ?? true,
+					conf?.LiveAdmiralNameMask ?? false,
+					conf?.RealAdmiralName ?? "",
+					conf?.LiveAdmiralNameMaskText ?? "提督");
 			}
 
 			return base.GetResourceResponseFilter(chromiumWebBrowser, browser, frame, request, response);

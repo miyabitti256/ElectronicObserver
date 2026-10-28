@@ -729,8 +729,8 @@ namespace Browser
 			try
 			{
 				if (!IsBrowserInitialized) return;
-				var frame = GetKanColleFrame();
-				if (frame == null) return;
+				var browser = Browser?.GetBrowser();
+				if (browser == null) return;
 
 				// Why not modify network/API responses: 通信パケットは一切改変せず、画面描画直前のJSレイヤーでのみ置換するため
 				string script = BrowserLib.LiveAdmiralNameMaskHelper.GenerateUpdateScript(
@@ -738,7 +738,15 @@ namespace Browser
 					Configuration.RealAdmiralName,
 					Configuration.LiveAdmiralNameMaskText);
 
-				frame.ExecuteJavaScriptAsync(script);
+				// ゲームフレームおよび関連フレームすべてに送信して確実に実行させる
+				foreach (var id in browser.GetFrameIdentifiers())
+				{
+					var frame = browser.GetFrameByIdentifier(id);
+					if (frame != null && (IsKanColleFrame(frame) || (frame.Url != null && (frame.Url.Contains("kcs") || frame.Url.Contains("dmm")))))
+					{
+						frame.ExecuteJavaScriptAsync(script);
+					}
+				}
 			}
 			catch (Exception ex)
 			{
