@@ -25,13 +25,12 @@ namespace Browser.CefOp
 		{
 			var conf = configProvider?.Invoke();
 
-			// Why not require conf.LiveAdmiralNameMask == true: 起動時にOFFであってもフック機構自体を先行注入しておき、後からONになった際に即時反映可能にするため
+			// Why not check LiveAdmiralNameMask here: スクリーンショット用の preserveDrawingBuffer 注入のため index.php のフィルター自体は常時必要であり、マスクの要否判定はフィルター内部で行うため
 			if (request.Url.Contains(@"/kcs2/index.php"))
 			{
 				return new ResponseFilterPixiSetting(
 					conf?.PreserveDrawingBuffer ?? true,
 					conf?.LiveAdmiralNameMask ?? false,
-					conf?.RealAdmiralName ?? "",
 					conf?.LiveAdmiralNameMaskText ?? "提督");
 			}
 

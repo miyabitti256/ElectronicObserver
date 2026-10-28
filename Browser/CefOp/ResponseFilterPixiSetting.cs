@@ -12,14 +12,12 @@ namespace Browser.CefOp
 	{
 		private readonly bool preserveDrawingBuffer;
 		private readonly bool maskEnabled;
-		private readonly string targetName;
 		private readonly string maskText;
 
-		public ResponseFilterPixiSetting(bool preserveDrawingBuffer = true, bool maskEnabled = false, string targetName = "", string maskText = "提督")
+		public ResponseFilterPixiSetting(bool preserveDrawingBuffer = true, bool maskEnabled = false, string maskText = "提督")
 		{
 			this.preserveDrawingBuffer = preserveDrawingBuffer;
 			this.maskEnabled = maskEnabled;
-			this.targetName = targetName;
 			this.maskText = maskText;
 		}
 
@@ -43,7 +41,6 @@ namespace Browser.CefOp
 					raw,
 					preserveDrawingBuffer,
 					maskEnabled,
-					targetName,
 					maskText);
 
 				var bytes = Encoding.UTF8.GetBytes(replaced);

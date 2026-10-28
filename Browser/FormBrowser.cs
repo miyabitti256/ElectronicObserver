@@ -520,7 +520,6 @@ namespace Browser
 			ToolMenu.Dock = (DockStyle)Configuration.ToolMenuDockStyle;
 			ToolMenu.Visible = Configuration.IsToolMenuVisible;
 			ToolMenu_Other_ClearCache.Visible = conf.EnableDebugMenu;
-			UpdateLiveAdmiralNameMask();
 		}
 
 		private void ConfigurationUpdated()
@@ -604,7 +603,6 @@ namespace Browser
 					ApplyStyleSheet();
 					ApplyZoom();
 					DestroyDMMreloadDialog();
-					UpdateLiveAdmiralNameMask();
 				}
 				catch (Exception ex)
 				{
@@ -722,38 +720,6 @@ namespace Browser
 		}
 
 
-		/// <summary>
-		/// 提督名のクライアントサイド表示マスク設定をブラウザに反映します。
-		/// </summary>
-		private void UpdateLiveAdmiralNameMask()
-		{
-			try
-			{
-				if (!IsBrowserInitialized) return;
-				var browser = Browser?.GetBrowser();
-				if (browser == null) return;
-
-				// Why not modify network/API responses: 通信パケットは一切改変せず、画面描画直前のJSレイヤーでのみ置換するため
-				string script = BrowserLib.LiveAdmiralNameMaskHelper.GenerateUpdateScript(
-					Configuration.LiveAdmiralNameMask,
-					Configuration.RealAdmiralName,
-					Configuration.LiveAdmiralNameMaskText);
-
-				// ゲームフレームおよび関連フレームすべてに送信して確実に実行させる
-				foreach (var id in browser.GetFrameIdentifiers())
-				{
-					var frame = browser.GetFrameByIdentifier(id);
-					if (frame != null && (frame.IsMain || IsKanColleFrame(frame) || (frame.Url != null && (frame.Url.Contains("kcs") || frame.Url.Contains("dmm")))))
-					{
-						frame.ExecuteJavaScriptAsync(script);
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				AddLog(3, "提督名マスク更新に失敗しました: " + ex.Message);
-			}
-		}
 
 
 
@@ -872,12 +838,6 @@ namespace Browser
 			{
 				SendErrorReport(ex.ToString(), "FrameLoadStart: スクリプト注入に失敗しました。");
 			}
-
-			try
-			{
-				UpdateLiveAdmiralNameMask();
-			}
-			catch { }
 		}
 
 
@@ -971,14 +931,6 @@ namespace Browser
 
 		private void Browser_FrameLoadEnd(object sender, FrameLoadEndEventArgs e)
 		{
-			try
-			{
-				if (IsKanColleFrame(e.Frame))
-				{
-					UpdateLiveAdmiralNameMask();
-				}
-			}
-			catch { }
 
 			if (!Configuration.AppliesStyleSheet)
 				return;

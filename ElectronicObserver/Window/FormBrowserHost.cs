@@ -244,7 +244,6 @@ namespace ElectronicObserver.Window
 				config.MaskOnlyOnHomeport = c.MaskOnlyOnHomeport;
 				config.LiveAdmiralNameMask = c.LiveAdmiralNameMask;
 				config.LiveAdmiralNameMaskText = c.LiveAdmiralNameMaskText;
-				config.RealAdmiralName = (KCDatabase.Instance.Admiral?.IsAvailable ?? false) ? (KCDatabase.Instance.Admiral.AdmiralName ?? "") : "";
 				config.ToolMenuDockStyle = (int)c.ToolMenuDockStyle;
 				config.IsToolMenuVisible = c.IsToolMenuVisible;
 				config.ConfirmAtRefresh = c.ConfirmAtRefresh;
@@ -458,16 +457,6 @@ namespace ElectronicObserver.Window
 				APIObserver.Instance.APIList["api_start2/getData"].ResponseReceived +=
 					(string apiname, dynamic data) => InitialAPIReceived(apiname, data);
 
-				// Why not intercept earlier: 提督名(api_nickname)が確定するのは母港(api_port/port)または基本情報(api_get_member/basic)受信時であるため
-				void NotifyAdmiralNameUpdated(string apiname, dynamic data)
-				{
-					if (Utility.Configuration.Config.FormBrowser.LiveAdmiralNameMask)
-					{
-						Browser?.AsyncRemoteRun(() => Browser.Proxy.ConfigurationChanged(Configuration));
-					}
-				}
-				APIObserver.Instance.APIList["api_port/port"].ResponseReceived += NotifyAdmiralNameUpdated;
-				APIObserver.Instance.APIList["api_get_member/basic"].ResponseReceived += NotifyAdmiralNameUpdated;
 
 				// プロキシをセット
 				Browser.AsyncRemoteRun(() => Browser.Proxy.SetProxy(BuildDownstreamProxy()));

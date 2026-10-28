@@ -9,6 +9,7 @@ namespace ElectronicObserverTests
 		[Fact]
 		public void EscapeJsString_HandlesNull()
 		{
+			// null 入力時に "null" 文字列が返されることを保証する
 			string result = LiveAdmiralNameMaskHelper.EscapeJsString(null);
 
 			Assert.Equal("null", result);
@@ -17,6 +18,7 @@ namespace ElectronicObserverTests
 		[Fact]
 		public void EscapeJsString_EscapesSpecialCharactersAndHtmlTags()
 		{
+			// エスケープ対象文字および HTML script 終了タグが安全にエスケープされることを保証する
 			string input = "提督\"'\\</script>\r\n\t";
 			string escaped = LiveAdmiralNameMaskHelper.EscapeJsString(input);
 
@@ -29,104 +31,89 @@ namespace ElectronicObserverTests
 			Assert.Contains("\\r\\n\\t", escaped);
 		}
 
+		[Fact]
+		public void GenerateHookScript_AppendsEscapedMaskTextAsArgument()
+		{
+			// 特殊文字を含むマスク文字列がエスケープされて即時呼び出し引数になることを保証する
+			string script = LiveAdmiralNameMaskHelper.GenerateHookScript("提督\"<special>");
+
+			Assert.EndsWith("(\"提督\\\"\\x3cspecial>\");", script);
+		}
+
 		[Theory]
-		[InlineData(true, "吹雪提督", "司令官")]
-		[InlineData(false, "大和", "提督")]
-		public void GenerateHookScript_ContainsExpectedConfigurationAndHooks(bool enabled, string target, string mask)
+		[InlineData(null)]
+		[InlineData("")]
+		public void GenerateHookScript_FallsBackToDefaultMaskText_WhenNullOrEmpty(string maskText)
 		{
-			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(enabled, target, mask);
+			// マスク文字列が null または空文字列の場合にデフォルトの「提督」が引数となることを保証する
+			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(maskText);
 
-			Assert.Contains($"enabled: {(enabled ? "true" : "false")}", script);
-			Assert.Contains($"targetName: \"{target}\"", script);
-			Assert.Contains($"maskText: \"{mask}\"", script);
-			Assert.Contains("JSON.parse", script);
-			Assert.Contains("api_nickname", script);
-			Assert.Contains("CanvasRenderingContext2D.prototype.fillText", script);
-			Assert.Contains("CanvasRenderingContext2D.prototype.strokeText", script);
-			Assert.Contains("CanvasRenderingContext2D.prototype.measureText", script);
-			Assert.Contains("PIXI.Text.prototype", script);
-			Assert.Contains("window.__setAdmiralMask", script);
+			Assert.EndsWith("(\"提督\");", script);
 		}
 
 		[Fact]
-		public void GenerateHookScript_DoesNotHookRenderWebGL_ToPreventPerformanceOverheadAndLooping()
+		public void InjectIntoHtml_InsertsScriptImmediatelyBeforeMainJsTag()
 		{
-			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(true, "提督", "新米提督");
+			// 実際の index.php 同様に axios -> pixi -> main.js の並びにおいて main.js 直前にスクリプトが挿入されることを保証する
+			string html = "<!DOCTYPE html><html><head><script src=\"js/axios.min.js\"></script><script src=\"js/pixi.min.js\"></script><script src=\"js/main.js\"></script></head><body></body></html>";
 
-			// 描画ループ(_renderWebGL)に介入せず基底状態(JSON.parse)で差し替えることで、描画負荷ゼロ・無限ループゼロを保証する検証
-			Assert.DoesNotContain("_renderWebGL", script);
-			Assert.Contains("JSON.parse", script);
-			Assert.Contains("api_nickname", script);
+			string modified = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: true, maskText: "司令官");
+
+			Assert.Contains("</script><script>PIXI.settings.RENDER_OPTIONS.preserveDrawingBuffer=true;", modified);
+			Assert.Contains("(\"司令官\");</script><script src=\"js/main.js\">", modified);
 		}
 
 		[Fact]
-		public void GenerateHookScript_FallsBackToDefaultMaskText_WhenEmpty()
+		public void InjectIntoHtml_InsertsScriptAfterPixiTag_WhenMainJsNotFound()
 		{
-			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(true, "テスト提督", "");
-
-			Assert.Contains("maskText: \"提督\"", script);
-		}
-
-		[Fact]
-		public void GenerateUpdateScript_ProducesValidCallWithSelfInitialization()
-		{
-			string script = LiveAdmiralNameMaskHelper.GenerateUpdateScript(true, "吹雪", "司令官");
-
-			Assert.Contains("if (typeof window.__setAdmiralMask === 'undefined')", script);
-			Assert.Contains("window.__setAdmiralMask(true, \"吹雪\", \"司令官\");", script);
-		}
-
-		[Fact]
-		public void InjectIntoHtml_InsertsScriptAfterPixiMinJs()
-		{
+			// main.js タグが存在しない場合、pixi.min.js タグの直後にスクリプトが挿入されることを保証する
 			string html = "<html><head><script src=\"https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.8/pixi.min.js\"></script></head><body></body></html>";
 
-			string modified = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: true, targetName: "提督A", maskText: "司令官");
+			string modified = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: true, maskText: "提督");
 
 			Assert.Contains("pixi.min.js\"></script><script>", modified);
 			Assert.Contains("PIXI.settings.RENDER_OPTIONS.preserveDrawingBuffer=true;", modified);
-			Assert.Contains("window.__eoAdmiralMask", modified);
-			Assert.Contains("司令官", modified);
+			Assert.Contains("(\"提督\");</script></head>", modified);
 		}
 
 		[Fact]
-		public void InjectIntoHtml_InsertsScriptAfterStandardPixiJs()
+		public void InjectIntoHtml_OmitsMaskHook_WhenMaskDisabled_ButIncludesPreserveDrawingBuffer()
 		{
-			string html = "<html><head><script src=\"/kcs2/js/pixi.js\"></script></head><body></body></html>";
+			// マスク無効時、フックスクリプトは挿入されず preserveDrawingBuffer のみが挿入されることを保証する
+			string html = "<html><head><script src=\"js/main.js\"></script></head><body></body></html>";
 
-			string modified = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: true, targetName: "提督A", maskText: "司令官");
+			string modified = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: false, maskText: "提督");
 
-			Assert.Contains("/pixi.js\"></script><script>", modified);
-			Assert.Contains("PIXI.settings.RENDER_OPTIONS.preserveDrawingBuffer=true;", modified);
-			Assert.Contains("window.__eoAdmiralMask", modified);
-			Assert.Contains("司令官", modified);
+			Assert.Equal("<html><head><script>PIXI.settings.RENDER_OPTIONS.preserveDrawingBuffer=true;</script><script src=\"js/main.js\"></script></head><body></body></html>", modified);
 		}
 
 		[Fact]
-		public void InjectIntoHtml_OmitsPreserveDrawingBuffer_WhenDisabled()
+		public void InjectIntoHtml_ReturnsUnchangedHtml_WhenBothOptionsDisabled()
 		{
-			string html = "<html><head><script src=\"https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.8/pixi.min.js\"></script></head><body></body></html>";
+			// preserveDrawingBuffer もマスクも無効な場合、HTML が無改変で返されることを保証する
+			string html = "<html><head><script src=\"js/main.js\"></script></head><body></body></html>";
 
-			string modified = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: false, maskEnabled: true, targetName: "提督A", maskText: "提督");
+			string result = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: false, maskEnabled: false, maskText: "提督");
 
-			Assert.DoesNotContain("PIXI.settings.RENDER_OPTIONS.preserveDrawingBuffer=true;", modified);
-			Assert.Contains("window.__eoAdmiralMask", modified);
+			Assert.Equal(html, result);
 		}
 
 		[Fact]
-		public void InjectIntoHtml_FallsBackToBeforeHead_WhenPixiTagNotFound()
+		public void InjectIntoHtml_FallsBackToBeforeClosingHeadTag_WhenNeitherMainNorPixiTagExists()
 		{
-			string html = "<html><head></head><body>No Pixi Here</body></html>";
+			// main.js も pixi.js も存在しない場合、</head> タグの直前にスクリプトが挿入されることを保証する
+			string html = "<html><head><title>Test</title></head><body></body></html>";
 
-			string result = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: true, targetName: "提督", maskText: "提督");
+			string result = LiveAdmiralNameMaskHelper.InjectIntoHtml(html, preserveDrawingBuffer: true, maskEnabled: true, maskText: "提督");
 
-			Assert.Contains("<script>", result);
-			Assert.Contains("</head>", result);
+			Assert.Contains("<script>PIXI.settings.RENDER_OPTIONS.preserveDrawingBuffer=true;", result);
+			Assert.EndsWith("(\"提督\");</script></head><body></body></html>", result);
 		}
 
 		[Fact]
 		public void ConfigFormBrowser_HasCorrectDefaultValues()
 		{
+			// ConfigFormBrowser の提督名マスク初期設定値が仕様通りであることを保証する
 			var config = new Configuration.ConfigurationData.ConfigFormBrowser();
 
 			Assert.False(config.LiveAdmiralNameMask);
@@ -134,19 +121,9 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
-		public void GenerateHookScript_ContainsInitialScanAndTemporaryWatch_ForImmediateHomeportDisplay()
-		{
-			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(true, "初期提督", "司令官");
-
-			Assert.Contains("trackedTexts", script);
-			Assert.Contains("updateExistingTexts", script);
-			Assert.Contains("startTemporaryWatch", script);
-			Assert.Contains("hookPixiText", script);
-		}
-
-		[Fact]
 		public void AdmiralData_AdmiralName_ReturnsEmptyString_WhenNotInitialized()
 		{
+			// 未初期化状態の AdmiralData において AdmiralName が空文字列であることを保証する
 			var admiral = new ElectronicObserver.Data.AdmiralData();
 
 			Assert.False(admiral.IsAvailable);
