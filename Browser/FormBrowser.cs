@@ -604,6 +604,7 @@ namespace Browser
 					ApplyStyleSheet();
 					ApplyZoom();
 					DestroyDMMreloadDialog();
+					UpdateLiveAdmiralNameMask();
 				}
 				catch (Exception ex)
 				{
@@ -742,7 +743,7 @@ namespace Browser
 				foreach (var id in browser.GetFrameIdentifiers())
 				{
 					var frame = browser.GetFrameByIdentifier(id);
-					if (frame != null && (IsKanColleFrame(frame) || (frame.Url != null && (frame.Url.Contains("kcs") || frame.Url.Contains("dmm")))))
+					if (frame != null && (frame.IsMain || IsKanColleFrame(frame) || (frame.Url != null && (frame.Url.Contains("kcs") || frame.Url.Contains("dmm")))))
 					{
 						frame.ExecuteJavaScriptAsync(script);
 					}
@@ -871,6 +872,12 @@ namespace Browser
 			{
 				SendErrorReport(ex.ToString(), "FrameLoadStart: スクリプト注入に失敗しました。");
 			}
+
+			try
+			{
+				UpdateLiveAdmiralNameMask();
+			}
+			catch { }
 		}
 
 

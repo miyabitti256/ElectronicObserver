@@ -134,6 +134,17 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
+		public void GenerateHookScript_ContainsInitialScanAndTemporaryWatch_ForImmediateHomeportDisplay()
+		{
+			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(true, "初期提督", "司令官");
+
+			Assert.Contains("trackedTexts", script);
+			Assert.Contains("updateExistingTexts", script);
+			Assert.Contains("startTemporaryWatch", script);
+			Assert.Contains("hookPixiText", script);
+		}
+
+		[Fact]
 		public void AdmiralData_AdmiralName_ReturnsEmptyString_WhenNotInitialized()
 		{
 			var admiral = new ElectronicObserver.Data.AdmiralData();

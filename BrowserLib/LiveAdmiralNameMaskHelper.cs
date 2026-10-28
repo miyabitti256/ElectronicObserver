@@ -57,6 +57,7 @@ namespace BrowserLib
 
 			// Why not hook _renderWebGL/render loop: 毎フレームの描画ループに介入すると負荷が高く多重置換の恐れがあるため、基底状態(JSON.parse/モデル)で置換してループを全廃する
 			// Why not modify network stream: サーバー通信や本体プロキシの通信パケットには触れず、ブラウザ内のJSメモリ上でのみオブジェクトプロパティを差し替えるため
+			// Why not permanent interval: 常時タイマーは無駄なCPU消費になるため、画面初期化直後の過渡期（3秒間）のみ数回走査して自動停止させるため
 			return $@"
 (function() {{
 	if (window.__eoAdmiralMaskInstalled) {{
@@ -73,6 +74,10 @@ namespace BrowserLib
 		maskText: {maskJs}
 	}};
 
+	var trackedTexts = [];
+	var watchTimer = null;
+	var watchCount = 0;
+
 	function replaceName(str) {{
 		if (!str || typeof str !== 'string') return str;
 		var m = window.__eoAdmiralMask;
@@ -83,10 +88,86 @@ namespace BrowserLib
 		return str;
 	}}
 
+	function trackText(textObj) {{
+		if (!textObj || textObj.__eoTracked) return;
+		textObj.__eoTracked = true;
+		trackedTexts.push(textObj);
+	}}
+
+	function updateExistingTexts() {{
+		var m = window.__eoAdmiralMask;
+		if (!m || !m.enabled || !m.targetName || m.targetName === m.maskText) return;
+		var target = m.targetName;
+		var mask = m.maskText;
+
+		// 1. 追跡中の PIXI.Text インスタンスを更新
+		for (var i = 0; i < trackedTexts.length; i++) {{
+			var t = trackedTexts[i];
+			try {{
+				if (t && !t.destroyed && typeof t.text === 'string' && t.text.indexOf(target) !== -1) {{
+					t.text = t.text.split(target).join(mask);
+					if (t.dirty !== undefined) t.dirty = true;
+					if (typeof t.updateText === 'function') t.updateText();
+				}}
+			}} catch (e) {{}}
+		}}
+
+		// 2. ステージツリー走査フォールバック
+		try {{
+			if (window.stage && window.stage.children) {{
+				scanContainer(window.stage, target, mask);
+			}}
+		}} catch (e) {{}}
+	}}
+
+	function scanContainer(parent, target, mask) {{
+		if (!parent || !parent.children || !Array.isArray(parent.children)) return;
+		for (var i = 0; i < parent.children.length; i++) {{
+			var child = parent.children[i];
+			if (!child) continue;
+			try {{
+				if (typeof child.text === 'string' && child.text.indexOf(target) !== -1) {{
+					child.text = child.text.split(target).join(mask);
+					if (child.dirty !== undefined) child.dirty = true;
+					if (typeof child.updateText === 'function') child.updateText();
+				}}
+				if (child.children && child.children.length > 0) {{
+					scanContainer(child, target, mask);
+				}}
+			}} catch (e) {{}}
+		}}
+	}}
+
+	function startTemporaryWatch() {{
+		if (watchTimer) {{
+			clearInterval(watchTimer);
+			watchTimer = null;
+		}}
+		watchCount = 0;
+		updateExistingTexts();
+		watchTimer = setInterval(function() {{
+			watchCount++;
+			updateExistingTexts();
+			if (watchCount >= 20) {{
+				clearInterval(watchTimer);
+				watchTimer = null;
+			}}
+		}}, 150);
+	}}
+
 	window.__setAdmiralMask = function(enabled, targetName, maskText) {{
+		var prevTarget = window.__eoAdmiralMask.targetName;
 		window.__eoAdmiralMask.enabled = !!enabled;
 		window.__eoAdmiralMask.targetName = targetName || '';
 		window.__eoAdmiralMask.maskText = maskText || '提督';
+
+		if (window.__eoAdmiralMask.enabled && window.__eoAdmiralMask.targetName) {{
+			if (prevTarget !== window.__eoAdmiralMask.targetName) {{
+				startTemporaryWatch();
+			}} else {{
+				updateExistingTexts();
+			}}
+		}}
 	}};
 
 	// 1. 基底状態の置換: API レスポンスのパース時に提督名プロパティをクライアント側メモリ内で差し替える
@@ -102,8 +183,10 @@ namespace BrowserLib
 						// 自分自身の提督名 (api_port/port, api_get_member/basic, etc.)
 						// Why not require targetName match for self: 初回ログイン時の母港画面表示の時点で即座に置換を反映させるため
 						if (data.api_data && typeof data.api_data.api_nickname === 'string') {{
-							if (!m.targetName) {{
-								m.targetName = data.api_data.api_nickname;
+							var detected = data.api_data.api_nickname;
+							if (!m.targetName && detected !== m.maskText) {{
+								m.targetName = detected;
+								startTemporaryWatch();
 							}}
 							data.api_data.api_nickname = m.maskText;
 						}}
@@ -152,13 +235,16 @@ namespace BrowserLib
 		}} catch (e) {{}}
 	}}
 
-	// 3. PIXI.Text のセッターフック（直接代入される場合のフォールバック）
-	if (typeof PIXI !== 'undefined' && PIXI.Text && PIXI.Text.prototype) {{
+	// 3. PIXI.Text のフック（コンストラクタ＆セッター＆遅延ロード対応）
+	function hookPixiText() {{
+		if (typeof PIXI === 'undefined' || !PIXI.Text || !PIXI.Text.prototype) return;
+
 		try {{
 			var desc = Object.getOwnPropertyDescriptor(PIXI.Text.prototype, 'text');
 			if (desc && desc.set && !desc.set.__eoHooked) {{
 				var origSet = desc.set;
 				var newSet = function(val) {{
+					trackText(this);
 					var m = window.__eoAdmiralMask;
 					if (m && m.enabled && m.targetName && typeof val === 'string' && val.indexOf(m.targetName) !== -1) {{
 						origSet.call(this, replaceName(val));
@@ -175,6 +261,46 @@ namespace BrowserLib
 				}});
 			}}
 		}} catch (e) {{}}
+
+		try {{
+			if (!PIXI.Text.__eoHooked) {{
+				var origPixiText = PIXI.Text;
+				var newPixiText = function(text, style, canvas) {{
+					var replaced = replaceName(text);
+					var inst = new origPixiText(replaced, style, canvas);
+					trackText(inst);
+					return inst;
+				}};
+				newPixiText.prototype = origPixiText.prototype;
+				newPixiText.__eoHooked = true;
+				for (var prop in origPixiText) {{
+					if (origPixiText.hasOwnProperty(prop)) {{
+						newPixiText[prop] = origPixiText[prop];
+					}}
+				}}
+				PIXI.Text = newPixiText;
+			}}
+		}} catch (e) {{}}
+	}}
+
+	hookPixiText();
+	if (typeof PIXI === 'undefined') {{
+		try {{
+			var _pixi = undefined;
+			Object.defineProperty(window, 'PIXI', {{
+				configurable: true,
+				enumerable: true,
+				get: function() {{ return _pixi; }},
+				set: function(val) {{
+					_pixi = val;
+					hookPixiText();
+				}}
+			}});
+		}} catch (e) {{}}
+	}}
+
+	if (window.__eoAdmiralMask.enabled && window.__eoAdmiralMask.targetName) {{
+		startTemporaryWatch();
 	}}
 }})();";
 		}
