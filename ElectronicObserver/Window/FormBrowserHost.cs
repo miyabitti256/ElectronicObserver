@@ -244,11 +244,7 @@ namespace ElectronicObserver.Window
 				config.MaskOnlyOnHomeport = c.MaskOnlyOnHomeport;
 				config.LiveAdmiralNameMask = c.LiveAdmiralNameMask;
 				config.LiveAdmiralNameMaskText = c.LiveAdmiralNameMaskText;
-				config.LiveAdmiralNameCustomTarget = c.LiveAdmiralNameCustomTarget;
-				string resolvedTarget = !string.IsNullOrWhiteSpace(c.LiveAdmiralNameCustomTarget)
-					? c.LiveAdmiralNameCustomTarget
-					: ((KCDatabase.Instance.Admiral?.IsAvailable ?? false) ? (KCDatabase.Instance.Admiral.AdmiralName ?? "") : "");
-				config.RealAdmiralName = resolvedTarget;
+				config.RealAdmiralName = (KCDatabase.Instance.Admiral?.IsAvailable ?? false) ? (KCDatabase.Instance.Admiral.AdmiralName ?? "") : "";
 				config.ToolMenuDockStyle = (int)c.ToolMenuDockStyle;
 				config.IsToolMenuVisible = c.IsToolMenuVisible;
 				config.ConfirmAtRefresh = c.ConfirmAtRefresh;
@@ -284,7 +280,6 @@ namespace ElectronicObserver.Window
 			c.MaskOnlyOnHomeport = config.MaskOnlyOnHomeport;
 			c.LiveAdmiralNameMask = config.LiveAdmiralNameMask;
 			c.LiveAdmiralNameMaskText = config.LiveAdmiralNameMaskText;
-			c.LiveAdmiralNameCustomTarget = config.LiveAdmiralNameCustomTarget;
 			c.ToolMenuDockStyle = (DockStyle)config.ToolMenuDockStyle;
 			c.IsToolMenuVisible = config.IsToolMenuVisible;
 			c.ConfirmAtRefresh = config.ConfirmAtRefresh;

@@ -510,7 +510,6 @@ namespace ElectronicObserver.Window.Dialog
 			FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked = config.FormBrowser.MaskOnlyOnHomeport;
 			FormBrowser_LiveAdmiralNameMask.Checked = config.FormBrowser.LiveAdmiralNameMask;
 			FormBrowser_LiveAdmiralNameMaskText.Text = config.FormBrowser.LiveAdmiralNameMaskText ?? "提督";
-			FormBrowser_LiveAdmiralNameCustomTarget.Text = config.FormBrowser.LiveAdmiralNameCustomTarget ?? "";
 
 			if (!config.FormBrowser.IsToolMenuVisible)
 				FormBrowser_ToolMenuDockStyle.SelectedIndex = 4;
@@ -756,7 +755,6 @@ namespace ElectronicObserver.Window.Dialog
 			config.FormBrowser.LiveAdmiralNameMaskText = string.IsNullOrWhiteSpace(FormBrowser_LiveAdmiralNameMaskText.Text)
 				? "提督"
 				: FormBrowser_LiveAdmiralNameMaskText.Text;
-			config.FormBrowser.LiveAdmiralNameCustomTarget = FormBrowser_LiveAdmiralNameCustomTarget.Text.Trim();
 			if (FormBrowser_ToolMenuDockStyle.SelectedIndex == 4)
 			{
 				config.FormBrowser.IsToolMenuVisible = false;
@@ -934,8 +932,6 @@ namespace ElectronicObserver.Window.Dialog
 			bool enabled = FormBrowser_LiveAdmiralNameMask.Checked;
 			FormBrowser_LiveAdmiralNameMaskText.Enabled = enabled;
 			label_LiveAdmiralNameMaskText.Enabled = enabled;
-			FormBrowser_LiveAdmiralNameCustomTarget.Enabled = enabled;
-			label_LiveAdmiralNameCustomTarget.Enabled = enabled;
 		}
 
 

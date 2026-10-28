@@ -191,12 +191,6 @@ namespace BrowserLib
 		public string RealAdmiralName { get; set; }
 
 		/// <summary>
-		/// ブラウザ画面上で提督名を隠す際のカスタム対象名（空欄時は自動取得値）
-		/// </summary>
-		[DataMember]
-		public string LiveAdmiralNameCustomTarget { get; set; }
-
-		/// <summary>
 		/// ツールメニューの配置
 		/// </summary>
 		[DataMember]

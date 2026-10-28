@@ -228,8 +228,6 @@ namespace ElectronicObserver.Window.Dialog
 			this.FormBrowser_LiveAdmiralNameMask = new System.Windows.Forms.CheckBox();
 			this.label_LiveAdmiralNameMaskText = new System.Windows.Forms.Label();
 			this.FormBrowser_LiveAdmiralNameMaskText = new System.Windows.Forms.TextBox();
-			this.label_LiveAdmiralNameCustomTarget = new System.Windows.Forms.Label();
-			this.FormBrowser_LiveAdmiralNameCustomTarget = new System.Windows.Forms.TextBox();
 			this.label17 = new System.Windows.Forms.Label();
 			this.label16 = new System.Windows.Forms.Label();
 			this.FormBrowser_IsEnabled = new System.Windows.Forms.CheckBox();
@@ -2541,8 +2539,6 @@ namespace ElectronicObserver.Window.Dialog
 			this.groupBox2.Controls.Add(this.FormBrowser_LiveAdmiralNameMask);
 			this.groupBox2.Controls.Add(this.label_LiveAdmiralNameMaskText);
 			this.groupBox2.Controls.Add(this.FormBrowser_LiveAdmiralNameMaskText);
-			this.groupBox2.Controls.Add(this.label_LiveAdmiralNameCustomTarget);
-			this.groupBox2.Controls.Add(this.FormBrowser_LiveAdmiralNameCustomTarget);
 			this.groupBox2.Location = new System.Drawing.Point(6, 116);
 			this.groupBox2.Name = "groupBox2";
 			this.groupBox2.Size = new System.Drawing.Size(670, 135);
@@ -2699,34 +2695,17 @@ namespace ElectronicObserver.Window.Dialog
 			this.FormBrowser_LiveAdmiralNameMask.AutoSize = true;
 			this.FormBrowser_LiveAdmiralNameMask.Location = new System.Drawing.Point(6, 107);
 			this.FormBrowser_LiveAdmiralNameMask.Name = "FormBrowser_LiveAdmiralNameMask";
-			this.FormBrowser_LiveAdmiralNameMask.Size = new System.Drawing.Size(180, 19);
+			this.FormBrowser_LiveAdmiralNameMask.Size = new System.Drawing.Size(145, 19);
 			this.FormBrowser_LiveAdmiralNameMask.TabIndex = 21;
 			this.FormBrowser_LiveAdmiralNameMask.Text = "提督名を置換する *";
 			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMask, "ゲーム画面上の提督名を指定した名前に置換します。\r\n通信データには一切影響を与えません。\r\n* この変更は再起動後に反映されます。");
 			this.FormBrowser_LiveAdmiralNameMask.UseVisualStyleBackColor = true;
 			this.FormBrowser_LiveAdmiralNameMask.CheckedChanged += new System.EventHandler(this.FormBrowser_LiveAdmiralNameMask_CheckedChanged);
 			// 
-			// label_LiveAdmiralNameCustomTarget
-			// 
-			this.label_LiveAdmiralNameCustomTarget.AutoSize = true;
-			this.label_LiveAdmiralNameCustomTarget.Location = new System.Drawing.Point(185, 108);
-			this.label_LiveAdmiralNameCustomTarget.Name = "label_LiveAdmiralNameCustomTarget";
-			this.label_LiveAdmiralNameCustomTarget.Size = new System.Drawing.Size(94, 15);
-			this.label_LiveAdmiralNameCustomTarget.TabIndex = 22;
-			this.label_LiveAdmiralNameCustomTarget.Text = "対象(空で自動):";
-			// 
-			// FormBrowser_LiveAdmiralNameCustomTarget
-			// 
-			this.FormBrowser_LiveAdmiralNameCustomTarget.Location = new System.Drawing.Point(282, 105);
-			this.FormBrowser_LiveAdmiralNameCustomTarget.Name = "FormBrowser_LiveAdmiralNameCustomTarget";
-			this.FormBrowser_LiveAdmiralNameCustomTarget.Size = new System.Drawing.Size(100, 23);
-			this.FormBrowser_LiveAdmiralNameCustomTarget.TabIndex = 23;
-			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameCustomTarget, "マスク対象の提督名です。空欄の場合は母港API受信時に自動取得されます。\r\nあらかじめ入力して再起動するとログイン直後からマスクされます。");
-			// 
 			// label_LiveAdmiralNameMaskText
 			// 
 			this.label_LiveAdmiralNameMaskText.AutoSize = true;
-			this.label_LiveAdmiralNameMaskText.Location = new System.Drawing.Point(395, 108);
+			this.label_LiveAdmiralNameMaskText.Location = new System.Drawing.Point(155, 108);
 			this.label_LiveAdmiralNameMaskText.Name = "label_LiveAdmiralNameMaskText";
 			this.label_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(48, 15);
 			this.label_LiveAdmiralNameMaskText.TabIndex = 24;
@@ -2734,9 +2713,9 @@ namespace ElectronicObserver.Window.Dialog
 			// 
 			// FormBrowser_LiveAdmiralNameMaskText
 			// 
-			this.FormBrowser_LiveAdmiralNameMaskText.Location = new System.Drawing.Point(455, 105);
+			this.FormBrowser_LiveAdmiralNameMaskText.Location = new System.Drawing.Point(220, 105);
 			this.FormBrowser_LiveAdmiralNameMaskText.Name = "FormBrowser_LiveAdmiralNameMaskText";
-			this.FormBrowser_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(100, 23);
+			this.FormBrowser_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(120, 23);
 			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMaskText, "提督名の置換後の名前を指定します。\r\n* この変更は再起動後に反映されます。");
 			this.FormBrowser_LiveAdmiralNameMaskText.TabIndex = 25;
 
@@ -3579,7 +3558,5 @@ namespace ElectronicObserver.Window.Dialog
 		private System.Windows.Forms.CheckBox FormBrowser_LiveAdmiralNameMask;
 		private System.Windows.Forms.Label label_LiveAdmiralNameMaskText;
 		private System.Windows.Forms.TextBox FormBrowser_LiveAdmiralNameMaskText;
-		private System.Windows.Forms.Label label_LiveAdmiralNameCustomTarget;
-		private System.Windows.Forms.TextBox FormBrowser_LiveAdmiralNameCustomTarget;
 	}
 }

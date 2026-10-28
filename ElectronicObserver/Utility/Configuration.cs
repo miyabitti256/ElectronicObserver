@@ -1119,8 +1119,7 @@ namespace ElectronicObserver.Utility
 					MaskOnlyOnHomeport = true;
 					LiveAdmiralNameMask = false;
 					LiveAdmiralNameMaskText = "提督";
-					LiveAdmiralNameCustomTarget = "";
-					ToolMenuDockStyle = DockStyle.Top;
+						ToolMenuDockStyle = DockStyle.Top;
 					IsToolMenuVisible = true;
 					ConfirmAtRefresh = true;
 					HardwareAccelerationEnabled = true;

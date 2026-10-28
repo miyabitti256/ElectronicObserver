@@ -131,7 +131,6 @@ namespace ElectronicObserverTests
 
 			Assert.False(config.LiveAdmiralNameMask);
 			Assert.Equal("提督", config.LiveAdmiralNameMaskText);
-			Assert.Equal("", config.LiveAdmiralNameCustomTarget);
 		}
 
 		[Fact]
