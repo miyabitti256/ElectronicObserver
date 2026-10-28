@@ -1,4 +1,5 @@
 using BrowserLib;
+using ElectronicObserver.Data;
 using ElectronicObserver.Observer;
 using ElectronicObserver.Resource;
 using ElectronicObserver.Utility.Mathematics;
@@ -241,6 +242,8 @@ namespace ElectronicObserver.Window
 				config.KeepHQLevel = c.KeepHQLevel;
 				config.AdmiralNameMaskMode = c.AdmiralNameMaskMode;
 				config.MaskOnlyOnHomeport = c.MaskOnlyOnHomeport;
+				config.LiveAdmiralNameMask = c.LiveAdmiralNameMask;
+				config.LiveAdmiralNameMaskText = c.LiveAdmiralNameMaskText;
 				config.ToolMenuDockStyle = (int)c.ToolMenuDockStyle;
 				config.IsToolMenuVisible = c.IsToolMenuVisible;
 				config.ConfirmAtRefresh = c.ConfirmAtRefresh;
@@ -274,6 +277,8 @@ namespace ElectronicObserver.Window
 			c.KeepHQLevel = config.KeepHQLevel;
 			c.AdmiralNameMaskMode = config.AdmiralNameMaskMode;
 			c.MaskOnlyOnHomeport = config.MaskOnlyOnHomeport;
+			c.LiveAdmiralNameMask = config.LiveAdmiralNameMask;
+			c.LiveAdmiralNameMaskText = config.LiveAdmiralNameMaskText;
 			c.ToolMenuDockStyle = (DockStyle)config.ToolMenuDockStyle;
 			c.IsToolMenuVisible = config.IsToolMenuVisible;
 			c.ConfirmAtRefresh = config.ConfirmAtRefresh;
@@ -451,6 +456,7 @@ namespace ElectronicObserver.Window
 
 				APIObserver.Instance.APIList["api_start2/getData"].ResponseReceived +=
 					(string apiname, dynamic data) => InitialAPIReceived(apiname, data);
+
 
 				// プロキシをセット
 				Browser.AsyncRemoteRun(() => Browser.Proxy.SetProxy(BuildDownstreamProxy()));

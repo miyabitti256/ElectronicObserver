@@ -1,4 +1,4 @@
-using Browser.CefOp;
+﻿using Browser.CefOp;
 using BrowserLib;
 using CefSharp;
 using CefSharp.WinForms;
@@ -465,7 +465,7 @@ namespace Browser
 			Cef.Initialize(settings, false, (IBrowserProcessHandler)null);
 
 
-			var requestHandler = new CustomRequestHandler(pixiSettingEnabled: Configuration.PreserveDrawingBuffer);
+			var requestHandler = new CustomRequestHandler(() => Configuration);
 			requestHandler.RenderProcessTerminated += (mes) => AddLog(3, mes);
 
 			Browser = new ChromiumWebBrowser(@"about:blank")
@@ -721,6 +721,8 @@ namespace Browser
 
 
 
+
+
 		/// <summary>
 		/// スタイルシートを適用します。
 		/// </summary>
@@ -929,6 +931,7 @@ namespace Browser
 
 		private void Browser_FrameLoadEnd(object sender, FrameLoadEndEventArgs e)
 		{
+
 			if (!Configuration.AppliesStyleSheet)
 				return;
 
