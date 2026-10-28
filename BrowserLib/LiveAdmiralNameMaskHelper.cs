@@ -77,9 +77,45 @@ namespace BrowserLib
 	function replaceName(str) {{
 		if (!str || typeof str !== 'string') return str;
 		var m = window.__eoAdmiralMask;
-		if (!m || !m.enabled || !m.targetName) return str;
+		// Why not replace when target equals mask: 自己置換や不要な処理を防ぐため
+		if (!m || !m.enabled || !m.targetName || m.targetName === m.maskText) return str;
 		return str.indexOf(m.targetName) !== -1 ? str.split(m.targetName).join(m.maskText) : str;
 	}}
+
+	var applyMaskToTextNode = function(node) {{
+		var m = window.__eoAdmiralMask;
+		if (!node || node.destroyed) return;
+		if (m && m.enabled && m.targetName) {{
+			// Why not use node._text directly: 置換後文字列に targetName が含まれている場合の再置換・無限増殖を防ぐため、常に元テキストを基底にする
+			var raw = typeof node.__eoOriginalText === 'string' ? node.__eoOriginalText : node._text;
+			if (typeof raw === 'string' && raw.indexOf(m.targetName) !== -1) {{
+				if (typeof node.__eoOriginalText !== 'string') {{
+					node.__eoOriginalText = raw;
+				}}
+				var target = replaceName(node.__eoOriginalText);
+				// 現在のテキストと異なる場合のみ更新（二重描画・無限ループの防止）
+				if (node._text !== target) {{
+					node.__eoSettingText = true;
+					try {{
+						node.text = target;
+					}} finally {{
+						node.__eoSettingText = false;
+					}}
+				}}
+			}}
+		}} else if (m && !m.enabled && typeof node.__eoOriginalText === 'string') {{
+			var orig = node.__eoOriginalText;
+			node.__eoOriginalText = null;
+			if (node._text !== orig) {{
+				node.__eoSettingText = true;
+				try {{
+					node.text = orig;
+				}} finally {{
+					node.__eoSettingText = false;
+				}}
+			}}
+		}}
+	}};
 
 	window.__setAdmiralMask = function(enabled, targetName, maskText) {{
 		window.__eoAdmiralMask.enabled = !!enabled;
@@ -90,21 +126,7 @@ namespace BrowserLib
 		if (nodes && nodes.length) {{
 			for (var i = 0; i < nodes.length; i++) {{
 				try {{
-					var node = nodes[i];
-					if (node && !node.destroyed && typeof node._text === 'string') {{
-						if (window.__eoAdmiralMask.enabled && window.__eoAdmiralMask.targetName) {{
-							if (node._text.indexOf(window.__eoAdmiralMask.targetName) !== -1) {{
-								if (!node.__eoOriginalText) node.__eoOriginalText = node._text;
-								node.text = replaceName(node._text);
-								if (node.updateText) node.updateText();
-							}}
-						}} else if (!window.__eoAdmiralMask.enabled && node.__eoOriginalText) {{
-							var orig = node.__eoOriginalText;
-							node.__eoOriginalText = null;
-							node.text = orig;
-							if (node.updateText) node.updateText();
-						}}
-					}}
+					applyMaskToTextNode(nodes[i]);
 				}} catch (e) {{}}
 			}}
 		}}
@@ -117,18 +139,7 @@ namespace BrowserLib
 						if (window.__eoAdmiralMask.nodes.indexOf(obj) === -1) {{
 							window.__eoAdmiralMask.nodes.push(obj);
 						}}
-						if (window.__eoAdmiralMask.enabled && window.__eoAdmiralMask.targetName) {{
-							if (obj._text.indexOf(window.__eoAdmiralMask.targetName) !== -1) {{
-								if (!obj.__eoOriginalText) obj.__eoOriginalText = obj._text;
-								obj.text = replaceName(obj._text);
-								if (obj.updateText) obj.updateText();
-							}}
-						}} else if (!window.__eoAdmiralMask.enabled && obj.__eoOriginalText) {{
-							var orig = obj.__eoOriginalText;
-							obj.__eoOriginalText = null;
-							obj.text = orig;
-							if (obj.updateText) obj.updateText();
-						}}
+						applyMaskToTextNode(obj);
 					}}
 					if (obj.children && obj.children.length) {{
 						for (var j = 0; j < obj.children.length; j++) {{
@@ -177,19 +188,7 @@ namespace BrowserLib
 			var origRenderWebGL = PIXI.Text.prototype._renderWebGL;
 			if (origRenderWebGL && !PIXI.Text.prototype._renderWebGL.__eoHooked) {{
 				var renderWebGLHook = function(renderer) {{
-					var m = window.__eoAdmiralMask;
-					if (m && m.enabled && m.targetName && typeof this._text === 'string') {{
-						if (this._text.indexOf(m.targetName) !== -1) {{
-							if (!this.__eoOriginalText) {{
-								this.__eoOriginalText = this._text;
-							}}
-							this.text = replaceName(this._text);
-						}}
-					}} else if (m && !m.enabled && this.__eoOriginalText) {{
-						var orig = this.__eoOriginalText;
-						this.__eoOriginalText = null;
-						this.text = orig;
-					}}
+					applyMaskToTextNode(this);
 					return origRenderWebGL.apply(this, arguments);
 				}};
 				renderWebGLHook.__eoHooked = true;
@@ -201,19 +200,7 @@ namespace BrowserLib
 			var origRenderCanvas = PIXI.Text.prototype._renderCanvas;
 			if (origRenderCanvas && !PIXI.Text.prototype._renderCanvas.__eoHooked) {{
 				var renderCanvasHook = function(renderer) {{
-					var m = window.__eoAdmiralMask;
-					if (m && m.enabled && m.targetName && typeof this._text === 'string') {{
-						if (this._text.indexOf(m.targetName) !== -1) {{
-							if (!this.__eoOriginalText) {{
-								this.__eoOriginalText = this._text;
-							}}
-							this.text = replaceName(this._text);
-						}}
-					}} else if (m && !m.enabled && this.__eoOriginalText) {{
-						var orig = this.__eoOriginalText;
-						this.__eoOriginalText = null;
-						this.text = orig;
-					}}
+					applyMaskToTextNode(this);
 					return origRenderCanvas.apply(this, arguments);
 				}};
 				renderCanvasHook.__eoHooked = true;
@@ -229,12 +216,15 @@ namespace BrowserLib
 					if (window.__eoAdmiralMask.nodes.indexOf(this) === -1) {{
 						window.__eoAdmiralMask.nodes.push(this);
 					}}
+					if (this.__eoSettingText) {{
+						origSet.call(this, val);
+						return;
+					}}
+					this.__eoOriginalText = typeof val === 'string' ? val : (val != null ? String(val) : '');
 					var m = window.__eoAdmiralMask;
 					if (m && m.enabled && m.targetName && typeof val === 'string' && val.indexOf(m.targetName) !== -1) {{
-						if (!this.__eoOriginalText) {{
-							this.__eoOriginalText = val;
-						}}
-						origSet.call(this, replaceName(val));
+						var replaced = replaceName(val);
+						origSet.call(this, replaced);
 					}} else {{
 						origSet.call(this, val);
 					}}

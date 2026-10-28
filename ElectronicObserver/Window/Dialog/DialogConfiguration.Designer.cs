@@ -2701,8 +2701,8 @@ namespace ElectronicObserver.Window.Dialog
 			this.FormBrowser_LiveAdmiralNameMask.Name = "FormBrowser_LiveAdmiralNameMask";
 			this.FormBrowser_LiveAdmiralNameMask.Size = new System.Drawing.Size(180, 19);
 			this.FormBrowser_LiveAdmiralNameMask.TabIndex = 21;
-			this.FormBrowser_LiveAdmiralNameMask.Text = "ゲーム画面上の提督名も隠す";
-			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMask, "ゲーム画面に表示される提督名を指定した名前にリアルタイムで置き換えます。\r\n通信パケットには一切影響を与えません。");
+			this.FormBrowser_LiveAdmiralNameMask.Text = "ゲーム画面上の提督名を隠す *";
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMask, "ゲーム画面に表示される提督名を指定した名前に置き換えて描画します。\r\n通信パケットには一切影響を与えません。\r\n* この変更は再起動後に反映されます。");
 			this.FormBrowser_LiveAdmiralNameMask.UseVisualStyleBackColor = true;
 			this.FormBrowser_LiveAdmiralNameMask.CheckedChanged += new System.EventHandler(this.FormBrowser_LiveAdmiralNameMask_CheckedChanged);
 			// 
@@ -2721,7 +2721,7 @@ namespace ElectronicObserver.Window.Dialog
 			this.FormBrowser_LiveAdmiralNameCustomTarget.Name = "FormBrowser_LiveAdmiralNameCustomTarget";
 			this.FormBrowser_LiveAdmiralNameCustomTarget.Size = new System.Drawing.Size(100, 23);
 			this.FormBrowser_LiveAdmiralNameCustomTarget.TabIndex = 23;
-			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameCustomTarget, "マスク対象の提督名です。空欄の場合は母港API受信時に自動取得されます。\r\nあらかじめ入力しておくとログイン直後からマスクされます。");
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameCustomTarget, "マスク対象の提督名です。空欄の場合は母港API受信時に自動取得されます。\r\nあらかじめ入力して再起動するとログイン直後からマスクされます。");
 			// 
 			// label_LiveAdmiralNameMaskText
 			// 

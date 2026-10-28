@@ -48,6 +48,18 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
+		public void GenerateHookScript_ContainsLoopPreventionAndBaseTextPreservation()
+		{
+			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(true, "提督", "新米提督");
+
+			// 置換後の名前に元の提督名が含まれるケースでの無限増殖・横引き伸ばしを防止するガードの検証
+			Assert.Contains("__eoOriginalText", script);
+			Assert.Contains("__eoSettingText", script);
+			Assert.Contains("applyMaskToTextNode", script);
+			Assert.Contains("m.targetName === m.maskText", script);
+		}
+
+		[Fact]
 		public void GenerateHookScript_FallsBackToDefaultMaskText_WhenEmpty()
 		{
 			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(true, "テスト提督", "");
