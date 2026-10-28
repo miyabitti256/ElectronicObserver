@@ -1,4 +1,4 @@
-﻿using ElectronicObserver.Utility.Mathematics;
+using ElectronicObserver.Utility.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +31,7 @@ namespace ElectronicObserver.Data
 		/// <summary>
 		/// 提督名
 		/// </summary>
-		public string AdmiralName => RawData.api_nickname;
+		public string AdmiralName => IsAvailable ? RawData.api_nickname : "";
 
 		/// <summary>
 		/// 起動日時

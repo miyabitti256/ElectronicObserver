@@ -244,7 +244,7 @@ namespace ElectronicObserver.Window
 				config.MaskOnlyOnHomeport = c.MaskOnlyOnHomeport;
 				config.LiveAdmiralNameMask = c.LiveAdmiralNameMask;
 				config.LiveAdmiralNameMaskText = c.LiveAdmiralNameMaskText;
-				config.RealAdmiralName = KCDatabase.Instance.Admiral?.AdmiralName ?? "";
+				config.RealAdmiralName = (KCDatabase.Instance.Admiral?.IsAvailable ?? false) ? (KCDatabase.Instance.Admiral.AdmiralName ?? "") : "";
 				config.ToolMenuDockStyle = (int)c.ToolMenuDockStyle;
 				config.IsToolMenuVisible = c.IsToolMenuVisible;
 				config.ConfirmAtRefresh = c.ConfirmAtRefresh;

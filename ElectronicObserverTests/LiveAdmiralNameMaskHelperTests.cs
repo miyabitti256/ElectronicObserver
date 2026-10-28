@@ -104,5 +104,14 @@ namespace ElectronicObserverTests
 			Assert.False(config.LiveAdmiralNameMask);
 			Assert.Equal("提督", config.LiveAdmiralNameMaskText);
 		}
+
+		[Fact]
+		public void AdmiralData_AdmiralName_ReturnsEmptyString_WhenNotInitialized()
+		{
+			var admiral = new ElectronicObserver.Data.AdmiralData();
+
+			Assert.False(admiral.IsAvailable);
+			Assert.Equal("", admiral.AdmiralName);
+		}
 	}
 }
