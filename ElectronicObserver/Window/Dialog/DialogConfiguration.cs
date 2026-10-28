@@ -767,7 +767,7 @@ namespace ElectronicObserver.Window.Dialog
 			if (liveMaskChanged)
 			{
 				MessageBox.Show(
-					"ゲーム画面上の提督名マスク設定を変更しました。\r\n安全のため、設定は七四式電子観測儀の再起動後に反映されます。",
+					"提督名置換設定を変更しました。\r\n安全のため、設定は七四式電子観測儀の再起動後に反映されます。",
 					"設定変更",
 					MessageBoxButtons.OK,
 					MessageBoxIcon.Information);

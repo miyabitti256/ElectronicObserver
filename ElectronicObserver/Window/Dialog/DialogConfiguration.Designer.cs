@@ -2701,8 +2701,8 @@ namespace ElectronicObserver.Window.Dialog
 			this.FormBrowser_LiveAdmiralNameMask.Name = "FormBrowser_LiveAdmiralNameMask";
 			this.FormBrowser_LiveAdmiralNameMask.Size = new System.Drawing.Size(180, 19);
 			this.FormBrowser_LiveAdmiralNameMask.TabIndex = 21;
-			this.FormBrowser_LiveAdmiralNameMask.Text = "ゲーム画面上の提督名を隠す *";
-			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMask, "ゲーム画面に表示される提督名を指定した名前に置き換えて描画します。\r\n通信パケットには一切影響を与えません。\r\n* この変更は再起動後に反映されます。");
+			this.FormBrowser_LiveAdmiralNameMask.Text = "提督名を置換する *";
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMask, "ゲーム画面上の提督名を指定した名前に置換します。\r\n通信データには一切影響を与えません。\r\n* この変更は再起動後に反映されます。");
 			this.FormBrowser_LiveAdmiralNameMask.UseVisualStyleBackColor = true;
 			this.FormBrowser_LiveAdmiralNameMask.CheckedChanged += new System.EventHandler(this.FormBrowser_LiveAdmiralNameMask_CheckedChanged);
 			// 

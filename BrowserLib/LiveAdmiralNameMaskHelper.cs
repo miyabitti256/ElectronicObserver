@@ -55,8 +55,8 @@ namespace BrowserLib
 			string targetJs = EscapeJsString(targetName ?? "");
 			string maskJs = EscapeJsString(string.IsNullOrEmpty(maskText) ? "提督" : maskText);
 
-			// Why not fetch/XHR hook: サーバー通信データには一切触れず、表示描画層（Canvas 2D / PixiJS）のみで差し替えるため
-			// Why not only Canvas hook: PixiJS の内部テキストキャッシュ更新時にも安全に反映させるため text setter もフックする
+			// Why not hook _renderWebGL/render loop: 毎フレームの描画ループに介入すると負荷が高く多重置換の恐れがあるため、基底状態(JSON.parse/モデル)で置換してループを全廃する
+			// Why not modify network stream: サーバー通信や本体プロキシの通信パケットには触れず、ブラウザ内のJSメモリ上でのみオブジェクトプロパティを差し替えるため
 			return $@"
 (function() {{
 	if (window.__eoAdmiralMaskInstalled) {{
@@ -70,161 +70,96 @@ namespace BrowserLib
 	window.__eoAdmiralMask = {{
 		enabled: {enabledJs},
 		targetName: {targetJs},
-		maskText: {maskJs},
-		nodes: []
+		maskText: {maskJs}
 	}};
 
 	function replaceName(str) {{
 		if (!str || typeof str !== 'string') return str;
 		var m = window.__eoAdmiralMask;
-		// Why not replace when target equals mask: 自己置換や不要な処理を防ぐため
-		if (!m || !m.enabled || !m.targetName || m.targetName === m.maskText) return str;
-		return str.indexOf(m.targetName) !== -1 ? str.split(m.targetName).join(m.maskText) : str;
-	}}
-
-	var applyMaskToTextNode = function(node) {{
-		var m = window.__eoAdmiralMask;
-		if (!node || node.destroyed) return;
-		if (m && m.enabled && m.targetName) {{
-			// Why not use node._text directly: 置換後文字列に targetName が含まれている場合の再置換・無限増殖を防ぐため、常に元テキストを基底にする
-			var raw = typeof node.__eoOriginalText === 'string' ? node.__eoOriginalText : node._text;
-			if (typeof raw === 'string' && raw.indexOf(m.targetName) !== -1) {{
-				if (typeof node.__eoOriginalText !== 'string') {{
-					node.__eoOriginalText = raw;
-				}}
-				var target = replaceName(node.__eoOriginalText);
-				// 現在のテキストと異なる場合のみ更新（二重描画・無限ループの防止）
-				if (node._text !== target) {{
-					node.__eoSettingText = true;
-					try {{
-						node.text = target;
-					}} finally {{
-						node.__eoSettingText = false;
-					}}
-				}}
-			}}
-		}} else if (m && !m.enabled && typeof node.__eoOriginalText === 'string') {{
-			var orig = node.__eoOriginalText;
-			node.__eoOriginalText = null;
-			if (node._text !== orig) {{
-				node.__eoSettingText = true;
-				try {{
-					node.text = orig;
-				}} finally {{
-					node.__eoSettingText = false;
-				}}
-			}}
+		if (!m || !m.enabled) return str;
+		if (m.targetName && m.targetName !== m.maskText) {{
+			return str.indexOf(m.targetName) !== -1 ? str.split(m.targetName).join(m.maskText) : str;
 		}}
-	}};
+		return str;
+	}}
 
 	window.__setAdmiralMask = function(enabled, targetName, maskText) {{
 		window.__eoAdmiralMask.enabled = !!enabled;
 		window.__eoAdmiralMask.targetName = targetName || '';
 		window.__eoAdmiralMask.maskText = maskText || '提督';
-
-		var nodes = window.__eoAdmiralMask.nodes;
-		if (nodes && nodes.length) {{
-			for (var i = 0; i < nodes.length; i++) {{
-				try {{
-					applyMaskToTextNode(nodes[i]);
-				}} catch (e) {{}}
-			}}
-		}}
-
-		try {{
-			if (typeof PIXI !== 'undefined' && PIXI.Text) {{
-				function scanDisplayObject(obj, depth) {{
-					if (!obj || depth > 20) return;
-					if (obj instanceof PIXI.Text && typeof obj._text === 'string') {{
-						if (window.__eoAdmiralMask.nodes.indexOf(obj) === -1) {{
-							window.__eoAdmiralMask.nodes.push(obj);
-						}}
-						applyMaskToTextNode(obj);
-					}}
-					if (obj.children && obj.children.length) {{
-						for (var j = 0; j < obj.children.length; j++) {{
-							scanDisplayObject(obj.children[j], depth + 1);
-						}}
-					}}
-				}}
-				for (var k in window) {{
-					try {{
-						var val = window[k];
-						if (val && (val.stage || val.children)) {{
-							scanDisplayObject(val.stage || val, 0);
-						}}
-					}} catch (e) {{}}
-				}}
-			}}
-		}} catch (e) {{}}
 	}};
 
-	if (typeof CanvasRenderingContext2D !== 'undefined') {{
-		var origFillText = CanvasRenderingContext2D.prototype.fillText;
-		CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {{
-			var replaced = replaceName(text);
-			return arguments.length >= 4 
-				? origFillText.call(this, replaced, x, y, maxWidth) 
-				: origFillText.call(this, replaced, x, y);
-		}};
-
-		var origStrokeText = CanvasRenderingContext2D.prototype.strokeText;
-		CanvasRenderingContext2D.prototype.strokeText = function(text, x, y, maxWidth) {{
-			var replaced = replaceName(text);
-			return arguments.length >= 4 
-				? origStrokeText.call(this, replaced, x, y, maxWidth) 
-				: origStrokeText.call(this, replaced, x, y);
-		}};
-
-		var origMeasureText = CanvasRenderingContext2D.prototype.measureText;
-		CanvasRenderingContext2D.prototype.measureText = function(text) {{
-			var replaced = replaceName(text);
-			return origMeasureText.call(this, replaced);
-		}};
+	// 1. 基底状態の置換: API レスポンスのパース時に提督名プロパティをクライアント側メモリ内で差し替える
+	// これによりゲーム自身が置換後の名前をモデルに格納して描画するため、毎フレームの描画フックが不要になる
+	if (typeof JSON !== 'undefined' && JSON.parse) {{
+		try {{
+			var origParse = JSON.parse;
+			JSON.parse = function(text, reviver) {{
+				var data = origParse.apply(this, arguments);
+				try {{
+					var m = window.__eoAdmiralMask;
+					if (m && m.enabled && data && typeof data === 'object') {{
+						// 自分自身の提督名 (api_port/port, api_get_member/basic, etc.)
+						if (data.api_data && typeof data.api_data.api_nickname === 'string') {{
+							if (!m.targetName || data.api_data.api_nickname === m.targetName || data.api_data.api_nickname.indexOf(m.targetName) !== -1) {{
+								data.api_data.api_nickname = m.maskText;
+							}}
+						}}
+						// 演習相手やランキング等のリスト内
+						if (data.api_data && Array.isArray(data.api_data.api_list)) {{
+							for (var i = 0; i < data.api_data.api_list.length; i++) {{
+								var item = data.api_data.api_list[i];
+								if (item && typeof item.api_nickname === 'string') {{
+									if (m.targetName && (item.api_nickname === m.targetName || item.api_nickname.indexOf(m.targetName) !== -1)) {{
+										item.api_nickname = m.maskText;
+									}}
+								}}
+							}}
+						}}
+					}}
+				}} catch (e) {{}}
+				return data;
+			}};
+		}} catch (e) {{}}
 	}}
 
+	// 2. 万が一直接生成されるテキストに備えた軽量なフォールバック
+	if (typeof CanvasRenderingContext2D !== 'undefined') {{
+		try {{
+			var origFillText = CanvasRenderingContext2D.prototype.fillText;
+			CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {{
+				var replaced = replaceName(text);
+				return arguments.length >= 4 
+					? origFillText.call(this, replaced, x, y, maxWidth) 
+					: origFillText.call(this, replaced, x, y);
+			}};
+
+			var origStrokeText = CanvasRenderingContext2D.prototype.strokeText;
+			CanvasRenderingContext2D.prototype.strokeText = function(text, x, y, maxWidth) {{
+				var replaced = replaceName(text);
+				return arguments.length >= 4 
+					? origStrokeText.call(this, replaced, x, y, maxWidth) 
+					: origStrokeText.call(this, replaced, x, y);
+			}};
+
+			var origMeasureText = CanvasRenderingContext2D.prototype.measureText;
+			CanvasRenderingContext2D.prototype.measureText = function(text) {{
+				var replaced = replaceName(text);
+				return origMeasureText.call(this, replaced);
+			}};
+		}} catch (e) {{}}
+	}}
+
+	// 3. PIXI.Text のセッターフック（直接代入される場合のフォールバック）
 	if (typeof PIXI !== 'undefined' && PIXI.Text && PIXI.Text.prototype) {{
-		try {{
-			var origRenderWebGL = PIXI.Text.prototype._renderWebGL;
-			if (origRenderWebGL && !PIXI.Text.prototype._renderWebGL.__eoHooked) {{
-				var renderWebGLHook = function(renderer) {{
-					applyMaskToTextNode(this);
-					return origRenderWebGL.apply(this, arguments);
-				}};
-				renderWebGLHook.__eoHooked = true;
-				PIXI.Text.prototype._renderWebGL = renderWebGLHook;
-			}}
-		}} catch (e) {{}}
-
-		try {{
-			var origRenderCanvas = PIXI.Text.prototype._renderCanvas;
-			if (origRenderCanvas && !PIXI.Text.prototype._renderCanvas.__eoHooked) {{
-				var renderCanvasHook = function(renderer) {{
-					applyMaskToTextNode(this);
-					return origRenderCanvas.apply(this, arguments);
-				}};
-				renderCanvasHook.__eoHooked = true;
-				PIXI.Text.prototype._renderCanvas = renderCanvasHook;
-			}}
-		}} catch (e) {{}}
-
 		try {{
 			var desc = Object.getOwnPropertyDescriptor(PIXI.Text.prototype, 'text');
 			if (desc && desc.set && !desc.set.__eoHooked) {{
 				var origSet = desc.set;
 				var newSet = function(val) {{
-					if (window.__eoAdmiralMask.nodes.indexOf(this) === -1) {{
-						window.__eoAdmiralMask.nodes.push(this);
-					}}
-					if (this.__eoSettingText) {{
-						origSet.call(this, val);
-						return;
-					}}
-					this.__eoOriginalText = typeof val === 'string' ? val : (val != null ? String(val) : '');
 					var m = window.__eoAdmiralMask;
 					if (m && m.enabled && m.targetName && typeof val === 'string' && val.indexOf(m.targetName) !== -1) {{
-						var replaced = replaceName(val);
-						origSet.call(this, replaced);
+						origSet.call(this, replaceName(val));
 					}} else {{
 						origSet.call(this, val);
 					}}

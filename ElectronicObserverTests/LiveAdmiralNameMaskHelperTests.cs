@@ -39,24 +39,24 @@ namespace ElectronicObserverTests
 			Assert.Contains($"enabled: {(enabled ? "true" : "false")}", script);
 			Assert.Contains($"targetName: \"{target}\"", script);
 			Assert.Contains($"maskText: \"{mask}\"", script);
+			Assert.Contains("JSON.parse", script);
+			Assert.Contains("api_nickname", script);
 			Assert.Contains("CanvasRenderingContext2D.prototype.fillText", script);
 			Assert.Contains("CanvasRenderingContext2D.prototype.strokeText", script);
 			Assert.Contains("CanvasRenderingContext2D.prototype.measureText", script);
 			Assert.Contains("PIXI.Text.prototype", script);
-			Assert.Contains("PIXI.Text.prototype._renderWebGL", script);
 			Assert.Contains("window.__setAdmiralMask", script);
 		}
 
 		[Fact]
-		public void GenerateHookScript_ContainsLoopPreventionAndBaseTextPreservation()
+		public void GenerateHookScript_DoesNotHookRenderWebGL_ToPreventPerformanceOverheadAndLooping()
 		{
 			string script = LiveAdmiralNameMaskHelper.GenerateHookScript(true, "提督", "新米提督");
 
-			// 置換後の名前に元の提督名が含まれるケースでの無限増殖・横引き伸ばしを防止するガードの検証
-			Assert.Contains("__eoOriginalText", script);
-			Assert.Contains("__eoSettingText", script);
-			Assert.Contains("applyMaskToTextNode", script);
-			Assert.Contains("m.targetName === m.maskText", script);
+			// 描画ループ(_renderWebGL)に介入せず基底状態(JSON.parse)で差し替えることで、描画負荷ゼロ・無限ループゼロを保証する検証
+			Assert.DoesNotContain("_renderWebGL", script);
+			Assert.Contains("JSON.parse", script);
+			Assert.Contains("api_nickname", script);
 		}
 
 		[Fact]
