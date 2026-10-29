@@ -228,6 +228,16 @@ namespace ElectronicObserver.Window.Dialog
 			this.FormBrowser_LiveAdmiralNameMask = new System.Windows.Forms.CheckBox();
 			this.label_LiveAdmiralNameMaskText = new System.Windows.Forms.Label();
 			this.FormBrowser_LiveAdmiralNameMaskText = new System.Windows.Forms.TextBox();
+			this.groupBoxCustomFont = new System.Windows.Forms.GroupBox();
+			this.FormBrowser_EnableCustomGameFont = new System.Windows.Forms.CheckBox();
+			this.labelGameFontJapanese = new System.Windows.Forms.Label();
+			this.FormBrowser_GameFontJapanese = new System.Windows.Forms.TextBox();
+			this.FormBrowser_GameFontJapaneseSelect = new System.Windows.Forms.Button();
+			this.labelGameFontLatin = new System.Windows.Forms.Label();
+			this.FormBrowser_GameFontLatin = new System.Windows.Forms.TextBox();
+			this.FormBrowser_GameFontLatinSelect = new System.Windows.Forms.Button();
+			this.labelGameFontCustomCSS = new System.Windows.Forms.Label();
+			this.FormBrowser_GameFontCustomCSS = new System.Windows.Forms.TextBox();
 			this.label17 = new System.Windows.Forms.Label();
 			this.label16 = new System.Windows.Forms.Label();
 			this.FormBrowser_IsEnabled = new System.Windows.Forms.CheckBox();
@@ -2368,6 +2378,7 @@ namespace ElectronicObserver.Window.Dialog
 			// 
 			// tabPage12
 			// 
+			this.tabPage12.Controls.Add(this.groupBoxCustomFont);
 			this.tabPage12.Controls.Add(this.FormBrowser_SavesBrowserLog);
 			this.tabPage12.Controls.Add(this.FormBrowser_ForceColorProfile);
 			this.tabPage12.Controls.Add(this.FormBrowser_PreserveDrawingBuffer);
@@ -2386,6 +2397,7 @@ namespace ElectronicObserver.Window.Dialog
 			this.tabPage12.Controls.Add(this.FormBrowser_LogInPageURL);
 			this.tabPage12.Controls.Add(this.FormBrowser_ZoomRate);
 			this.tabPage12.Controls.Add(this.label15);
+			this.tabPage12.AutoScroll = true;
 			this.tabPage12.Location = new System.Drawing.Point(4, 22);
 			this.tabPage12.Name = "tabPage12";
 			this.tabPage12.Padding = new System.Windows.Forms.Padding(3);
@@ -2718,6 +2730,113 @@ namespace ElectronicObserver.Window.Dialog
 			this.FormBrowser_LiveAdmiralNameMaskText.Size = new System.Drawing.Size(120, 23);
 			this.ToolTipInfo.SetToolTip(this.FormBrowser_LiveAdmiralNameMaskText, "提督名の置換後の名前を指定します。\r\n* この変更は再起動後に反映されます。");
 			this.FormBrowser_LiveAdmiralNameMaskText.TabIndex = 25;
+			// 
+			// groupBoxCustomFont
+			// 
+			this.groupBoxCustomFont.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			| System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBoxCustomFont.Controls.Add(this.FormBrowser_EnableCustomGameFont);
+			this.groupBoxCustomFont.Controls.Add(this.labelGameFontJapanese);
+			this.groupBoxCustomFont.Controls.Add(this.FormBrowser_GameFontJapanese);
+			this.groupBoxCustomFont.Controls.Add(this.FormBrowser_GameFontJapaneseSelect);
+			this.groupBoxCustomFont.Controls.Add(this.labelGameFontLatin);
+			this.groupBoxCustomFont.Controls.Add(this.FormBrowser_GameFontLatin);
+			this.groupBoxCustomFont.Controls.Add(this.FormBrowser_GameFontLatinSelect);
+			this.groupBoxCustomFont.Controls.Add(this.labelGameFontCustomCSS);
+			this.groupBoxCustomFont.Controls.Add(this.FormBrowser_GameFontCustomCSS);
+			this.groupBoxCustomFont.Location = new System.Drawing.Point(6, 335);
+			this.groupBoxCustomFont.Name = "groupBoxCustomFont";
+			this.groupBoxCustomFont.Size = new System.Drawing.Size(670, 205);
+			this.groupBoxCustomFont.TabIndex = 18;
+			this.groupBoxCustomFont.TabStop = false;
+			this.groupBoxCustomFont.Text = "ゲーム内フォント設定";
+			// 
+			// FormBrowser_EnableCustomGameFont
+			// 
+			this.FormBrowser_EnableCustomGameFont.AutoSize = true;
+			this.FormBrowser_EnableCustomGameFont.Location = new System.Drawing.Point(6, 22);
+			this.FormBrowser_EnableCustomGameFont.Name = "FormBrowser_EnableCustomGameFont";
+			this.FormBrowser_EnableCustomGameFont.Size = new System.Drawing.Size(210, 19);
+			this.FormBrowser_EnableCustomGameFont.TabIndex = 0;
+			this.FormBrowser_EnableCustomGameFont.Text = "ゲーム内フォントをカスタマイズする *";
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_EnableCustomGameFont, "艦これゲーム画面の描画フォント（font_j）を変更します。\r\n通信データには一切影響を与えません。\r\n* この変更は再起動後に反映されます。");
+			this.FormBrowser_EnableCustomGameFont.UseVisualStyleBackColor = true;
+			this.FormBrowser_EnableCustomGameFont.CheckedChanged += new System.EventHandler(this.FormBrowser_EnableCustomGameFont_CheckedChanged);
+			// 
+			// labelGameFontJapanese
+			// 
+			this.labelGameFontJapanese.AutoSize = true;
+			this.labelGameFontJapanese.Location = new System.Drawing.Point(6, 50);
+			this.labelGameFontJapanese.Name = "labelGameFontJapanese";
+			this.labelGameFontJapanese.Size = new System.Drawing.Size(107, 15);
+			this.labelGameFontJapanese.TabIndex = 1;
+			this.labelGameFontJapanese.Text = "日本語フォント *:";
+			// 
+			// FormBrowser_GameFontJapanese
+			// 
+			this.FormBrowser_GameFontJapanese.Location = new System.Drawing.Point(120, 47);
+			this.FormBrowser_GameFontJapanese.Name = "FormBrowser_GameFontJapanese";
+			this.FormBrowser_GameFontJapanese.Size = new System.Drawing.Size(200, 23);
+			this.FormBrowser_GameFontJapanese.TabIndex = 2;
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_GameFontJapanese, "ベースとなる日本語フォント名を指定します（例: Noto Sans JP, BIZ UDPGothic, メイリオ）。\r\n* この変更は再起動後に反映されます。");
+			// 
+			// FormBrowser_GameFontJapaneseSelect
+			// 
+			this.FormBrowser_GameFontJapaneseSelect.Location = new System.Drawing.Point(325, 46);
+			this.FormBrowser_GameFontJapaneseSelect.Name = "FormBrowser_GameFontJapaneseSelect";
+			this.FormBrowser_GameFontJapaneseSelect.Size = new System.Drawing.Size(32, 23);
+			this.FormBrowser_GameFontJapaneseSelect.TabIndex = 3;
+			this.FormBrowser_GameFontJapaneseSelect.Text = "...";
+			this.FormBrowser_GameFontJapaneseSelect.UseVisualStyleBackColor = true;
+			this.FormBrowser_GameFontJapaneseSelect.Click += new System.EventHandler(this.FormBrowser_GameFontJapaneseSelect_Click);
+			// 
+			// labelGameFontLatin
+			// 
+			this.labelGameFontLatin.AutoSize = true;
+			this.labelGameFontLatin.Location = new System.Drawing.Point(6, 78);
+			this.labelGameFontLatin.Name = "labelGameFontLatin";
+			this.labelGameFontLatin.Size = new System.Drawing.Size(108, 15);
+			this.labelGameFontLatin.TabIndex = 4;
+			this.labelGameFontLatin.Text = "英数字 *:";
+			// 
+			// FormBrowser_GameFontLatin
+			// 
+			this.FormBrowser_GameFontLatin.Location = new System.Drawing.Point(120, 75);
+			this.FormBrowser_GameFontLatin.Name = "FormBrowser_GameFontLatin";
+			this.FormBrowser_GameFontLatin.Size = new System.Drawing.Size(200, 23);
+			this.FormBrowser_GameFontLatin.TabIndex = 5;
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_GameFontLatin, "英数字を置き換える欧文フォント名を指定します（例: Roboto, Segoe UI）。\r\n空欄の場合は日本語フォントのみ使用されます。\r\n* この変更は再起動後に反映されます。");
+			// 
+			// FormBrowser_GameFontLatinSelect
+			// 
+			this.FormBrowser_GameFontLatinSelect.Location = new System.Drawing.Point(325, 74);
+			this.FormBrowser_GameFontLatinSelect.Name = "FormBrowser_GameFontLatinSelect";
+			this.FormBrowser_GameFontLatinSelect.Size = new System.Drawing.Size(32, 23);
+			this.FormBrowser_GameFontLatinSelect.TabIndex = 6;
+			this.FormBrowser_GameFontLatinSelect.Text = "...";
+			this.FormBrowser_GameFontLatinSelect.UseVisualStyleBackColor = true;
+			this.FormBrowser_GameFontLatinSelect.Click += new System.EventHandler(this.FormBrowser_GameFontLatinSelect_Click);
+			// 
+			// labelGameFontCustomCSS
+			// 
+			this.labelGameFontCustomCSS.AutoSize = true;
+			this.labelGameFontCustomCSS.Location = new System.Drawing.Point(6, 106);
+			this.labelGameFontCustomCSS.Name = "labelGameFontCustomCSS";
+			this.labelGameFontCustomCSS.Size = new System.Drawing.Size(100, 15);
+			this.labelGameFontCustomCSS.TabIndex = 7;
+			this.labelGameFontCustomCSS.Text = "カスタムCSS *:";
+			// 
+			// FormBrowser_GameFontCustomCSS
+			// 
+			this.FormBrowser_GameFontCustomCSS.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			| System.Windows.Forms.AnchorStyles.Right)));
+			this.FormBrowser_GameFontCustomCSS.Location = new System.Drawing.Point(120, 103);
+			this.FormBrowser_GameFontCustomCSS.Multiline = true;
+			this.FormBrowser_GameFontCustomCSS.Name = "FormBrowser_GameFontCustomCSS";
+			this.FormBrowser_GameFontCustomCSS.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+			this.FormBrowser_GameFontCustomCSS.Size = new System.Drawing.Size(540, 90);
+			this.FormBrowser_GameFontCustomCSS.TabIndex = 8;
+			this.ToolTipInfo.SetToolTip(this.FormBrowser_GameFontCustomCSS, "上級者向け：ゲーム画面（/kcs2/index.php）に直接注入するカスタムCSSを指定できます。\r\n* この変更は再起動後に反映されます。");
 
 			// 
 			// label17
@@ -3558,5 +3677,15 @@ namespace ElectronicObserver.Window.Dialog
 		private System.Windows.Forms.CheckBox FormBrowser_LiveAdmiralNameMask;
 		private System.Windows.Forms.Label label_LiveAdmiralNameMaskText;
 		private System.Windows.Forms.TextBox FormBrowser_LiveAdmiralNameMaskText;
+		private System.Windows.Forms.GroupBox groupBoxCustomFont;
+		private System.Windows.Forms.CheckBox FormBrowser_EnableCustomGameFont;
+		private System.Windows.Forms.Label labelGameFontJapanese;
+		private System.Windows.Forms.TextBox FormBrowser_GameFontJapanese;
+		private System.Windows.Forms.Button FormBrowser_GameFontJapaneseSelect;
+		private System.Windows.Forms.Label labelGameFontLatin;
+		private System.Windows.Forms.TextBox FormBrowser_GameFontLatin;
+		private System.Windows.Forms.Button FormBrowser_GameFontLatinSelect;
+		private System.Windows.Forms.Label labelGameFontCustomCSS;
+		private System.Windows.Forms.TextBox FormBrowser_GameFontCustomCSS;
 	}
 }

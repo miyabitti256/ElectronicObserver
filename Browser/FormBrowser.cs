@@ -516,6 +516,7 @@ namespace Browser
 			SizeAdjuster.AutoScroll = Configuration.IsScrollable;
 			ToolMenu_Other_Zoom_Fit.Checked = Configuration.ZoomFit;
 			ApplyZoom();
+			ApplyCustomGameFont();
 			ToolMenu_Other_AppliesStyleSheet.Checked = Configuration.AppliesStyleSheet;
 			ToolMenu.Dock = (DockStyle)Configuration.ToolMenuDockStyle;
 			ToolMenu.Visible = Configuration.IsToolMenuVisible;
@@ -545,6 +546,7 @@ namespace Browser
 			//ロード直後の適用ではレイアウトがなぜか崩れるのでこのタイミングでも適用
 			ApplyStyleSheet();
 			ApplyZoom();
+			ApplyCustomGameFont();
 			DestroyDMMreloadDialog();
 
 			//起動直後はまだ音声が鳴っていないのでミュートできないため、この時点で有効化
@@ -602,6 +604,7 @@ namespace Browser
 					// DOM が完成した後に確実に適用
 					ApplyStyleSheet();
 					ApplyZoom();
+					ApplyCustomGameFont();
 					DestroyDMMreloadDialog();
 				}
 				catch (Exception ex)
@@ -700,6 +703,58 @@ namespace Browser
 			catch
 			{
 				return false;
+			}
+		}
+
+		private bool _customFontApplied = false;
+
+		private bool IsKanColleUrl(string url)
+		{
+			if (string.IsNullOrEmpty(url)) return false;
+
+			try
+			{
+				var uri = new Uri(url);
+				return uri.AbsolutePath.Contains("/kcs2/index.php");
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// ゲーム画面のカスタムフォント設定を DOM に動的適用します。
+		/// </summary>
+		public void ApplyCustomGameFont(IFrame frame = null)
+		{
+			if (!IsBrowserInitialized || Configuration == null)
+				return;
+
+			string css = Configuration.EnableCustomGameFont
+				? GameFontHelper.GenerateFontCss(
+					Configuration.GameFontJapanese,
+					Configuration.GameFontLatin,
+					Configuration.GameFontCustomCSS)
+				: null;
+
+			bool hasCss = !string.IsNullOrWhiteSpace(css);
+			// Why not always execute script: カスタムフォント未使用時は余計なスクリプト実行を行わず、有効から無効へ切り替えた時のみ注入済み style を除去するため
+			if (!hasCss && !_customFontApplied)
+				return;
+
+			try
+			{
+				var targetFrame = frame ?? GetKanColleFrame();
+				if (targetFrame == null)
+					return;
+
+				targetFrame.ExecuteJavaScriptAsync(GameFontHelper.GenerateInjectionScript(css));
+				_customFontApplied = hasCss;
+			}
+			catch (Exception ex)
+			{
+				SendErrorReport(ex.ToString(), "ApplyCustomGameFont: カスタムフォントの適用に失敗しました。");
 			}
 		}
 
@@ -828,6 +883,11 @@ namespace Browser
 					e.Frame.ExecuteJavaScriptAsync(FrameScript);
 				}
 
+				if (IsKanColleUrl(e.Url) || IsKanColleFrame(e.Frame))
+				{
+					ApplyCustomGameFont(e.Frame);
+				}
+
 				// confirm() 無効化（DOM 安全版）
 				if (Configuration.IsDMMreloadDialogDestroyable && e.Frame.IsMain)
 				{
@@ -930,6 +990,16 @@ namespace Browser
 		}
 
 		private void Browser_FrameLoadEnd(object sender, FrameLoadEndEventArgs e)
+		{
+			if (IsKanColleUrl(e.Url) || IsKanColleFrame(e.Frame))
+			{
+				ApplyCustomGameFont(e.Frame);
+			}
+
+			OnFrameLoadEndStyleSheet(e);
+		}
+
+		private void OnFrameLoadEndStyleSheet(FrameLoadEndEventArgs e)
 		{
 
 			if (!Configuration.AppliesStyleSheet)

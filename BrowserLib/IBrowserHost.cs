@@ -185,6 +185,30 @@ namespace BrowserLib
 		public string LiveAdmiralNameMaskText { get; set; }
 
 		/// <summary>
+		/// ゲーム画面のフォントをカスタマイズするか
+		/// </summary>
+		[DataMember]
+		public bool EnableCustomGameFont { get; set; }
+
+		/// <summary>
+		/// ゲーム画面の日本語（全体）フォント名
+		/// </summary>
+		[DataMember]
+		public string GameFontJapanese { get; set; } 
+
+		/// <summary>
+		/// ゲーム画面の英数字（欧文混植）フォント名
+		/// </summary>
+		[DataMember]
+		public string GameFontLatin { get; set; }
+
+		/// <summary>
+		/// ゲーム画面のカスタムフォントCSS
+		/// </summary>
+		[DataMember]
+		public string GameFontCustomCSS { get; set; }
+
+		/// <summary>
 		/// ツールメニューの配置
 		/// </summary>
 		[DataMember]
