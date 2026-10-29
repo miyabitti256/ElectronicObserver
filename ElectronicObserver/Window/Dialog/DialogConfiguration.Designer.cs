@@ -2797,7 +2797,7 @@ namespace ElectronicObserver.Window.Dialog
 			this.labelGameFontLatin.Name = "labelGameFontLatin";
 			this.labelGameFontLatin.Size = new System.Drawing.Size(108, 15);
 			this.labelGameFontLatin.TabIndex = 4;
-			this.labelGameFontLatin.Text = "英数字(混植) *:";
+			this.labelGameFontLatin.Text = "英数字 *:";
 			// 
 			// FormBrowser_GameFontLatin
 			// 

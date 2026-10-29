@@ -54,7 +54,7 @@ namespace Browser.CefOp
 
 				if (customFontEnabled && !string.IsNullOrWhiteSpace(customFontCss))
 				{
-					replaced = BrowserLib.GameFontHelper.InjectCssIntoHtml(replaced, customFontCss);
+					replaced = BrowserLib.GameFontHelper.InjectIntoHtml(replaced, customFontCss);
 				}
 
 				var bytes = Encoding.UTF8.GetBytes(replaced);

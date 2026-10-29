@@ -54,6 +54,9 @@
     <EmbeddedResource Include="AdmiralNameMask.js">
       <LogicalName>BrowserLib.AdmiralNameMask.js</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="GameFontInjector.js">
+      <LogicalName>BrowserLib.GameFontInjector.js</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
