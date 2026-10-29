@@ -177,7 +177,7 @@ namespace ElectronicObserver.Utility
 		/// <summary>
 		/// フォーク版の組み込み既定バージョン
 		/// </summary>
-		public const string DefaultForkVersion = "4.7.6-20261026";
+		public const string DefaultForkVersion = "4.7.7-20261029";
 
 		/// <summary>
 		/// インストール済みバージョン
