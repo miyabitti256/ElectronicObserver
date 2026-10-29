@@ -75,5 +75,17 @@ namespace ElectronicObserverTests
 			Assert.Equal(1, restored.SelectedTabIndex);
 			Assert.Equal(new[] { 0, 0, 7, 0, 123 }, restored.TargetMissions);
 		}
+
+		[Fact]
+		public void FormBrowser_GameFontDefaults_AreExpected()
+		{
+			// What: ブラウザのフォントカスタマイズ設定のデフォルト値が仕様通り（無効・空欄）であること
+			var config = new Configuration.ConfigurationData.ConfigFormBrowser();
+
+			Assert.False(config.EnableCustomGameFont);
+			Assert.Equal("", config.GameFontJapanese);
+			Assert.Equal("", config.GameFontLatin);
+			Assert.Equal("", config.GameFontCustomCSS);
+		}
 	}
 }

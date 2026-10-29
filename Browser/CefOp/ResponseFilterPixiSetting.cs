@@ -13,12 +13,21 @@ namespace Browser.CefOp
 		private readonly bool preserveDrawingBuffer;
 		private readonly bool maskEnabled;
 		private readonly string maskText;
+		private readonly bool customFontEnabled;
+		private readonly string customFontCss;
 
-		public ResponseFilterPixiSetting(bool preserveDrawingBuffer = true, bool maskEnabled = false, string maskText = "提督")
+		public ResponseFilterPixiSetting(
+			bool preserveDrawingBuffer = true,
+			bool maskEnabled = false,
+			string maskText = "提督",
+			bool customFontEnabled = false,
+			string customFontCss = null)
 		{
 			this.preserveDrawingBuffer = preserveDrawingBuffer;
 			this.maskEnabled = maskEnabled;
 			this.maskText = maskText;
+			this.customFontEnabled = customFontEnabled;
+			this.customFontCss = customFontCss;
 		}
 
 		public bool InitFilter() => true;
@@ -42,6 +51,11 @@ namespace Browser.CefOp
 					preserveDrawingBuffer,
 					maskEnabled,
 					maskText);
+
+				if (customFontEnabled && !string.IsNullOrWhiteSpace(customFontCss))
+				{
+					replaced = BrowserLib.GameFontHelper.InjectCssIntoHtml(replaced, customFontCss);
+				}
 
 				var bytes = Encoding.UTF8.GetBytes(replaced);
 				dataOut.Write(bytes, 0, bytes.Length);

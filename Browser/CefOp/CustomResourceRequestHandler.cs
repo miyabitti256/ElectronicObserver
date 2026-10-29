@@ -28,10 +28,16 @@ namespace Browser.CefOp
 			// Why not check LiveAdmiralNameMask here: スクリーンショット用の preserveDrawingBuffer 注入のため index.php のフィルター自体は常時必要であり、マスクの要否判定はフィルター内部で行うため
 			if (request.Url.Contains(@"/kcs2/index.php"))
 			{
+				string fontCss = conf?.EnableCustomGameFont == true
+					? BrowserLib.GameFontHelper.GenerateFontCss(conf.GameFontJapanese, conf.GameFontLatin, conf.GameFontCustomCSS)
+					: null;
+
 				return new ResponseFilterPixiSetting(
 					conf?.PreserveDrawingBuffer ?? true,
 					conf?.LiveAdmiralNameMask ?? false,
-					conf?.LiveAdmiralNameMaskText ?? "提督");
+					conf?.LiveAdmiralNameMaskText ?? "提督",
+					conf?.EnableCustomGameFont ?? false,
+					fontCss);
 			}
 
 			return base.GetResourceResponseFilter(chromiumWebBrowser, browser, frame, request, response);

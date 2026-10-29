@@ -244,6 +244,10 @@ namespace ElectronicObserver.Window
 				config.MaskOnlyOnHomeport = c.MaskOnlyOnHomeport;
 				config.LiveAdmiralNameMask = c.LiveAdmiralNameMask;
 				config.LiveAdmiralNameMaskText = c.LiveAdmiralNameMaskText;
+				config.EnableCustomGameFont = c.EnableCustomGameFont;
+				config.GameFontJapanese = c.GameFontJapanese;
+				config.GameFontLatin = c.GameFontLatin;
+				config.GameFontCustomCSS = c.GameFontCustomCSS;
 				config.ToolMenuDockStyle = (int)c.ToolMenuDockStyle;
 				config.IsToolMenuVisible = c.IsToolMenuVisible;
 				config.ConfirmAtRefresh = c.ConfirmAtRefresh;
@@ -279,6 +283,10 @@ namespace ElectronicObserver.Window
 			c.MaskOnlyOnHomeport = config.MaskOnlyOnHomeport;
 			c.LiveAdmiralNameMask = config.LiveAdmiralNameMask;
 			c.LiveAdmiralNameMaskText = config.LiveAdmiralNameMaskText;
+			c.EnableCustomGameFont = config.EnableCustomGameFont;
+			c.GameFontJapanese = config.GameFontJapanese;
+			c.GameFontLatin = config.GameFontLatin;
+			c.GameFontCustomCSS = config.GameFontCustomCSS;
 			c.ToolMenuDockStyle = (DockStyle)config.ToolMenuDockStyle;
 			c.IsToolMenuVisible = config.IsToolMenuVisible;
 			c.ConfirmAtRefresh = config.ConfirmAtRefresh;

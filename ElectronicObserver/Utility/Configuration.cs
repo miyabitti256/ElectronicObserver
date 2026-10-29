@@ -1064,6 +1064,26 @@ namespace ElectronicObserver.Utility
 				public string LiveAdmiralNameCustomTarget { get; set; }
 
 				/// <summary>
+				/// ゲーム画面のフォントをカスタマイズするか
+				/// </summary>
+				public bool EnableCustomGameFont { get; set; }
+
+				/// <summary>
+				/// ゲーム画面の日本語（全体）フォント名
+				/// </summary>
+				public string GameFontJapanese { get; set; }
+
+				/// <summary>
+				/// ゲーム画面の英数字（欧文混植）フォント名
+				/// </summary>
+				public string GameFontLatin { get; set; }
+
+				/// <summary>
+				/// ゲーム画面のカスタムフォントCSS
+				/// </summary>
+				public string GameFontCustomCSS { get; set; }
+
+				/// <summary>
 				/// ツールメニューの配置
 				/// </summary>
 				public DockStyle ToolMenuDockStyle { get; set; }
@@ -1119,6 +1139,10 @@ namespace ElectronicObserver.Utility
 					MaskOnlyOnHomeport = true;
 					LiveAdmiralNameMask = false;
 					LiveAdmiralNameMaskText = "提督";
+					EnableCustomGameFont = false;
+					GameFontJapanese = "";
+					GameFontLatin = "";
+					GameFontCustomCSS = "";
 						ToolMenuDockStyle = DockStyle.Top;
 					IsToolMenuVisible = true;
 					ConfirmAtRefresh = true;

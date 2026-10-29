@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="IBrowser.cs" />
     <Compile Include="IBrowserHost.cs" />
+    <Compile Include="GameFontHelper.cs" />
     <Compile Include="LiveAdmiralNameMaskHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PipeCommunicator.cs" />
