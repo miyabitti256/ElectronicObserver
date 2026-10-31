@@ -35,12 +35,14 @@ namespace Browser.CefOp
 			bool maskAdmiralName,
 			bool keepHQLevel,
 			int maskMode,
-			bool maskOnlyOnHomeport)
+			bool maskOnlyOnHomeport,
+			bool isInSortie = false)
 		{
 			if (!maskAdmiralName || original == null)
 				return original;
 
-			if (maskOnlyOnHomeport && !IsHomeport(original))
+			// Why not analyze image when in sortie: 出撃中・演習中は提督名ヘッダーが存在しないため画像解析を行わず即座にバイパスする
+			if (maskOnlyOnHomeport && (isInSortie || !IsHomeport(original)))
 				return original;
 
 			int w = original.Width;
@@ -237,9 +239,26 @@ namespace Browser.CefOp
 							if (c.G > 60 && c.B > 60 && c.G > c.R * 1.15 && c.B > c.R * 1.15)
 							{
 								cyanCount++;
-								if (cyanCount >= 10)
-									return true;
 							}
+						}
+					}
+
+					// Why not allow cyanCount > 300: 一面が青い海面テクスチャ（戦闘画面・マップ）では1,000ピクセル以上該当するため、文字として妥当な範囲(20〜300)に限定する
+					// Why not cyanCount alone: 背景が青い戦闘画面を確実に除外するため、ヘッダー背景上部(Y=2..6)が青い海面色でないことも確認する
+					if (cyanCount >= 20 && cyanCount <= 300)
+					{
+						int sampleY = (int)Math.Round(h * (4.0 / 720.0));
+						int sampleX = (int)Math.Round(w * (480.0 / 1200.0));
+						if (sampleY < h && sampleX < w)
+						{
+							Color headerBg = image.GetPixel(sampleX, sampleY);
+							bool isSeaBackground = headerBg.B > 100 && headerBg.B > headerBg.R * 1.4;
+							if (!isSeaBackground)
+								return true;
+						}
+						else
+						{
+							return true;
 						}
 					}
 				}

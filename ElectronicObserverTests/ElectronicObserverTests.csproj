@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Browser\CefOp\AdmiralNameMaskHelper.cs" Link="AdmiralNameMaskHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ElectronicObserver\ElectronicObserver.csproj" />
     <ProjectReference Include="..\EOUpdate\EOUpdate.csproj" />
     <ProjectReference Include="..\BrowserLib\BrowserLib.csproj" />

@@ -503,6 +503,15 @@ namespace ElectronicObserver.Window
 			InitializationStage |= InitializationStageFlag.SetProxyCompleted;
 		}
 
+		/// <summary>
+		/// 現在出撃中または演習中かどうかを返します。
+		/// </summary>
+		public bool IsInSortie()
+		{
+			// Why not check database loaded only: 起動直後や未接続時にも安全に false を返すため null ガードを行う
+			return KCDatabase.Instance.Fleet?.Fleets?.Values.Any(f => f != null && (f.IsInSortie || f.IsInPractice)) ?? false;
+		}
+
 
 		void Browser_Faulted(Exception e)
 		{

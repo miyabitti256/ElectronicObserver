@@ -66,6 +66,12 @@ namespace BrowserLib
 
 		[OperationContract]
 		void ClearCache();
+
+		/// <summary>
+		/// 現在出撃中または演習中かどうか
+		/// </summary>
+		[OperationContract]
+		bool IsInSortie();
 	}
 
 	/// <summary>

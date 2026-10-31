@@ -1,4 +1,4 @@
-﻿using Browser.CefOp;
+using Browser.CefOp;
 using BrowserLib;
 using CefSharp;
 using CefSharp.WinForms;
@@ -1170,12 +1170,26 @@ namespace Browser
 				if (image == null)
 					return;
 
+				bool isInSortie = false;
+				if (Configuration.MaskOnlyOnHomeport && BrowserHost != null && !BrowserHost.Closed)
+				{
+					try
+					{
+						isInSortie = BrowserHost.Proxy.IsInSortie();
+					}
+					catch
+					{
+						// Why not throw: IPC通信エラー時でもスクリーンショット撮影自体は失敗させない
+					}
+				}
+
 				image = AdmiralNameMaskHelper.ProcessScreenShot(
 					image,
 					Configuration.MaskAdmiralName,
 					Configuration.KeepHQLevel,
 					Configuration.AdmiralNameMaskMode,
-					Configuration.MaskOnlyOnHomeport);
+					Configuration.MaskOnlyOnHomeport,
+					isInSortie);
 
 				if (is32bpp)
 				{
