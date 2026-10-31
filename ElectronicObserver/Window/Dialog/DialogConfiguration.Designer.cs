@@ -222,7 +222,6 @@ namespace ElectronicObserver.Window.Dialog
 			this.FormBrowser_ScreenShotFormat_JPEG = new System.Windows.Forms.RadioButton();
 			this.FormBrowser_ScreenShot_MaskAdmiralName = new System.Windows.Forms.CheckBox();
 			this.FormBrowser_ScreenShot_KeepHQLevel = new System.Windows.Forms.CheckBox();
-			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport = new System.Windows.Forms.CheckBox();
 			this.labelScreenShot_MaskMode = new System.Windows.Forms.Label();
 			this.FormBrowser_ScreenShot_MaskMode = new System.Windows.Forms.ComboBox();
 			this.FormBrowser_LiveAdmiralNameMask = new System.Windows.Forms.CheckBox();
@@ -2545,7 +2544,6 @@ namespace ElectronicObserver.Window.Dialog
 			this.groupBox2.Controls.Add(this.FormBrowser_ScreenShotFormat_JPEG);
 			this.groupBox2.Controls.Add(this.FormBrowser_ScreenShot_MaskAdmiralName);
 			this.groupBox2.Controls.Add(this.FormBrowser_ScreenShot_KeepHQLevel);
-			this.groupBox2.Controls.Add(this.FormBrowser_ScreenShot_MaskOnlyOnHomeport);
 			this.groupBox2.Controls.Add(this.labelScreenShot_MaskMode);
 			this.groupBox2.Controls.Add(this.FormBrowser_ScreenShot_MaskMode);
 			this.groupBox2.Controls.Add(this.FormBrowser_LiveAdmiralNameMask);
@@ -2668,21 +2666,12 @@ namespace ElectronicObserver.Window.Dialog
 			this.ToolTipInfo.SetToolTip(this.FormBrowser_ScreenShot_KeepHQLevel, "提督名のみを隠し、司令部Lvは隠さずそのまま残します。");
 			this.FormBrowser_ScreenShot_KeepHQLevel.UseVisualStyleBackColor = true;
 			// 
-			// FormBrowser_ScreenShot_MaskOnlyOnHomeport
 			// 
-			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport.AutoSize = true;
-			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport.Location = new System.Drawing.Point(239, 80);
-			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport.Name = "FormBrowser_ScreenShot_MaskOnlyOnHomeport";
-			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport.Size = new System.Drawing.Size(94, 19);
-			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport.TabIndex = 18;
-			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport.Text = "母港画面のみ";
-			this.ToolTipInfo.SetToolTip(this.FormBrowser_ScreenShot_MaskOnlyOnHomeport, "母港画面であると判定された時のみ提督名を隠します。\r\n無効にするとすべての画面で上部領域を隠します。");
-			this.FormBrowser_ScreenShot_MaskOnlyOnHomeport.UseVisualStyleBackColor = true;
 			// 
 			// labelScreenShot_MaskMode
 			// 
 			this.labelScreenShot_MaskMode.AutoSize = true;
-			this.labelScreenShot_MaskMode.Location = new System.Drawing.Point(351, 82);
+			this.labelScreenShot_MaskMode.Location = new System.Drawing.Point(245, 82);
 			this.labelScreenShot_MaskMode.Name = "labelScreenShot_MaskMode";
 			this.labelScreenShot_MaskMode.Size = new System.Drawing.Size(55, 15);
 			this.labelScreenShot_MaskMode.TabIndex = 19;
@@ -2696,7 +2685,7 @@ namespace ElectronicObserver.Window.Dialog
 			"モザイク",
 			"黒塗り",
 			"切り取り"});
-			this.FormBrowser_ScreenShot_MaskMode.Location = new System.Drawing.Point(423, 78);
+			this.FormBrowser_ScreenShot_MaskMode.Location = new System.Drawing.Point(305, 78);
 			this.FormBrowser_ScreenShot_MaskMode.Name = "FormBrowser_ScreenShot_MaskMode";
 			this.FormBrowser_ScreenShot_MaskMode.Size = new System.Drawing.Size(121, 23);
 			this.FormBrowser_ScreenShot_MaskMode.TabIndex = 20;
@@ -3671,7 +3660,6 @@ namespace ElectronicObserver.Window.Dialog
 		private System.Windows.Forms.Label label48;
 		private System.Windows.Forms.CheckBox FormBrowser_ScreenShot_MaskAdmiralName;
 		private System.Windows.Forms.CheckBox FormBrowser_ScreenShot_KeepHQLevel;
-		private System.Windows.Forms.CheckBox FormBrowser_ScreenShot_MaskOnlyOnHomeport;
 		private System.Windows.Forms.Label labelScreenShot_MaskMode;
 		private System.Windows.Forms.ComboBox FormBrowser_ScreenShot_MaskMode;
 		private System.Windows.Forms.CheckBox FormBrowser_LiveAdmiralNameMask;

@@ -1,4 +1,4 @@
-using ElectronicObserver.Notifier;
+﻿using ElectronicObserver.Notifier;
 using ElectronicObserver.Observer;
 using ElectronicObserver.Resource;
 using ElectronicObserver.Utility;
@@ -508,7 +508,6 @@ namespace ElectronicObserver.Window.Dialog
 			FormBrowser_ScreenShot_MaskAdmiralName.Checked = config.FormBrowser.MaskAdmiralName;
 			FormBrowser_ScreenShot_KeepHQLevel.Checked = config.FormBrowser.KeepHQLevel;
 			FormBrowser_ScreenShot_MaskMode.SelectedIndex = Math.Max(0, Math.Min(2, config.FormBrowser.AdmiralNameMaskMode));
-			FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked = config.FormBrowser.MaskOnlyOnHomeport;
 			FormBrowser_LiveAdmiralNameMask.Checked = config.FormBrowser.LiveAdmiralNameMask;
 			FormBrowser_LiveAdmiralNameMaskText.Text = config.FormBrowser.LiveAdmiralNameMaskText ?? "提督";
 			FormBrowser_EnableCustomGameFont.Checked = config.FormBrowser.EnableCustomGameFont;
@@ -755,7 +754,6 @@ namespace ElectronicObserver.Window.Dialog
 			config.FormBrowser.MaskAdmiralName = FormBrowser_ScreenShot_MaskAdmiralName.Checked;
 			config.FormBrowser.KeepHQLevel = FormBrowser_ScreenShot_KeepHQLevel.Checked;
 			config.FormBrowser.AdmiralNameMaskMode = FormBrowser_ScreenShot_MaskMode.SelectedIndex;
-			config.FormBrowser.MaskOnlyOnHomeport = FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked;
 			config.FormBrowser.LiveAdmiralNameMask = FormBrowser_LiveAdmiralNameMask.Checked;
 			config.FormBrowser.LiveAdmiralNameMaskText = string.IsNullOrWhiteSpace(FormBrowser_LiveAdmiralNameMaskText.Text)
 				? "提督"
@@ -925,7 +923,6 @@ namespace ElectronicObserver.Window.Dialog
 		{
 			bool enabled = FormBrowser_ScreenShot_MaskAdmiralName.Checked;
 			FormBrowser_ScreenShot_KeepHQLevel.Enabled = enabled && FormBrowser_ScreenShot_MaskMode.SelectedIndex != 2;
-			FormBrowser_ScreenShot_MaskOnlyOnHomeport.Enabled = enabled;
 			labelScreenShot_MaskMode.Enabled = enabled;
 			FormBrowser_ScreenShot_MaskMode.Enabled = enabled;
 		}
