@@ -1171,7 +1171,7 @@ namespace Browser
 					return;
 
 				bool isInSortie = false;
-				if (Configuration.MaskOnlyOnHomeport && BrowserHost != null && !BrowserHost.Closed)
+				if (Configuration.MaskAdmiralName && BrowserHost != null && !BrowserHost.Closed)
 				{
 					try
 					{

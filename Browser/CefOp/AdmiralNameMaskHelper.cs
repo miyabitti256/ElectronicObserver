@@ -35,14 +35,38 @@ namespace Browser.CefOp
 			bool maskAdmiralName,
 			bool keepHQLevel,
 			int maskMode,
-			bool maskOnlyOnHomeport,
+			bool maskOnlyOnHomeport = true,
 			bool isInSortie = false)
 		{
 			if (!maskAdmiralName || original == null)
 				return original;
 
-			// Why not analyze image when in sortie: 出撃中・演習中は提督名ヘッダーが存在しないため画像解析を行わず即座にバイパスする
-			if (maskOnlyOnHomeport && (isInSortie || !IsHomeport(original)))
+			// 戦果報告（リザルト）画面の提督名・司令部Lvマスキング（スライド追従）
+			// Why not skip when in sortie: リザルト画面は出撃中・演習中に表示され、白い基準縦線と共に横スライドするため先に判定・マスクする
+			if (TryGetBattleResultMaskRects(original, out Rectangle resultNameRect, out Rectangle resultLvRect, out int resultXRef))
+			{
+				if (maskMode == 1) // 黒塗り（走査線・グラデーション保持同化塗りつぶし）
+				{
+					ApplyScanlineSeamlessFill(original, resultNameRect, resultXRef);
+					if (!keepHQLevel)
+					{
+						ApplyScanlineSeamlessFill(original, resultLvRect, resultXRef);
+					}
+				}
+				else // モザイク (mode == 0) または 切り取り選択時のリザルト画面フォールバック (mode == 2)
+				{
+					// Why not crop top 45px on result screen: リザルト画面の提督名は画面中段(Y=124..154)にあり上部切り取りでは隠せないためモザイクを適用する
+					ApplyMosaic(original, resultNameRect, 0.11);
+					if (!keepHQLevel)
+					{
+						ApplyMosaic(original, resultLvRect, 0.11);
+					}
+				}
+				return original;
+			}
+
+			// Why not analyze homeport header when in sortie: 出撃中・演習中（戦闘・マップ等）は母港ヘッダーが存在しないため即座にバイパスする
+			if (isInSortie || !IsHomeport(original))
 				return original;
 
 			int w = original.Width;
@@ -121,6 +145,198 @@ namespace Browser.CefOp
 			return original;
 		}
 
+		/// <summary>
+		/// 戦果報告（リザルト）画面であるかを判定し、白い縦線の位置(barX)から提督名と司令部Lvのマスク矩形を算出します。
+		/// 戦果バー表示時(X=130)から経験値加算時(X=76)への横スライド中も縦線に完全追従します。
+		/// </summary>
+		public static bool TryGetBattleResultMaskRects(
+			Bitmap image,
+			out Rectangle nameRect,
+			out Rectangle lvRect,
+			out int xRef)
+		{
+			nameRect = Rectangle.Empty;
+			lvRect = Rectangle.Empty;
+			xRef = 0;
+
+			if (image == null)
+				return false;
+
+			int w = image.Width;
+			int h = image.Height;
+			if (w < 100 || h < 100)
+				return false;
+
+			try
+			{
+				int xMin = (int)Math.Round(w * (60.0 / 1200.0));
+				int xMax = (int)Math.Round(w * (155.0 / 1200.0));
+				int yMin = (int)Math.Round(h * (120.0 / 720.0));
+				int yMax = (int)Math.Round(h * (260.0 / 720.0));
+
+				if (xMax >= w || yMax >= h || yMin >= yMax)
+					return false;
+
+				int requiredWhite = Math.Max(1, (int)Math.Round((yMax - yMin) * 0.85));
+				int barX = -1;
+
+				for (int x = xMin; x <= xMax; x++)
+				{
+					int whiteCount = 0;
+					for (int y = yMin; y <= yMax; y++)
+					{
+						Color c = image.GetPixel(x, y);
+						if (c.R > 210 && c.G > 210 && c.B > 210)
+						{
+							whiteCount++;
+						}
+					}
+					if (whiteCount >= requiredWhite)
+					{
+						barX = x;
+					}
+				}
+
+				if (barX < 0)
+					return false;
+
+				// 白縦線のすぐ右側（行間 Y=160）が暗いパネル背景であることを確認
+				// Why not white bar only: 明るい艦娘イラストや画面フラッシュによる誤検出を防ぐため
+				int bgCheckX = Math.Min(w - 1, barX + (int)Math.Round(w * (15.0 / 1200.0)));
+				int bgCheckY = (int)Math.Round(h * (160.0 / 720.0));
+				Color bgSample = image.GetPixel(bgCheckX, bgCheckY);
+				if (bgSample.R > 90 || bgSample.G > 100 || bgSample.B > 110)
+					return false;
+
+				// 白縦線からの相対位置にある「Lv」または「艦隊名」のシアン文字を確認
+				int cyanCount = 0;
+				int lvX1 = Math.Min(w - 1, barX + (int)Math.Round(w * (270.0 / 1200.0)));
+				int lvX2 = Math.Min(w - 1, barX + (int)Math.Round(w * (302.0 / 1200.0)));
+				int lvY1 = (int)Math.Round(h * (128.0 / 720.0));
+				int lvY2 = (int)Math.Round(h * (150.0 / 720.0));
+
+				for (int y = lvY1; y <= lvY2; y++)
+				{
+					for (int x = lvX1; x <= lvX2; x++)
+					{
+						Color c = image.GetPixel(x, y);
+						if (c.G > 90 && c.B > 90 && c.G > c.R * 1.25 && c.B > c.R * 1.25)
+						{
+							cyanCount++;
+						}
+					}
+				}
+
+				if (cyanCount < 5)
+					return false;
+
+				int rectY = (int)Math.Round(h * (124.0 / 720.0));
+				int rectH = (int)Math.Round(h * (30.0 / 720.0));
+
+				nameRect = new Rectangle(
+					barX + (int)Math.Round(w * (8.0 / 1200.0)),
+					rectY,
+					(int)Math.Round(w * (262.0 / 1200.0)),
+					rectH);
+
+				lvRect = new Rectangle(
+					barX + (int)Math.Round(w * (302.0 / 1200.0)),
+					rectY,
+					(int)Math.Round(w * (55.0 / 1200.0)),
+					rectH);
+
+				xRef = Math.Min(w - 1, barX + (int)Math.Round(w * (365.0 / 1200.0)));
+				return true;
+			}
+			catch
+			{
+				// Why not throw: 画像解析エラーでスクショ撮影自体を失敗させない
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// 戦果報告画面の半透明グラデーションと水平走査線（スキャンライン）を保持したまま文字領域を背景と同化させます。
+		/// </summary>
+		private static void ApplyScanlineSeamlessFill(Bitmap bmp, Rectangle rect, int xRef)
+		{
+			rect.Intersect(new Rectangle(0, 6, bmp.Width, bmp.Height - 12));
+			if (rect.Width <= 0 || rect.Height <= 0)
+				return;
+
+			xRef = Math.Max(0, Math.Min(bmp.Width - 1, xRef));
+
+			int topY1 = rect.Top - 5;
+			int topY2 = rect.Top - 1;
+			int botY1 = rect.Bottom;
+			int botY2 = rect.Bottom + 4;
+			int rh = rect.Height;
+			int sampleCount = 5;
+
+			double refTopR = 0, refTopG = 0, refTopB = 0;
+			double refBotR = 0, refBotG = 0, refBotB = 0;
+			for (int y = topY1; y <= topY2; y++)
+			{
+				Color c = bmp.GetPixel(xRef, y);
+				refTopR += c.R; refTopG += c.G; refTopB += c.B;
+			}
+			refTopR /= sampleCount; refTopG /= sampleCount; refTopB /= sampleCount;
+
+			for (int y = botY1; y <= botY2; y++)
+			{
+				Color c = bmp.GetPixel(xRef, y);
+				refBotR += c.R; refBotG += c.G; refBotB += c.B;
+			}
+			refBotR /= sampleCount; refBotG /= sampleCount; refBotB /= sampleCount;
+
+			// Why not simple vertical interpolation: リザルト画面の背景には2px周期の水平走査線があり、単純補間すると走査線が消えて帯状の跡が見えるため参照列(xRef)から走査線差分を抽出して加算する
+			double[] scanDeltaR = new double[rh];
+			double[] scanDeltaG = new double[rh];
+			double[] scanDeltaB = new double[rh];
+			for (int dy = 0; dy < rh; dy++)
+			{
+				double t = (dy + 1.0) / (rh + 1.0);
+				double baseR = refTopR * (1.0 - t) + refBotR * t;
+				double baseG = refTopG * (1.0 - t) + refBotG * t;
+				double baseB = refTopB * (1.0 - t) + refBotB * t;
+				Color cRef = bmp.GetPixel(xRef, rect.Top + dy);
+				scanDeltaR[dy] = cRef.R - baseR;
+				scanDeltaG[dy] = cRef.G - baseG;
+				scanDeltaB[dy] = cRef.B - baseB;
+			}
+
+			for (int x = rect.Left; x < rect.Right; x++)
+			{
+				double colTopR = 0, colTopG = 0, colTopB = 0;
+				for (int y = topY1; y <= topY2; y++)
+				{
+					Color c = bmp.GetPixel(x, y);
+					colTopR += c.R; colTopG += c.G; colTopB += c.B;
+				}
+				colTopR /= sampleCount; colTopG /= sampleCount; colTopB /= sampleCount;
+
+				double colBotR = 0, colBotG = 0, colBotB = 0;
+				for (int y = botY1; y <= botY2; y++)
+				{
+					Color c = bmp.GetPixel(x, y);
+					colBotR += c.R; colBotG += c.G; colBotB += c.B;
+				}
+				colBotR /= sampleCount; colBotG /= sampleCount; colBotB /= sampleCount;
+
+				for (int dy = 0; dy < rh; dy++)
+				{
+					double t = (dy + 1.0) / (rh + 1.0);
+					int r = (int)Math.Round(colTopR * (1.0 - t) + colBotR * t + scanDeltaR[dy]);
+					int g = (int)Math.Round(colTopG * (1.0 - t) + colBotG * t + scanDeltaG[dy]);
+					int b = (int)Math.Round(colTopB * (1.0 - t) + colBotB * t + scanDeltaB[dy]);
+					r = Math.Max(0, Math.Min(255, r));
+					g = Math.Max(0, Math.Min(255, g));
+					b = Math.Max(0, Math.Min(255, b));
+					bmp.SetPixel(x, rect.Top + dy, Color.FromArgb(r, g, b));
+				}
+			}
+		}
+
 		private static void ApplyMosaic(Bitmap bmp, Rectangle rect, double scale)
 		{
 			rect.Intersect(new Rectangle(0, 0, bmp.Width, bmp.Height));
@@ -134,7 +350,8 @@ namespace Browser.CefOp
 			{
 				using (var gSmall = Graphics.FromImage(small))
 				{
-					gSmall.InterpolationMode = InterpolationMode.NearestNeighbor;
+					// Why not NearestNeighbor on shrink: 縮小時に点サンプリングすると文字の白ピクセル1点を拾ったブロック全体が真っ白になるため、Bilinearで周辺背景色と平均化してからNearestNeighbor拡大する
+					gSmall.InterpolationMode = InterpolationMode.Bilinear;
 					gSmall.PixelOffsetMode = PixelOffsetMode.Half;
 					gSmall.DrawImage(bmp, new Rectangle(0, 0, sw, sh), rect, GraphicsUnit.Pixel);
 				}
