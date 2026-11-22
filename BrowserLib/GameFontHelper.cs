@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -51,6 +52,98 @@ namespace BrowserLib
 			return Regex.Replace(fontName, @"[^\w\s\-\.\u3000-\u30FF\u4E00-\u9FFF\uFF00-\uFFEF]", "").Trim();
 		}
 
+		private static readonly Regex WeightSuffixRegex = new Regex(
+			@"^(?<base>.+?)[\s\-]+(?<weight>Thin|ExtraLight|UltraLight|Light|DemiLight|SemiLight|Semilight|Regular|Normal|Medium|DemiBold|SemiBold|Semibold|Bold|ボールド|ExtraBold|UltraBold|Black|Heavy|ExtraBlack|UltraBlack)$",
+			RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+		/// <summary>
+		/// フォント名末尾のウェイト表記（Bold, Medium, Light 等）を分離します。
+		/// </summary>
+		public static bool TrySplitFontWeight(string fontName, out string baseName, out string weight)
+		{
+			if (string.IsNullOrWhiteSpace(fontName))
+			{
+				baseName = string.Empty;
+				weight = null;
+				return false;
+			}
+
+			string trimmed = fontName.Trim();
+			var match = WeightSuffixRegex.Match(trimmed);
+			if (!match.Success)
+			{
+				baseName = trimmed;
+				weight = null;
+				return false;
+			}
+
+			baseName = match.Groups["base"].Value.TrimEnd();
+			string rawWeight = match.Groups["weight"].Value;
+			// Why not keep Japanese "ボールド" separate: ダイアログ保存時やフォールバック展開時に "Bold" として統一的に扱うため
+			weight = string.Equals(rawWeight, "ボールド", StringComparison.Ordinal) ||
+				string.Equals(rawWeight, "Bold", StringComparison.OrdinalIgnoreCase)
+				? "Bold"
+				: rawWeight;
+			return true;
+		}
+
+		/// <summary>
+		/// FontDialog で選択されたファミリ名と太字状態から設定保存用のフォント名を組み立てます。
+		/// </summary>
+		public static string FormatGameFontName(string familyName, bool isBold)
+		{
+			if (string.IsNullOrWhiteSpace(familyName))
+			{
+				return string.Empty;
+			}
+
+			string trimmed = familyName.Trim();
+			if (!isBold)
+			{
+				return trimmed;
+			}
+
+			if (TrySplitFontWeight(trimmed, out _, out string existingWeight) &&
+				string.Equals(existingWeight, "Bold", StringComparison.OrdinalIgnoreCase))
+			{
+				return trimmed;
+			}
+
+			return trimmed + " Bold";
+		}
+
+		/// <summary>
+		/// 設定値から FontDialog 初期選択用のファミリ名と太字フラグを解決します。
+		/// </summary>
+		public static bool ResolveGameFontSpec(string fontSetting, Func<string, bool> isInstalledFamily, out string familyName, out bool isBold)
+		{
+			familyName = null;
+			isBold = false;
+
+			if (string.IsNullOrWhiteSpace(fontSetting) || isInstalledFamily == null)
+			{
+				return false;
+			}
+
+			string trimmed = fontSetting.Trim();
+			if (isInstalledFamily(trimmed))
+			{
+				familyName = trimmed;
+				return true;
+			}
+
+			if (TrySplitFontWeight(trimmed, out string baseName, out string weight) &&
+				string.Equals(weight, "Bold", StringComparison.OrdinalIgnoreCase) &&
+				isInstalledFamily(baseName))
+			{
+				familyName = baseName;
+				isBold = true;
+				return true;
+			}
+
+			return false;
+		}
+
 		private static string GetNotoCjkJpFallbackName(string cleanJp)
 		{
 			// Why not append " CJK JP" unconditionally: "Noto Sans JP" が "Noto Sans JP CJK JP" になり、非Notoフォントにも不正な候補が付くのを防ぐため
@@ -61,6 +154,95 @@ namespace BrowserLib
 				return cleanJp.Substring(0, cleanJp.Length - 3) + " CJK JP";
 			}
 			return null;
+		}
+
+		private static void AddLocalCandidate(List<string> candidates, HashSet<string> seen, string name)
+		{
+			if (!string.IsNullOrEmpty(name) && seen.Add(name))
+			{
+				candidates.Add($"local(\"{name}\")");
+			}
+		}
+
+		private static string BuildExplicitWeightSrc(string baseName, string cjkBase, string weight, bool isJapanese)
+		{
+			var candidates = new List<string>();
+			var seen = new HashSet<string>(StringComparer.Ordinal);
+
+			AddLocalCandidate(candidates, seen, $"{baseName} {weight}");
+			AddLocalCandidate(candidates, seen, $"{baseName}-{weight}");
+			if (baseName.Contains(" "))
+			{
+				AddLocalCandidate(candidates, seen, $"{baseName.Replace(" ", "")}-{weight}");
+			}
+			if (cjkBase != null)
+			{
+				AddLocalCandidate(candidates, seen, $"{cjkBase} {weight}");
+				AddLocalCandidate(candidates, seen, $"{cjkBase}-{weight}");
+			}
+			// Why not omit Japanese localized weight: メイリオ等の日本語環境フォントは OpenType Full Name が "メイリオ ボールド" となるため
+			if (isJapanese && string.Equals(weight, "Bold", StringComparison.OrdinalIgnoreCase))
+			{
+				AddLocalCandidate(candidates, seen, $"{baseName} ボールド");
+			}
+			AddLocalCandidate(candidates, seen, baseName);
+			if (cjkBase != null)
+			{
+				AddLocalCandidate(candidates, seen, cjkBase);
+			}
+
+			return string.Join(", ", candidates);
+		}
+
+		private static void AppendFontFaceRule(StringBuilder sb, string srcList, bool isBoldRule, bool includeLatinRange)
+		{
+			sb.AppendLine("@font-face {");
+			sb.AppendLine("\tfont-family: \"font_j\";");
+			if (isBoldRule)
+			{
+				sb.AppendLine("\tfont-weight: bold;");
+			}
+			sb.AppendLine($"\tsrc: {srcList};");
+			if (includeLatinRange)
+			{
+				sb.AppendLine($"\tunicode-range: {UnicodeRangeLatin};");
+			}
+			sb.AppendLine("}");
+		}
+
+		private static void AppendFontFaceRules(StringBuilder sb, string cleanFont, bool isJapanese)
+		{
+			TrySplitFontWeight(cleanFont, out string baseName, out string weight);
+			string cjkBase = isJapanese ? GetNotoCjkJpFallbackName(baseName) : null;
+			bool isStandardRegular = string.IsNullOrEmpty(weight) ||
+				string.Equals(weight, "Regular", StringComparison.OrdinalIgnoreCase) ||
+				string.Equals(weight, "Normal", StringComparison.OrdinalIgnoreCase);
+
+			string normalSrc;
+			string boldSrc;
+			if (!isStandardRegular)
+			{
+				normalSrc = BuildExplicitWeightSrc(baseName, cjkBase, weight, isJapanese);
+				boldSrc = normalSrc;
+			}
+			else if (cjkBase != null)
+			{
+				normalSrc = $"local(\"{baseName}\"), local(\"{baseName} Regular\"), local(\"{cjkBase}\"), local(\"{cjkBase} Regular\")";
+				boldSrc = $"local(\"{baseName} Bold\"), local(\"{cjkBase} Bold\"), local(\"{baseName} Medium\"), local(\"{cjkBase} Medium\"), local(\"{baseName}\"), local(\"{cjkBase}\")";
+			}
+			else if (isJapanese)
+			{
+				normalSrc = $"local(\"{baseName}\"), local(\"{baseName} Regular\"), local(\"{baseName}-Regular\")";
+				boldSrc = $"local(\"{baseName} Bold\"), local(\"{baseName}-Bold\"), local(\"{baseName} ボールド\"), local(\"{baseName} Medium\"), local(\"{baseName}\")";
+			}
+			else
+			{
+				normalSrc = $"local(\"{baseName}\"), local(\"{baseName} Regular\"), local(\"{baseName}-Regular\")";
+				boldSrc = $"local(\"{baseName} Bold\"), local(\"{baseName}-Bold\"), local(\"{baseName}\")";
+			}
+
+			AppendFontFaceRule(sb, normalSrc, isBoldRule: false, includeLatinRange: !isJapanese);
+			AppendFontFaceRule(sb, boldSrc, isBoldRule: true, includeLatinRange: !isJapanese);
 		}
 
 		/// <summary>
@@ -74,49 +256,13 @@ namespace BrowserLib
 
 			if (!string.IsNullOrEmpty(cleanJp))
 			{
-				string cjkJp = GetNotoCjkJpFallbackName(cleanJp);
-
-				sb.AppendLine("@font-face {");
-				sb.AppendLine("\tfont-family: \"font_j\";");
-				if (cjkJp != null)
-				{
-					sb.AppendLine($"\tsrc: local(\"{cleanJp}\"), local(\"{cleanJp} Regular\"), local(\"{cjkJp}\"), local(\"{cjkJp} Regular\");");
-				}
-				else
-				{
-					sb.AppendLine($"\tsrc: local(\"{cleanJp}\"), local(\"{cleanJp} Regular\"), local(\"{cleanJp}-Regular\");");
-				}
-				sb.AppendLine("}");
-
-				sb.AppendLine("@font-face {");
-				sb.AppendLine("\tfont-family: \"font_j\";");
-				sb.AppendLine("\tfont-weight: bold;");
-				if (cjkJp != null)
-				{
-					sb.AppendLine($"\tsrc: local(\"{cleanJp} Bold\"), local(\"{cjkJp} Bold\"), local(\"{cleanJp} Medium\"), local(\"{cjkJp} Medium\"), local(\"{cleanJp}\"), local(\"{cjkJp}\");");
-				}
-				else
-				{
-					sb.AppendLine($"\tsrc: local(\"{cleanJp} Bold\"), local(\"{cleanJp}-Bold\"), local(\"{cleanJp} Medium\"), local(\"{cleanJp}\");");
-				}
-				sb.AppendLine("}");
+				AppendFontFaceRules(sb, cleanJp, isJapanese: true);
 			}
 
 			// Why not define Latin font before Japanese: CSSの@font-faceは後から定義されたルールが同一ファミリー内で優先マッチするため
 			if (!string.IsNullOrEmpty(cleanLatin))
 			{
-				sb.AppendLine("@font-face {");
-				sb.AppendLine("\tfont-family: \"font_j\";");
-				sb.AppendLine($"\tsrc: local(\"{cleanLatin}\"), local(\"{cleanLatin} Regular\"), local(\"{cleanLatin}-Regular\");");
-				sb.AppendLine($"\tunicode-range: {UnicodeRangeLatin};");
-				sb.AppendLine("}");
-
-				sb.AppendLine("@font-face {");
-				sb.AppendLine("\tfont-family: \"font_j\";");
-				sb.AppendLine("\tfont-weight: bold;");
-				sb.AppendLine($"\tsrc: local(\"{cleanLatin} Bold\"), local(\"{cleanLatin}-Bold\"), local(\"{cleanLatin}\");");
-				sb.AppendLine($"\tunicode-range: {UnicodeRangeLatin};");
-				sb.AppendLine("}");
+				AppendFontFaceRules(sb, cleanLatin, isJapanese: false);
 			}
 
 			if (!string.IsNullOrWhiteSpace(customCss))
