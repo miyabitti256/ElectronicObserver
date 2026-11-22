@@ -1,4 +1,4 @@
-﻿using ElectronicObserver.Notifier;
+using ElectronicObserver.Notifier;
 using ElectronicObserver.Observer;
 using ElectronicObserver.Resource;
 using ElectronicObserver.Utility;
@@ -955,30 +955,43 @@ namespace ElectronicObserver.Window.Dialog
 
 		private void FormBrowser_GameFontJapaneseSelect_Click(object sender, EventArgs e)
 		{
-			using (var dialog = new FontDialog())
-			{
-				if (!string.IsNullOrWhiteSpace(FormBrowser_GameFontJapanese.Text))
-				{
-					try { dialog.Font = new Font(FormBrowser_GameFontJapanese.Text, 12); } catch { }
-				}
-				if (dialog.ShowDialog(this) == DialogResult.OK)
-				{
-					FormBrowser_GameFontJapanese.Text = dialog.Font.FontFamily.Name;
-				}
-			}
+			SelectGameFont(FormBrowser_GameFontJapanese);
 		}
 
 		private void FormBrowser_GameFontLatinSelect_Click(object sender, EventArgs e)
 		{
+			SelectGameFont(FormBrowser_GameFontLatin);
+		}
+
+		private void SelectGameFont(TextBox targetBox)
+		{
 			using (var dialog = new FontDialog())
 			{
-				if (!string.IsNullOrWhiteSpace(FormBrowser_GameFontLatin.Text))
+				Font initialFont = null;
+				if (BrowserLib.GameFontHelper.ResolveGameFontSpec(
+					targetBox.Text,
+					name => FontFamily.Families.Any(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)),
+					out string familyName,
+					out bool isBold))
 				{
-					try { dialog.Font = new Font(FormBrowser_GameFontLatin.Text, 12); } catch { }
+					try
+					{
+						initialFont = new Font(familyName, 12, isBold ? FontStyle.Bold : FontStyle.Regular);
+						dialog.Font = initialFont;
+					}
+					catch { }
 				}
-				if (dialog.ShowDialog(this) == DialogResult.OK)
+
+				try
 				{
-					FormBrowser_GameFontLatin.Text = dialog.Font.FontFamily.Name;
+					if (dialog.ShowDialog(this) == DialogResult.OK)
+					{
+						targetBox.Text = BrowserLib.GameFontHelper.FormatGameFontName(dialog.Font.FontFamily.Name, dialog.Font.Bold);
+					}
+				}
+				finally
+				{
+					initialFont?.Dispose();
 				}
 			}
 		}

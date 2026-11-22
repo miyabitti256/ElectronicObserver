@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
@@ -50,6 +51,186 @@ namespace ElectronicObserverTests
 			Assert.True(restored.AlertOnMissionScreenOpened);
 			Assert.Equal(3, restored.SelectedFleetId);
 			Assert.Equal(new[] { 0, 0, 2, 5, 38 }, restored.TargetMissions);
+		}
+
+		[Fact]
+		public void ConfigConnection_RoundTrip_PreservesProperties()
+		{
+			// What: Verify ConfigConnection serializes and deserializes cleanly without data loss.
+			var config = new Configuration.ConfigurationData.ConfigConnection
+			{
+				Port = 12345,
+				SaveReceivedData = true,
+				SaveDataPath = @"D:\EO_TestLogs",
+				SaveRequest = true,
+				SaveResponse = false,
+				SaveOtherFile = true,
+				ApplyVersion = true,
+				RegisterAsSystemProxy = true,
+				UseSystemProxy = false,
+				UseUpstreamProxy = true,
+				UpstreamProxyPort = 8080,
+				UpstreamProxyAddress = "127.0.0.1"
+			};
+
+			var serializer = new DataContractSerializer(typeof(Configuration.ConfigurationData.ConfigConnection));
+			string xml;
+			using (var stream = new MemoryStream())
+			{
+				serializer.WriteObject(stream, config);
+				xml = Encoding.UTF8.GetString(stream.ToArray());
+			}
+
+			Configuration.ConfigurationData.ConfigConnection restored;
+			using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml)))
+			{
+				restored = (Configuration.ConfigurationData.ConfigConnection)serializer.ReadObject(stream);
+			}
+
+			Assert.NotNull(restored);
+			Assert.Equal(config.Port, restored.Port);
+			Assert.Equal(config.SaveReceivedData, restored.SaveReceivedData);
+			Assert.Equal(config.SaveDataPath, restored.SaveDataPath);
+			Assert.Equal(config.SaveRequest, restored.SaveRequest);
+			Assert.Equal(config.SaveResponse, restored.SaveResponse);
+			Assert.Equal(config.SaveOtherFile, restored.SaveOtherFile);
+			Assert.Equal(config.ApplyVersion, restored.ApplyVersion);
+			Assert.Equal(config.RegisterAsSystemProxy, restored.RegisterAsSystemProxy);
+			Assert.Equal(config.UseSystemProxy, restored.UseSystemProxy);
+			Assert.Equal(config.UseUpstreamProxy, restored.UseUpstreamProxy);
+			Assert.Equal(config.UpstreamProxyPort, restored.UpstreamProxyPort);
+			Assert.Equal(config.UpstreamProxyAddress, restored.UpstreamProxyAddress);
+		}
+
+		[Fact]
+		public void ConfigFormFleet_RoundTrip_PreservesProperties()
+		{
+			// What: Verify ConfigFormFleet serializes and deserializes with custom display configurations.
+			var config = new Configuration.ConfigurationData.ConfigFormFleet
+			{
+				ShowAircraft = false,
+				SearchingAbilityMethod = 2,
+				ShowNextExp = false,
+				IsScrollable = true,
+				FixShipNameWidth = true,
+				ShortenHPBar = true,
+				ShowConditionIcon = false
+			};
+
+			var serializer = new DataContractSerializer(typeof(Configuration.ConfigurationData.ConfigFormFleet));
+			string xml;
+			using (var stream = new MemoryStream())
+			{
+				serializer.WriteObject(stream, config);
+				xml = Encoding.UTF8.GetString(stream.ToArray());
+			}
+
+			Configuration.ConfigurationData.ConfigFormFleet restored;
+			using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml)))
+			{
+				restored = (Configuration.ConfigurationData.ConfigFormFleet)serializer.ReadObject(stream);
+			}
+
+			Assert.NotNull(restored);
+			Assert.Equal(config.ShowAircraft, restored.ShowAircraft);
+			Assert.Equal(config.SearchingAbilityMethod, restored.SearchingAbilityMethod);
+			Assert.Equal(config.ShowNextExp, restored.ShowNextExp);
+			Assert.Equal(config.IsScrollable, restored.IsScrollable);
+			Assert.Equal(config.FixShipNameWidth, restored.FixShipNameWidth);
+			Assert.Equal(config.ShortenHPBar, restored.ShortenHPBar);
+			Assert.Equal(config.ShowConditionIcon, restored.ShowConditionIcon);
+		}
+
+		[Fact]
+		public void ConfigUI_RoundTrip_PreservesProperties()
+		{
+			// What: Verify ConfigUI roundtrips theme and appearance flags without losing state.
+			var config = new Configuration.ConfigurationData.ConfigUI
+			{
+				BarColorMorphing = false,
+				IsLayoutFixed = true
+			};
+
+			var serializer = new DataContractSerializer(typeof(Configuration.ConfigurationData.ConfigUI));
+			string xml;
+			using (var stream = new MemoryStream())
+			{
+				serializer.WriteObject(stream, config);
+				xml = Encoding.UTF8.GetString(stream.ToArray());
+			}
+
+			Configuration.ConfigurationData.ConfigUI restored;
+			using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml)))
+			{
+				restored = (Configuration.ConfigurationData.ConfigUI)serializer.ReadObject(stream);
+			}
+
+			Assert.NotNull(restored);
+			Assert.Equal(config.BarColorMorphing, restored.BarColorMorphing);
+			Assert.Equal(config.IsLayoutFixed, restored.IsLayoutFixed);
+		}
+
+		[Fact]
+		public void ConfigurationData_WholeRoundTrip_PreservesCustomValues()
+		{
+			// What: Verify full ConfigurationData tree roundtrips while preserving child section configs.
+			var configData = new Configuration.ConfigurationData();
+			configData.Initialize();
+			configData.Connection.Port = 54321;
+			configData.Connection.SaveReceivedData = true;
+			configData.FormFleet.ShowAircraft = false;
+			configData.UI.BarColorMorphing = false;
+
+			var serializer = new DataContractSerializer(typeof(Configuration.ConfigurationData));
+			string xml;
+			using (var stream = new MemoryStream())
+			{
+				serializer.WriteObject(stream, configData);
+				xml = Encoding.UTF8.GetString(stream.ToArray());
+			}
+
+			Configuration.ConfigurationData restored;
+			using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml)))
+			{
+				restored = (Configuration.ConfigurationData)serializer.ReadObject(stream);
+			}
+
+			Assert.NotNull(restored);
+			Assert.Equal(54321, restored.Connection.Port);
+			Assert.True(restored.Connection.SaveReceivedData);
+			Assert.False(restored.FormFleet.ShowAircraft);
+			Assert.False(restored.UI.BarColorMorphing);
+		}
+
+		[Fact]
+		public void ConfigurationData_MissingElements_FillsDefaultsSafely()
+		{
+			// What: Verify deserializing minimal or element-omitted XML activates OnDeserializing/Initialize()
+			//       and populates all null/missing sections with standard default values.
+			const string minimalXml = @"<Configuration xmlns=""http://schemas.datacontract.org/2004/07/ElectronicObserver.Utility"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"">
+	<Connection>
+		<Port>49999</Port>
+	</Connection>
+</Configuration>";
+
+			var serializer = new DataContractSerializer(typeof(Configuration.ConfigurationData));
+			Configuration.ConfigurationData restored;
+			using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(minimalXml)))
+			{
+				restored = (Configuration.ConfigurationData)serializer.ReadObject(stream);
+			}
+
+			Assert.NotNull(restored);
+			// Specified in XML
+			Assert.Equal(49999, restored.Connection.Port);
+			// Omitted in XML under Connection -> should be default
+			Assert.False(restored.Connection.SaveReceivedData);
+			// Completely omitted sections -> should be initialized by Initialize() rather than remaining null
+			Assert.NotNull(restored.FormFleet);
+			Assert.True(restored.FormFleet.ShowAircraft);
+			Assert.NotNull(restored.UI);
+			Assert.NotNull(restored.UI.MainFont);
+			Assert.NotNull(restored.FormQuest);
 		}
 	}
 }

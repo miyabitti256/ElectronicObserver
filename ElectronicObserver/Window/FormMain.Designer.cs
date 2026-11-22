@@ -1,4 +1,4 @@
-﻿namespace ElectronicObserver.Window
+namespace ElectronicObserver.Window
 {
 	partial class FormMain
 	{
@@ -88,6 +88,7 @@
 			this.StripMenu_Tool_DevelopmentRecord = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripMenu_Tool_ConstructionRecord = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripMenu_Tool_ResourceChart = new System.Windows.Forms.ToolStripMenuItem();
+			this.StripMenu_Tool_SortieRecord = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
 			this.StripMenu_Tool_AlbumMasterShip = new System.Windows.Forms.ToolStripMenuItem();
 			this.StripMenu_Tool_AlbumMasterEquipment = new System.Windows.Forms.ToolStripMenuItem();
@@ -572,6 +573,7 @@
             this.StripMenu_Tool_DevelopmentRecord,
             this.StripMenu_Tool_ConstructionRecord,
             this.StripMenu_Tool_ResourceChart,
+            this.StripMenu_Tool_SortieRecord,
             this.toolStripSeparator15,
             this.StripMenu_Tool_AlbumMasterShip,
             this.StripMenu_Tool_AlbumMasterEquipment,
@@ -637,6 +639,13 @@
 			this.StripMenu_Tool_ResourceChart.Size = new System.Drawing.Size(214, 22);
 			this.StripMenu_Tool_ResourceChart.Text = "資源チャート(&C)";
 			this.StripMenu_Tool_ResourceChart.Click += new System.EventHandler(this.StripMenu_Tool_ResourceChart_Click);
+			// 
+			// StripMenu_Tool_SortieRecord
+			// 
+			this.StripMenu_Tool_SortieRecord.Name = "StripMenu_Tool_SortieRecord";
+			this.StripMenu_Tool_SortieRecord.Size = new System.Drawing.Size(214, 22);
+			this.StripMenu_Tool_SortieRecord.Text = "出撃記録(&S)...";
+			this.StripMenu_Tool_SortieRecord.Click += new System.EventHandler(this.StripMenu_Tool_SortieRecord_Click);
 			// 
 			// toolStripSeparator15
 			// 
@@ -1170,6 +1179,7 @@
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Tool_CopyFleet;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Tool_CopyAllShips;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_Tool_CopyAllEquips;
+		private System.Windows.Forms.ToolStripMenuItem StripMenu_Tool_SortieRecord;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_View_EquipmentGroup;
 		private System.Windows.Forms.ToolStripMenuItem StripMenu_View_ExpeditionCheck;
 	}

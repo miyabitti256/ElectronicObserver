@@ -1,4 +1,4 @@
-﻿using DynaJson;
+using DynaJson;
 using ElectronicObserver.Utility;
 using ElectronicObserver.Utility.Mathematics;
 using System;
@@ -33,6 +33,11 @@ namespace ElectronicObserver.Observer
 
 		#nullable enable
 		public APIDictionary APIList { get; private set; }
+
+		private readonly Lazy<Services.ApiFileService.ApiFileService> _apiFileService =
+			new Lazy<Services.ApiFileService.ApiFileService>(() => new Services.ApiFileService.ApiFileService(Data.KCDatabase.Instance));
+
+		public Services.ApiFileService.ApiFileService ApiFileService => _apiFileService.Value;
 
 		public string? ServerAddress { get; private set; }
 		public int ProxyPort { get; private set; }
@@ -162,8 +167,17 @@ namespace ElectronicObserver.Observer
 				EnableConnectionPool = false,
 				ForwardToUpstreamGateway = true,
 			};
-			Proxy.CertificateManager.CreateRootCertificate(true);
-			Proxy.CertificateManager.TrustRootCertificate();
+			try
+			{
+				Proxy.CertificateManager.CreateRootCertificate(true);
+				Proxy.CertificateManager.TrustRootCertificate();
+			}
+			catch (Exception ex)
+			{
+				// Why not throw: Root certificate installation may fail in unit test runners or restricted environments.
+				// Failure here should not crash the singleton or type initializer.
+				Utility.Logger.Add(1, "ルート証明書の作成・信頼に失敗しました: " + ex.Message);
+			}
 			Proxy.BeforeRequest += ProxyOnBeforeRequest;
 			Proxy.BeforeResponse += ProxyOnBeforeResponse;
 
@@ -288,6 +302,14 @@ namespace ElectronicObserver.Observer
 			Configuration.ConfigurationData.ConfigConnection c = Configuration.Config.Connection;
 
 			string baseurl = e.HttpClient.Request.RequestUri.AbsoluteUri;
+
+			if (baseurl.Contains("/kcsapi/"))
+			{
+				string apiName = baseurl.Substring(baseurl.LastIndexOf("/kcsapi/") + 8);
+				string requestBody = await e.GetRequestBodyAsString();
+				string responseBody = await e.GetResponseBodyAsString();
+				_ = ApiFileService.Add(apiName, requestBody, responseBody);
+			}
 
 			//debug
 			//Utility.Logger.Add( 1, baseurl );
@@ -492,6 +514,8 @@ namespace ElectronicObserver.Observer
 					ResponseReceived(shortpath, null);
 					APIList.OnResponseReceived(shortpath, null);
 				}
+
+				_ = ApiFileService.ProcessedApi(shortpath);
 
 			}
 			catch (Exception ex)

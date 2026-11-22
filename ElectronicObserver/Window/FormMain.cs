@@ -1,4 +1,4 @@
-﻿using DynaJson;
+using DynaJson;
 using ElectronicObserver.Data;
 using ElectronicObserver.Notifier;
 using ElectronicObserver.Observer;
@@ -1085,13 +1085,31 @@ namespace ElectronicObserver.Window
 				string line;
 				while ((line = sr.ReadLine()) != null)
 				{
+					if (string.IsNullOrWhiteSpace(line))
+						continue;
 
 					bool isRequest = false;
+					string timestamp = null;
+
+					if (line.Contains("[Request]") || line.Contains("[Response]"))
+					{
+						isRequest = line.Contains("[Request]");
+						int colonIdx = line.IndexOf(':');
+						if (colonIdx != -1)
+						{
+							timestamp = line.Substring(0, colonIdx).Trim();
+						}
+						int idx = line.IndexOf("/kcsapi/");
+						if (idx != -1)
+						{
+							line = line.Substring(idx + 8).Trim();
+						}
+					}
+					else
 					{
 						int slashindex = line.IndexOf('/');
 						if (slashindex != -1)
 						{
-
 							switch (line.Substring(0, slashindex).ToLower())
 							{
 								case "q":
@@ -1104,7 +1122,6 @@ namespace ElectronicObserver.Window
 									line = line.Substring(Math.Min(slashindex + 1, line.Length));
 									break;
 							}
-
 						}
 					}
 
@@ -1114,15 +1131,27 @@ namespace ElectronicObserver.Window
 
 						if (isRequest ? api.IsRequestSupported : api.IsResponseSupported)
 						{
+							string targetFile = null;
+							if (!string.IsNullOrEmpty(timestamp))
+							{
+								string candidate = Path.Combine(parent, string.Format("{0}{1}@{2}.json", timestamp, isRequest ? "Q" : "S", line.Replace('/', '@')));
+								if (File.Exists(candidate))
+								{
+									targetFile = candidate;
+								}
+							}
 
-							string[] files = Directory.GetFiles(parent, string.Format("*{0}@{1}.json", isRequest ? "Q" : "S", line.Replace('/', '@')), SearchOption.TopDirectoryOnly);
+							if (targetFile == null)
+							{
+								string[] files = Directory.GetFiles(parent, string.Format("*{0}@{1}.json", isRequest ? "Q" : "S", line.Replace('/', '@')), SearchOption.TopDirectoryOnly);
+								if (files.Length == 0)
+									continue;
 
-							if (files.Length == 0)
-								continue;
+								Array.Sort(files);
+								targetFile = files[files.Length - 1];
+							}
 
-							Array.Sort(files);
-
-							using (StreamReader sr2 = new StreamReader(files[files.Length - 1]))
+							using (StreamReader sr2 = new StreamReader(targetFile))
 							{
 								if (isRequest)
 								{
@@ -1590,6 +1619,16 @@ namespace ElectronicObserver.Window
 			var dialogResourceChart = new DialogResourceChart();
 			FormMain_RefreshTopMost();
 			dialogResourceChart.Show(this);
+		}
+
+		private void StripMenu_Tool_SortieRecord_Click(object sender, EventArgs e)
+		{
+			var window = new Tools.SortieRecordViewer.SortieRecordViewerWindow();
+			new System.Windows.Interop.WindowInteropHelper(window)
+			{
+				Owner = this.Handle
+			};
+			window.Show();
 
 		}
 

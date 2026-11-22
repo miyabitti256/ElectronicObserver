@@ -42,8 +42,8 @@ Set-StrictMode -Version Latest
 # トップレベルで配布する拡張子
 $allowedExtensions = @('.exe', '.dll', '.config', '.zip', '.txt')
 
-# ネイティブ依存を丸ごと含めるサブディレクトリ
-$nativeDirs = @('x86', 'x64')
+# ネイティブ依存および同梱データを含めるサブディレクトリ
+$nativeDirs = @('x86', 'x64', 'Data')
 
 # 配布しない拡張子 (デバッグ情報 / XML ドキュメント)
 $excludedExtensions = @('.pdb', '.xml')

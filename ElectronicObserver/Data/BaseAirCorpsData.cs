@@ -37,6 +37,8 @@ namespace ElectronicObserver.Data
 		/// 戦闘行動半径
 		/// </summary>
 		public int Distance { get; private set; }
+		public int BaseDistance { get; private set; }
+		public int BonusDistance { get; private set; }
 
 		/// <summary>
 		/// 行動指示
@@ -98,7 +100,7 @@ namespace ElectronicObserver.Data
 					base.LoadFromResponse(apiname, (object)data);
 
 					Name = (string)data.api_name;
-					Distance = (int)data.api_distance.api_base + (int)data.api_distance.api_bonus;
+					BaseDistance = (int)data.api_distance.api_base; BonusDistance = (int)data.api_distance.api_bonus; Distance = BaseDistance + BonusDistance;
 					ActionKind = (int)data.api_action_kind;
 
 					SetSquadrons(apiname, data.api_plane_info);
@@ -106,7 +108,7 @@ namespace ElectronicObserver.Data
 				case "api_req_air_corps/change_deployment_base":
 					//ここに来る場合のdataには入れ替えた航空隊の中隊情報しかないのでNameやActionKindは更新できない。
 					//継承元の処理も行わない。
-					Distance = (int)data.api_distance.api_base + (int)data.api_distance.api_bonus;
+					BaseDistance = (int)data.api_distance.api_base; BonusDistance = (int)data.api_distance.api_bonus; Distance = BaseDistance + BonusDistance;
 					SetSquadrons(apiname, data.api_plane_info);
 					break;
 				case "api_req_air_corps/set_plane":
@@ -124,7 +126,7 @@ namespace ElectronicObserver.Data
 							}
 						}
 
-						Distance = (int)data.api_distance.api_base + (int)data.api_distance.api_bonus;
+						BaseDistance = (int)data.api_distance.api_base; BonusDistance = (int)data.api_distance.api_bonus; Distance = BaseDistance + BonusDistance;
 					}
 					break;
 
