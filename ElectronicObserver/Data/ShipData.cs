@@ -200,6 +200,7 @@ namespace ElectronicObserver.Data
 		 ********************************************************/
 
 		private int[] _modernized;
+		public int[] Kyouka => _modernized;
 
 		/// <summary>
 		/// 火力強化値

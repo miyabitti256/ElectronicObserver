@@ -508,7 +508,6 @@ namespace ElectronicObserver.Window.Dialog
 			FormBrowser_ScreenShot_MaskAdmiralName.Checked = config.FormBrowser.MaskAdmiralName;
 			FormBrowser_ScreenShot_KeepHQLevel.Checked = config.FormBrowser.KeepHQLevel;
 			FormBrowser_ScreenShot_MaskMode.SelectedIndex = Math.Max(0, Math.Min(2, config.FormBrowser.AdmiralNameMaskMode));
-			FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked = config.FormBrowser.MaskOnlyOnHomeport;
 			FormBrowser_LiveAdmiralNameMask.Checked = config.FormBrowser.LiveAdmiralNameMask;
 			FormBrowser_LiveAdmiralNameMaskText.Text = config.FormBrowser.LiveAdmiralNameMaskText ?? "提督";
 			FormBrowser_EnableCustomGameFont.Checked = config.FormBrowser.EnableCustomGameFont;
@@ -755,7 +754,6 @@ namespace ElectronicObserver.Window.Dialog
 			config.FormBrowser.MaskAdmiralName = FormBrowser_ScreenShot_MaskAdmiralName.Checked;
 			config.FormBrowser.KeepHQLevel = FormBrowser_ScreenShot_KeepHQLevel.Checked;
 			config.FormBrowser.AdmiralNameMaskMode = FormBrowser_ScreenShot_MaskMode.SelectedIndex;
-			config.FormBrowser.MaskOnlyOnHomeport = FormBrowser_ScreenShot_MaskOnlyOnHomeport.Checked;
 			config.FormBrowser.LiveAdmiralNameMask = FormBrowser_LiveAdmiralNameMask.Checked;
 			config.FormBrowser.LiveAdmiralNameMaskText = string.IsNullOrWhiteSpace(FormBrowser_LiveAdmiralNameMaskText.Text)
 				? "提督"
@@ -925,7 +923,6 @@ namespace ElectronicObserver.Window.Dialog
 		{
 			bool enabled = FormBrowser_ScreenShot_MaskAdmiralName.Checked;
 			FormBrowser_ScreenShot_KeepHQLevel.Enabled = enabled && FormBrowser_ScreenShot_MaskMode.SelectedIndex != 2;
-			FormBrowser_ScreenShot_MaskOnlyOnHomeport.Enabled = enabled;
 			labelScreenShot_MaskMode.Enabled = enabled;
 			FormBrowser_ScreenShot_MaskMode.Enabled = enabled;
 		}
@@ -958,30 +955,43 @@ namespace ElectronicObserver.Window.Dialog
 
 		private void FormBrowser_GameFontJapaneseSelect_Click(object sender, EventArgs e)
 		{
-			using (var dialog = new FontDialog())
-			{
-				if (!string.IsNullOrWhiteSpace(FormBrowser_GameFontJapanese.Text))
-				{
-					try { dialog.Font = new Font(FormBrowser_GameFontJapanese.Text, 12); } catch { }
-				}
-				if (dialog.ShowDialog(this) == DialogResult.OK)
-				{
-					FormBrowser_GameFontJapanese.Text = dialog.Font.FontFamily.Name;
-				}
-			}
+			SelectGameFont(FormBrowser_GameFontJapanese);
 		}
 
 		private void FormBrowser_GameFontLatinSelect_Click(object sender, EventArgs e)
 		{
+			SelectGameFont(FormBrowser_GameFontLatin);
+		}
+
+		private void SelectGameFont(TextBox targetBox)
+		{
 			using (var dialog = new FontDialog())
 			{
-				if (!string.IsNullOrWhiteSpace(FormBrowser_GameFontLatin.Text))
+				Font initialFont = null;
+				if (BrowserLib.GameFontHelper.ResolveGameFontSpec(
+					targetBox.Text,
+					name => FontFamily.Families.Any(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)),
+					out string familyName,
+					out bool isBold))
 				{
-					try { dialog.Font = new Font(FormBrowser_GameFontLatin.Text, 12); } catch { }
+					try
+					{
+						initialFont = new Font(familyName, 12, isBold ? FontStyle.Bold : FontStyle.Regular);
+						dialog.Font = initialFont;
+					}
+					catch { }
 				}
-				if (dialog.ShowDialog(this) == DialogResult.OK)
+
+				try
 				{
-					FormBrowser_GameFontLatin.Text = dialog.Font.FontFamily.Name;
+					if (dialog.ShowDialog(this) == DialogResult.OK)
+					{
+						targetBox.Text = BrowserLib.GameFontHelper.FormatGameFontName(dialog.Font.FontFamily.Name, dialog.Font.Bold);
+					}
+				}
+				finally
+				{
+					initialFont?.Dispose();
 				}
 			}
 		}

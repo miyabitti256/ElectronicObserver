@@ -201,5 +201,89 @@ namespace ElectronicObserverTests
 			Assert.Equal(html, GameFontHelper.InjectIntoHtml(html, "   "));
 			Assert.Null(GameFontHelper.InjectIntoHtml(null, "css"));
 		}
+
+		[Fact]
+		public void GenerateFontCss_BoldWeightSuffix_AppliesBoldToNormalAndPreservesCjkAndLocalizedCandidates()
+		{
+			// What: Boldウェイト付きフォント名指定時、通常ウェイト側にもBold候補が適用され、CJKフォールバックや日本語ボールド表記・PostScript名が含まれ、Bold Bold等の重複接尾辞が出ないこと
+			string css = GameFontHelper.GenerateFontCss("Noto Sans JP Bold", null, null);
+
+			Assert.NotNull(css);
+			int boldRuleIdx = css.IndexOf("font-weight: bold;", StringComparison.Ordinal);
+			Assert.True(boldRuleIdx > 0);
+			string normalRule = css.Substring(0, boldRuleIdx);
+
+			Assert.Contains("local(\"Noto Sans JP Bold\")", normalRule);
+			Assert.Contains("local(\"NotoSansJP-Bold\")", normalRule);
+			Assert.Contains("local(\"Noto Sans CJK JP Bold\")", normalRule);
+			Assert.Contains("local(\"Noto Sans JP Bold\")", css.Substring(boldRuleIdx));
+			Assert.DoesNotContain("Noto Sans JP Bold Regular", css);
+			Assert.DoesNotContain("Noto Sans JP Bold Bold", css);
+
+			string meiryoCss = GameFontHelper.GenerateFontCss("メイリオ Bold", null, null);
+			Assert.NotNull(meiryoCss);
+			int meiryoBoldIdx = meiryoCss.IndexOf("font-weight: bold;", StringComparison.Ordinal);
+			Assert.True(meiryoBoldIdx > 0);
+			Assert.Contains("local(\"メイリオ ボールド\")", meiryoCss.Substring(0, meiryoBoldIdx));
+			Assert.Contains("local(\"メイリオ ボールド\")", meiryoCss.Substring(meiryoBoldIdx));
+			Assert.DoesNotContain("メイリオ Bold Regular", meiryoCss);
+			Assert.DoesNotContain("メイリオ Bold Bold", meiryoCss);
+		}
+
+		[Fact]
+		public void GenerateFontCss_NamedWeightSuffix_PreservesWeightAndCjkFallbackWithoutRegularOrBoldSuffixDuplication()
+		{
+			// What: MediumやRegular等のウェイト名付きフォント指定時、CJKフォールバックへウェイトが引き継がれ、不正なRegular/Bold連結が起きないこと
+			string jpCss = GameFontHelper.GenerateFontCss("Noto Sans JP Medium", null, null);
+
+			Assert.NotNull(jpCss);
+			Assert.Contains("local(\"Noto Sans JP Medium\")", jpCss);
+			Assert.Contains("local(\"Noto Sans CJK JP Medium\")", jpCss);
+			Assert.DoesNotContain("Noto Sans JP Medium Regular", jpCss);
+			Assert.DoesNotContain("Noto Sans JP Medium Bold", jpCss);
+
+			string regularCss = GameFontHelper.GenerateFontCss("Noto Sans JP Regular", null, null);
+			Assert.NotNull(regularCss);
+			Assert.Contains("local(\"Noto Sans JP Regular\")", regularCss);
+			Assert.Contains("local(\"Noto Sans JP Bold\")", regularCss);
+			Assert.DoesNotContain("Noto Sans JP Regular Regular", regularCss);
+
+			string latinCss = GameFontHelper.GenerateFontCss(null, "Roboto Bold", null);
+			Assert.NotNull(latinCss);
+			int latinBoldIdx = latinCss.IndexOf("font-weight: bold;", StringComparison.Ordinal);
+			Assert.True(latinBoldIdx > 0);
+			Assert.Contains("local(\"Roboto Bold\")", latinCss.Substring(0, latinBoldIdx));
+			Assert.Contains("local(\"Roboto-Bold\")", latinCss.Substring(0, latinBoldIdx));
+			Assert.Contains("unicode-range: U+0020-007E, U+00A0-00FF;", latinCss);
+			Assert.DoesNotContain("Roboto Bold Regular", latinCss);
+			Assert.DoesNotContain("Roboto Bold Bold", latinCss);
+		}
+
+		[Fact]
+		public void FormatAndResolveGameFontSpec_RoundTripsBoldSelection()
+		{
+			// What: FontDialogの太字選択が保存用フォント名へ反映され、再選択時にもベースファミリ名と太字フラグへ復元されること
+			Assert.Equal("Noto Sans JP", GameFontHelper.FormatGameFontName("Noto Sans JP", false));
+			Assert.Equal("Noto Sans JP Bold", GameFontHelper.FormatGameFontName("Noto Sans JP", true));
+			Assert.Equal("Noto Sans JP Bold", GameFontHelper.FormatGameFontName("Noto Sans JP Bold", true));
+
+			Func<string, bool> installed = name =>
+				string.Equals(name, "Noto Sans JP", StringComparison.OrdinalIgnoreCase) ||
+				string.Equals(name, "Noto Sans JP Medium", StringComparison.OrdinalIgnoreCase);
+
+			Assert.True(GameFontHelper.ResolveGameFontSpec("Noto Sans JP Bold", installed, out string fam1, out bool bold1));
+			Assert.Equal("Noto Sans JP", fam1);
+			Assert.True(bold1);
+
+			Assert.True(GameFontHelper.ResolveGameFontSpec("メイリオ ボールド", n => n == "メイリオ", out string fam2, out bool bold2));
+			Assert.Equal("メイリオ", fam2);
+			Assert.True(bold2);
+
+			Assert.True(GameFontHelper.ResolveGameFontSpec("Noto Sans JP Medium", installed, out string fam3, out bool bold3));
+			Assert.Equal("Noto Sans JP Medium", fam3);
+			Assert.False(bold3);
+
+			Assert.False(GameFontHelper.ResolveGameFontSpec("Bold", installed, out _, out _));
+		}
 	}
 }
