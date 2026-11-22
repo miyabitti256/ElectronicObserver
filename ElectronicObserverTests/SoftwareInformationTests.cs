@@ -69,6 +69,104 @@ namespace ElectronicObserverTests
 		}
 
 		[Fact]
+		public void InstalledVersion_FallsBackToDefaultWhenVersionFileIsEmpty()
+		{
+			// What: Verify empty version.txt falls back safely to DefaultForkVersion and UpdateTime without throwing.
+			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.txt");
+			bool existed = File.Exists(path);
+			string backup = existed ? File.ReadAllText(path) : null;
+
+			try
+			{
+				File.WriteAllText(path, "");
+
+				Assert.Equal(SoftwareInformation.DefaultForkVersion, SoftwareInformation.InstalledVersion);
+				Assert.Equal(SoftwareInformation.UpdateTime, SoftwareInformation.InstalledVersionTime);
+			}
+			finally
+			{
+				if (existed)
+					File.WriteAllText(path, backup);
+				else
+					File.Delete(path);
+			}
+		}
+
+		[Fact]
+		public void InstalledVersion_FallsBackToDefaultWhenVersionFileIsWhitespace()
+		{
+			// What: Verify whitespace-only version.txt falls back safely to DefaultForkVersion and UpdateTime.
+			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.txt");
+			bool existed = File.Exists(path);
+			string backup = existed ? File.ReadAllText(path) : null;
+
+			try
+			{
+				File.WriteAllText(path, "   \r\n\t  \r\n  \r\n");
+
+				Assert.Equal(SoftwareInformation.DefaultForkVersion, SoftwareInformation.InstalledVersion);
+				Assert.Equal(SoftwareInformation.UpdateTime, SoftwareInformation.InstalledVersionTime);
+			}
+			finally
+			{
+				if (existed)
+					File.WriteAllText(path, backup);
+				else
+					File.Delete(path);
+			}
+		}
+
+		[Fact]
+		public void InstalledVersionTime_FallsBackToUpdateTimeWhenDateFormatIsInvalid()
+		{
+			// What: Verify invalid or garbage date on line 1 does not throw and safely falls back to UpdateTime.
+			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.txt");
+			bool existed = File.Exists(path);
+			string backup = existed ? File.ReadAllText(path) : null;
+
+			try
+			{
+				File.WriteAllText(path, "GarbageInvalidDateString\r\n4.8.0-custom-tag\r\n");
+
+				// InstalledVersion should still read line 2
+				Assert.Equal("4.8.0-custom-tag", SoftwareInformation.InstalledVersion);
+				// InstalledVersionTime should safely fall back to UpdateTime
+				Assert.Equal(SoftwareInformation.UpdateTime, SoftwareInformation.InstalledVersionTime);
+			}
+			finally
+			{
+				if (existed)
+					File.WriteAllText(path, backup);
+				else
+					File.Delete(path);
+			}
+		}
+
+		[Fact]
+		public void InstalledVersion_HandlesSingleLineVersionFileGracefully()
+		{
+			// What: Verify single-line version.txt (date only, missing version tag) falls back to DefaultForkVersion.
+			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.txt");
+			bool existed = File.Exists(path);
+			string backup = existed ? File.ReadAllText(path) : null;
+
+			try
+			{
+				File.WriteAllText(path, "2031/12/31 23:59:59\r\n");
+
+				Assert.Equal(SoftwareInformation.DefaultForkVersion, SoftwareInformation.InstalledVersion);
+				Assert.Equal(new DateTime(2031, 12, 31, 23, 59, 59), SoftwareInformation.InstalledVersionTime);
+			}
+			finally
+			{
+				if (existed)
+					File.WriteAllText(path, backup);
+				else
+					File.Delete(path);
+			}
+		}
+
+		[Fact]
 		public void BaseVersion_IsNotNewerThanTheCompiledVersion()
 		{
 			// ベースにしている本家のバージョンが本体より新しくなっていたら、取り込み漏れか書き忘れ

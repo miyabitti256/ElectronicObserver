@@ -166,6 +166,11 @@ namespace ElectronicObserver.Data
         /// </summary>
         public EquipmentGroupManager EquipmentGroup { get; private set; }
 
+		/// <summary>
+		/// セル情報・行先データ
+		/// </summary>
+		public DestinationDataService Destination { get; private set; }
+
         private KCDatabase()
 		{
 
@@ -196,6 +201,8 @@ namespace ElectronicObserver.Data
 			RelocatedEquipments = new IDDictionary<RelocationData>();
 			FleetPreset = new FleetPresetManager();
             EquipmentGroup = new EquipmentGroupManager();
+			Destination = new DestinationDataService();
+			Destination.Initialize();
         }
 
 
